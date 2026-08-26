@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-04",
+  "updated": "2026-08-26",
   "events": [
     {
       "id": "wine-liam-noahs",
@@ -263,6 +263,62 @@
       "place": "강남역 일대(TBD)",
       "note": "곧 상세 정보가 업데이트됩니다.",
       "attendees": [],
+      "status": "auto"
+    },
+    {
+      "id": "networking-andaz",
+      "title": "YOUTH Networking: Andaz",
+      "date": "2026-09-13",
+      "time": "5pm",
+      "place": "Andaz Seoul Gangnam",
+      "attendees": [],
+      "formUrl": "https://forms.gle/n2RFgB9f8EizMuQd7",
+      "status": "auto"
+    },
+    {
+      "id": "family-dinner-noryangjin",
+      "title": "가족방 저녁 모임",
+      "host": "김경웅",
+      "date": "2026-08-25",
+      "time": "7pm",
+      "place": "노량진 손선장",
+      "attendees": [
+        "경웅",
+        "희선",
+        "진석",
+        "수은"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "family-companion-baegun",
+      "title": "가족방 가족 동반 모임",
+      "host": "정진석",
+      "date": "2026-08-29",
+      "time": "3pm",
+      "place": "바베큐팩토리 백운호수점",
+      "attendees": [
+        "안상진",
+        "최희선(+2명)",
+        "정진석(+1명)",
+        "고승현(+1명)"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "premium-lunch-grand-hyatt",
+      "title": "프리미엄 런치: 그랜드 하얏트",
+      "capacity": 4,
+      "capacityText": "4인",
+      "date": "2026-09-20",
+      "time": "12pm",
+      "place": "그랜드 하얏트 1F 더 테라스 키친",
+      "fee": "205,000원",
+      "note": "모엣샹동 한 잔이 제공됩니다",
+      "attendees": [
+        "직차",
+        "성보"
+      ],
       "status": "auto"
     }
   ]

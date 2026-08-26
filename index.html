@@ -369,7 +369,17 @@
    * 놓고 눌러도 아무 일 없는 상태를 만들지 않기 위해서다.
    * ------------------------------------------------------------------ */
 
+  /* 접수 주소는 data/config.json 에서 온다 — 주소가 바뀌어도 이 파일은 안 건드린다. */
   var SIGNUP_ENDPOINT = "";
+
+  function loadConfig() {
+    return fetch("data/config.json?t=" + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (c) {
+        if (c && typeof c.signupEndpoint === "string") SIGNUP_ENDPOINT = c.signupEndpoint.trim();
+      })
+      .catch(function () { /* 없으면 신청 폼 없이 그냥 보이기만 한다. */ });
+  }
 
   var MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
   var DOW = ["일","월","화","수","목","금","토"];
@@ -398,11 +408,13 @@
 
   /* ---------------- 파생 ---------------- */
 
-  /* 확정 참석자와 대기자를 나눈다. 정원이 없으면 전원 확정이다. */
+  /* 확정 참석자와 대기자를 나눈다. 정원이 없으면 전원 확정이다.
+     명단은 두 곳에서 온다 — 관리자가 카톡을 보고 적어둔 events.json 쪽이 먼저
+     신청한 사람들이고, 그 뒤에 웹으로 신청한 순서가 붙는다. */
+  function norm(a) { return typeof a === "string" ? { name: a } : a; }
+
   function roster(ev) {
-    var all = (state.signups[ev.id] || ev.attendees || []).map(function (a) {
-      return typeof a === "string" ? { name: a } : a;
-    });
+    var all = (ev.attendees || []).map(norm).concat((state.signups[ev.id] || []).map(norm));
     if (!ev.capacity || all.length <= ev.capacity) return { going: all, waiting: [] };
     return { going: all.slice(0, ev.capacity), waiting: all.slice(ev.capacity) };
   }
@@ -590,11 +602,14 @@
       msg.className = "hint"; msg.textContent = "신청 중…";
 
       submitSignup(ev.id, nv, pv).then(function (res) {
+        var done = res.waitlisted
+          ? nv + "님, 대기 " + res.position + "번으로 접수됐습니다."
+          : nv + "님, 신청됐습니다 — " + res.position + "번째입니다.";
         msg.className = "ok";
-        msg.textContent = res.waitlisted
-          ? "대기 " + res.position + "번으로 접수됐습니다."
-          : "신청됐습니다 — " + res.position + "번째입니다.";
+        msg.textContent = done;
         name.value = ""; phone.value = "";
+        /* 명단을 새로 받으면 이 폼은 다시 그려지며 사라진다. 확인은 토스트가 남긴다. */
+        toast(done);
         return refreshSignups();
       }, function (err) {
         btn.disabled = false; name.disabled = false; phone.disabled = false;
@@ -809,7 +824,8 @@
 
   /* ---------------- 부팅 ---------------- */
 
-  fetch("data/events.json?t=" + Date.now())
+  loadConfig()
+    .then(function () { return fetch("data/events.json?t=" + Date.now()); })
     .then(function (r) {
       if (!r.ok) throw new Error("데이터를 불러오지 못했습니다 (" + r.status + ")");
       return r.json();
