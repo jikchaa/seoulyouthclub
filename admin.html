@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>관리자 · YOUTH CLUB SEOUL</title>
+<link rel="icon" href="assets/logo.png" />
+<style>
+  @font-face {
+    font-family: "Barun";
+    src: url(assets/nbg-400.woff2) format("woff2");
+    font-weight: 400; font-style: normal; font-display: swap;
+    unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
+  }
+  @font-face {
+    font-family: "Barun";
+    src: url(assets/nbg-700.woff2) format("woff2");
+    font-weight: 700; font-style: normal; font-display: swap;
+    unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF;
+  }
+
+  :root {
+    color-scheme: dark;
+    --ink: #0A0908; --surface: #121110; --surface-2: #171613;
+    --line: #26231E; --line-strong: #3B362D;
+    --text: #ECE7DC; --text-2: #A79F91; --text-3: #6E675C;
+    --brass: #C8A96A; --brass-dim: #8A7440;
+    --sage: #8CB08F; --amber: #C98A45; --rust: #C0705E;
+    --font-sans: "Barun", "Helvetica Neue", Helvetica, Arial,
+      "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  :root[data-theme="light"], :root[data-theme="dark"] { color-scheme: dark; }
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0; background: var(--ink); color: var(--text);
+    font-family: var(--font-sans); font-size: 15px; line-height: 1.62;
+    letter-spacing: -0.003em; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  a { color: var(--brass); }
+  :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 2px; }
+
+  .shell { max-width: 74rem; margin: 0 auto; padding: 0 1.25rem 5rem; }
+
+  /* ---------- 잠금 ---------- */
+  .gate {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 0.9rem;
+    padding: 2rem 1.25rem; text-align: center;
+  }
+  .gate img { height: 2rem; margin-bottom: 0.5rem; }
+  .gate h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  .gate p { margin: 0; color: var(--text-3); font-size: 0.85rem; max-width: 24rem; }
+  .gate form { display: flex; gap: 0.5rem; margin-top: 0.4rem; }
+  .gate input {
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 2px;
+    color: var(--text); font-family: inherit; font-size: 0.9rem; padding: 0.5rem 0.7rem; width: 12rem;
+  }
+  .gate .err { color: var(--rust); font-size: 0.8rem; min-height: 1.2em; }
+
+  /* ---------- 상단 ---------- */
+  .top {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 1rem;
+    padding: 2.25rem 0 1rem; border-bottom: 1px solid var(--line);
+  }
+  .brand { display: inline-flex; align-items: center; gap: 0.7rem; }
+  .brand img { height: 1.9rem; display: block; }
+  .brand .sep { width: 1px; height: 1.5rem; background: var(--line-strong); }
+  .brand .role {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--brass); margin-right: -0.28em;
+  }
+  .spacer { flex: 1 1 auto; }
+  .state { font-size: 0.74rem; color: var(--text-3); white-space: nowrap; }
+  .state b { font-weight: 400; }
+  .state b.dirty { color: var(--amber); }
+  .state b.clean { color: var(--sage); }
+
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    padding: 0.85rem 0; border-bottom: 1px solid var(--line);
+  }
+
+  .btn {
+    appearance: none; background: transparent; border: 1px solid var(--line-strong);
+    color: var(--text-2); font-family: inherit; font-size: 0.78rem;
+    padding: 0.45rem 0.85rem; border-radius: 2px; cursor: pointer; white-space: nowrap;
+    transition: border-color .15s, color .15s, background-color .15s;
+  }
+  .btn:hover:not(:disabled) { border-color: var(--brass-dim); color: var(--text); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn-primary { border-color: var(--brass-dim); color: var(--brass); }
+  .btn-primary:hover:not(:disabled) { background: rgba(200,169,106,.1); }
+  .btn-quiet { border-color: transparent; color: var(--text-3); padding-inline: .4rem; }
+  .btn-quiet:hover { color: var(--text-2); border-color: transparent; }
+  .btn-danger:hover:not(:disabled) { border-color: #8C4A3F; color: #D98878; }
+  .btn-sm { font-size: .72rem; padding: .3rem .55rem; }
+  a.btn { text-decoration: none; display: inline-block; }
+
+  .banner {
+    margin-top: 1rem; padding: .7rem .9rem; border: 1px solid var(--brass-dim);
+    border-left-width: 3px; border-radius: 2px; background: rgba(200,169,106,.06);
+    font-size: .8rem; color: var(--text-2);
+    display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem;
+  }
+  .banner strong { color: var(--brass); font-weight: 700; }
+  .banner.bad { border-color: #8C4A3F; background: rgba(192,112,94,.08); }
+  .banner.bad strong { color: var(--rust); }
+
+  /* ---------- 레이아웃 ---------- */
+  .work { display: grid; grid-template-columns: 17rem minmax(0,1fr); gap: 2rem; align-items: start; padding-top: 1.4rem; }
+
+  .list-head {
+    font-size: .64rem; font-weight: 700; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--text-3); margin: 0 0 .5rem;
+  }
+  .list-head + .rows + .list-head { margin-top: 1.6rem; }
+  .rows { display: flex; flex-direction: column; }
+  .row {
+    appearance: none; background: transparent; border: 0; border-left: 2px solid transparent;
+    color: inherit; font-family: inherit; text-align: left;
+    display: grid; grid-template-columns: 3.4rem minmax(0,1fr); gap: .1rem .6rem;
+    padding: .55rem .5rem .55rem .7rem; cursor: pointer; border-radius: 0 2px 2px 0;
+  }
+  .row:hover { background: rgba(255,255,255,.03); }
+  .row[aria-current="true"] { background: rgba(200,169,106,.09); border-left-color: var(--brass); }
+  .row-date { grid-row: span 2; font-size: .72rem; color: var(--text-3); font-variant-numeric: tabular-nums; padding-top: .1rem; }
+  .row[aria-current="true"] .row-date { color: var(--brass); }
+  .row-title { font-size: .85rem; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row-sub { font-size: .72rem; color: var(--text-3); }
+  .row-sub .dot { color: var(--sage); }
+  .row-sub .dot[data-state="waitlist"] { color: var(--amber); }
+  .row-sub .dot[data-state="closed"] { color: var(--text-3); }
+  .row-sub .pic { color: var(--brass-dim); }
+  .list-empty { color: var(--text-3); font-size: .82rem; padding: .5rem .7rem; }
+
+  /* ---------- 폼 ---------- */
+  .form-wrap { min-width: 0; max-width: 46rem; }
+  .form-title { margin: 0 0 1.2rem; font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; }
+  .field { display: flex; flex-direction: column; gap: .32rem; min-width: 0; }
+  .field.wide { grid-column: 1 / -1; }
+  .field > label { font-size: .74rem; color: var(--text-3); }
+  .field > label .opt { color: var(--line-strong); }
+  .field .help { font-size: .72rem; color: var(--text-3); }
+  .field input, .field textarea, .field select {
+    width: 100%; background: var(--surface); border: 1px solid var(--line-strong);
+    border-radius: 2px; color: var(--text); font-family: inherit; font-size: .88rem; padding: .5rem .6rem;
+  }
+  .field textarea { resize: vertical; min-height: 5rem; line-height: 1.5; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: var(--brass-dim); outline: none; }
+  .field input::placeholder, .field textarea::placeholder { color: var(--text-3); opacity: .65; }
+  .form-wrap code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; color: var(--text-2); }
+
+  /* 포스터 */
+  .poster-slot { display: flex; flex-direction: column; gap: .6rem; align-items: flex-start; }
+  .poster-slot img {
+    display: block; width: 9rem; aspect-ratio: 3 / 4; object-fit: cover;
+    border: 1px solid var(--line-strong); border-radius: 2px; background: var(--ink);
+  }
+  .poster-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; }
+  .poster-actions label.btn { cursor: pointer; }
+  .poster-meta { font-size: .72rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+  /* 참석자 칩 */
+  .chips-box {
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 2px;
+    padding: .4rem; display: flex; flex-wrap: wrap; gap: .35rem; align-items: center;
+  }
+  .chips-box:focus-within { border-color: var(--brass-dim); }
+  .chip {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: rgba(200,169,106,.1); border: 1px solid var(--brass-dim);
+    border-radius: 2px; padding: .15rem .3rem .15rem .5rem; font-size: .82rem;
+  }
+  .chip .n { font-size: .68rem; color: var(--brass); font-variant-numeric: tabular-nums; }
+  .chip button { appearance: none; background: transparent; border: 0; color: var(--text-3); font: inherit; font-size: .9rem; line-height: 1; padding: 0 .15rem; cursor: pointer; }
+  .chip button:hover { color: var(--rust); }
+  .chips-box input { flex: 1 1 7rem; min-width: 7rem; background: transparent; border: 0; color: var(--text); font-family: inherit; font-size: .85rem; padding: .25rem .2rem; }
+  .chips-box input:focus { outline: none; }
+
+  details.more { grid-column: 1 / -1; border-top: 1px solid var(--line); padding-top: 1rem; margin-top: .25rem; }
+  details.more > summary { list-style: none; cursor: pointer; font-size: .74rem; color: var(--text-3); display: flex; align-items: center; gap: .5rem; }
+  details.more > summary::-webkit-details-marker { display: none; }
+  details.more > summary::before { content: "+"; color: var(--brass-dim); }
+  details.more[open] > summary::before { content: "\2013"; }
+  details.more[open] > summary { margin-bottom: 1rem; }
+
+  .form-foot { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: 1.4rem; padding-top: 1.1rem; border-top: 1px solid var(--line); }
+  .placeholder { color: var(--text-3); font-size: .88rem; padding: 3.5rem 0; text-align: center; border: 1px dashed var(--line-strong); border-radius: 3px; }
+
+  /* 신청자 */
+  .signups { margin-top: 2.2rem; }
+  .signups h2 { margin: 0 0 .7rem; font-size: .72rem; font-weight: 700; letter-spacing: .06em; color: var(--text-3); }
+  .signups table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .signups th, .signups td { text-align: left; padding: .4rem .5rem; border-bottom: 1px solid var(--line); }
+  .signups th { color: var(--text-3); font-weight: 400; font-size: .72rem; }
+  .signups td.num { font-variant-numeric: tabular-nums; color: var(--text-2); }
+  .signups td.wait { color: var(--amber); }
+  .signups .scroll { overflow-x: auto; }
+
+  /* 미리보기 */
+  .preview { margin-top: 2.2rem; }
+  .preview-head { display: flex; align-items: center; gap: .75rem; margin-bottom: .7rem; }
+  .preview-head h2 { margin: 0; font-size: .72rem; font-weight: 700; letter-spacing: .06em; color: var(--text-3); }
+  .preview pre {
+    margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 2px;
+    padding: 1rem 1.1rem; font-family: inherit; font-size: .82rem; line-height: 1.65;
+    color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24rem; overflow-y: auto;
+  }
+
+  dialog.sheet {
+    width: min(38rem, calc(100vw - 2rem)); padding: 0;
+    border: 1px solid var(--line-strong); border-radius: 3px; background: var(--surface); color: var(--text);
+  }
+  dialog.sheet::backdrop { background: rgba(5,5,4,.8); }
+  .sheet-body { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: .7rem; }
+  .sheet-body h2 { margin: 0; font-size: 1rem; font-weight: 700; letter-spacing: -.02em; }
+  .sheet-body p { margin: 0; font-size: .8rem; color: var(--text-3); }
+  .sheet-body ol { margin: 0; padding-left: 1.2rem; font-size: .8rem; color: var(--text-2); }
+  .sheet-body li { margin-bottom: .3rem; }
+  .sheet-body input {
+    width: 100%; background: var(--ink); border: 1px solid var(--line-strong); border-radius: 2px;
+    color: var(--text); font-family: ui-monospace, Menlo, monospace; font-size: .78rem; padding: .55rem .6rem;
+  }
+  .sheet-foot { padding: .9rem 1.5rem 1.2rem; border-top: 1px solid var(--line); display: flex; align-items: center; gap: .5rem; }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 1.5rem; transform: translate(-50%, 1.5rem);
+    background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 2px;
+    color: var(--text); font-size: .82rem; padding: .6rem 1rem; max-width: calc(100vw - 2rem);
+    opacity: 0; pointer-events: none; transition: opacity .18s, transform .18s; z-index: 60;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: .01ms !important; } }
+  @media (max-width: 58rem) {
+    .work { grid-template-columns: 1fr; gap: 1.4rem; }
+    aside.side { border-bottom: 1px solid var(--line); padding-bottom: 1.2rem; }
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <img src="assets/logo.png" alt="YOUTH CLUB SEOUL" />
+  <h1>관리자 페이지</h1>
+  <p>이 주소는 오픈챗에 공유하지 마세요.</p>
+  <form id="gateForm">
+    <input type="password" id="gateInput" placeholder="관리자 암호" autocomplete="current-password" />
+    <button type="submit" class="btn btn-primary">열기</button>
+  </form>
+  <span class="err" id="gateErr"></span>
+</div>
+
+<div class="shell" id="app" hidden>
+  <header class="top">
+    <div class="brand">
+      <img src="assets/logo.png" alt="YOUTH CLUB SEOUL" />
+      <span class="sep"></span>
+      <span class="role">Admin</span>
+    </div>
+    <span class="spacer"></span>
+    <span class="state" id="stateLabel"></span>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" class="btn btn-primary" id="btnSave" disabled>게시</button>
+    <button type="button" class="btn" id="btnNew">+ 새 이벤트</button>
+    <button type="button" class="btn" id="btnKakao">카톡 공지 복사</button>
+    <span class="spacer"></span>
+    <a class="btn btn-quiet" href="index.html" target="_blank" rel="noopener">공개 페이지 ↗</a>
+    <button type="button" class="btn btn-quiet" id="btnToken">토큰</button>
+    <button type="button" class="btn btn-quiet btn-danger" id="btnRevert">되돌리기</button>
+  </div>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <div class="work">
+    <aside class="side">
+      <p class="list-head">Upcoming</p>
+      <div class="rows" id="rowsUpcoming"></div>
+      <p class="list-head">Past</p>
+      <div class="rows" id="rowsPast"></div>
+    </aside>
+
+    <div class="form-wrap">
+      <p class="placeholder" id="placeholder">왼쪽에서 모임을 고르거나 <strong>+ 새 이벤트</strong>를 누르세요.</p>
+
+      <form id="form" hidden autocomplete="off">
+        <h2 class="form-title" id="formTitle">이벤트</h2>
+        <div class="grid">
+          <div class="field wide">
+            <label for="f_title">이벤트명</label>
+            <input id="f_title" name="title" required placeholder="유스미식회: 키이로" />
+          </div>
+          <div class="field">
+            <label for="f_host">호스트 <span class="opt">선택</span></label>
+            <input id="f_host" name="host" placeholder="김지훈" />
+          </div>
+          <div class="field">
+            <label for="f_place">장소 <span class="opt">선택</span></label>
+            <input id="f_place" name="place" placeholder="리암앤노아스" />
+          </div>
+          <div class="field">
+            <label for="f_date">날짜</label>
+            <input id="f_date" name="date" type="date" required />
+          </div>
+          <div class="field">
+            <label for="f_time">시간 <span class="opt">선택</span></label>
+            <input id="f_time" name="time" placeholder="7pm / 1-5pm / 점심" />
+            <span class="help">요일은 날짜에서 자동으로 붙습니다.</span>
+          </div>
+          <div class="field wide">
+            <label for="f_note">비고 <span class="opt">선택</span></label>
+            <textarea id="f_note" name="note" placeholder="줄바꿈으로 여러 줄을 쓸 수 있어요."></textarea>
+          </div>
+          <div class="field wide">
+            <label for="f_formUrl">참석 신청 링크 <span class="opt">선택</span></label>
+            <input id="f_formUrl" name="formUrl" type="url" placeholder="https://forms.gle/..." />
+            <span class="help">구글폼으로 따로 받을 때만 쓰세요. 비워두면 페이지의 신청 폼을 씁니다.</span>
+          </div>
+
+          <div class="field wide">
+            <label>포스터 <span class="opt">선택</span></label>
+            <div class="poster-slot">
+              <img id="posterPreview" alt="" hidden />
+              <div class="poster-actions">
+                <label class="btn btn-sm" for="f_imageFile">이미지 올리기</label>
+                <input type="file" id="f_imageFile" accept="image/*" hidden />
+                <button type="button" class="btn btn-sm btn-danger" id="btnImageClear" hidden>빼기</button>
+                <span class="poster-meta" id="posterMeta">없음</span>
+              </div>
+            </div>
+            <span class="help">3:4로 잘라서 1200px, JPEG로 저장합니다. 게시할 때 저장소에 함께 올라갑니다.</span>
+          </div>
+
+          <div class="field wide">
+            <label for="f_attendInput">참석자 <span class="opt">카톡에서 받은 사람</span></label>
+            <div class="chips-box" id="chipsBox">
+              <span id="chips"></span>
+              <input id="f_attendInput" placeholder="이름 입력 후 Enter" aria-label="참석자 추가" />
+            </div>
+            <span class="help">Enter 또는 쉼표로 추가, Backspace로 마지막 사람 삭제. 페이지에서 신청한 사람은 이 뒤에 자동으로 붙습니다.</span>
+          </div>
+
+          <details class="more" id="more">
+            <summary>추가 정보 — 정원 · 회비 · 주소 · 장소 링크 · 상태</summary>
+            <div class="grid">
+              <div class="field">
+                <label for="f_capacity">정원 <span class="opt">숫자</span></label>
+                <input id="f_capacity" name="capacity" inputmode="numeric" placeholder="8" />
+                <span class="help">채우면 남은 자리가 표시되고, 다 차면 이후 신청은 대기로 갑니다.</span>
+              </div>
+              <div class="field">
+                <label for="f_capacityText">정원 표기 <span class="opt">선택</span></label>
+                <input id="f_capacityText" name="capacityText" placeholder="비우면 “8명”. 예: 8명(대관)" />
+              </div>
+              <div class="field wide">
+                <label for="f_fee">회비 <span class="opt">선택</span></label>
+                <input id="f_fee" name="fee" placeholder="205,000원" />
+              </div>
+              <div class="field wide">
+                <label for="f_address">주소 <span class="opt">선택</span></label>
+                <input id="f_address" name="address" placeholder="서울 강남구 ..." />
+              </div>
+              <div class="field wide">
+                <label for="f_placeUrl">장소 링크 <span class="opt">선택</span></label>
+                <input id="f_placeUrl" name="placeUrl" type="url" placeholder="https://naver.me/..." />
+              </div>
+              <div class="field wide">
+                <label for="f_links">단톡방 등 추가 링크 <span class="opt">선택</span></label>
+                <textarea id="f_links" name="links" placeholder="강남역 거점방 | https://invite.kakao.com/tc/..."></textarea>
+                <span class="help">한 줄에 하나씩, <code>이름 | 주소</code> 형식.</span>
+              </div>
+              <div class="field wide">
+                <label for="f_status">상태</label>
+                <select id="f_status" name="status">
+                  <option value="auto">자동 (정원이 차면 대기 전환)</option>
+                  <option value="open">모집중</option>
+                  <option value="waitlist">대기 모집중</option>
+                  <option value="closed">마감</option>
+                </select>
+              </div>
+            </div>
+          </details>
+        </div>
+
+        <div class="form-foot">
+          <button type="button" class="btn" id="btnDuplicate">복제</button>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-danger" id="btnDelete">삭제</button>
+        </div>
+      </form>
+
+      <section class="signups" id="signupsBox" hidden>
+        <h2>신청자 <span id="signupsCount"></span></h2>
+        <div class="scroll"><table id="signupsTable"></table></div>
+      </section>
+
+      <section class="preview">
+        <div class="preview-head">
+          <h2>카톡 공지 미리보기</h2>
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-sm" id="btnKakao2">복사</button>
+        </div>
+        <pre id="kakaoPreview"></pre>
+      </section>
+    </div>
+  </div>
+</div>
+
+<dialog class="sheet" id="tokenSheet">
+  <div class="sheet-body">
+    <h2>GitHub 토큰</h2>
+    <p>이 토큰으로 [게시]가 저장소에 직접 씁니다. <strong>이 브라우저에만 저장되고</strong> 저장소나 페이지에는 절대 들어가지 않습니다.</p>
+    <ol>
+      <li>github.com/settings/personal-access-tokens 에서 <b>Fine-grained token</b> 생성</li>
+      <li>Repository access → <b>Only select repositories</b> → <code>seoulyouthclub</code></li>
+      <li>Permissions → Repository permissions → <b>Contents: Read and write</b></li>
+      <li>생성된 <code>github_pat_…</code> 를 아래에 붙여넣기</li>
+    </ol>
+    <input type="password" id="tokenInput" placeholder="github_pat_..." autocomplete="off" />
+  </div>
+  <div class="sheet-foot">
+    <button type="button" class="btn btn-primary" id="tokenSave">저장</button>
+    <button type="button" class="btn btn-quiet btn-danger" id="tokenClear">지우기</button>
+    <span class="spacer"></span>
+    <button type="button" class="btn btn-quiet" id="tokenClose">닫기</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------------ *
+   * 이 페이지에서 고친 내용은 [게시]를 누를 때 GitHub 저장소에 직접 커밋된다.
+   * 커밋되면 GitHub Pages가 1분 안에 다시 배포하고 공개 페이지가 바뀐다.
+   * 즉 이벤트 추가·수정·삭제·포스터 업로드에 더 이상 누구도 거치지 않는다.
+   *
+   * 토큰은 이 브라우저(localStorage)에만 있다. 저장소에 커밋되지 않는다.
+   * ------------------------------------------------------------------ */
+
+  var PASSCODE_HASH = "1659f09c01cc1414ae221c0007b6a7630194b7e937a9729ddfdca6bd71a8bed2";
+  var OWNER = "jikchaa";
+  var REPO = "seoulyouthclub";
+  var BRANCH = "main";
+  var DATA_PATH = "data/events.json";
+
+  var K_TOKEN = "yclub.gh.token";
+  var K_UNLOCK = "yclub.admin.unlocked";
+
+  var DOW = ["일","월","화","수","목","금","토"];
+  var STATUS_LABEL = { open: "모집중", closed: "마감", waitlist: "대기 모집중" };
+  var STATUS_WEIGHT = { open: 0, waitlist: 1, closed: 2 };
+
+  /* published = 저장소에 올라가 있는 그대로. dirty 판정의 기준선이다. */
+  var state = {
+    events: [], updated: "", sha: null,
+    published: "", signups: {}, endpoint: "", adminKey: "",
+    newPosters: {}   // path -> dataURL (아직 저장소에 없는 포스터)
+  };
+  var selectedId = null;
+
+  /* ---------------- 저장소 ---------------- */
+
+  function store(k, v) {
+    try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {}
+  }
+  function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function token() { return read(K_TOKEN) || ""; }
+
+  /* ---------------- 날짜 ---------------- */
+
+  function pad(n) { return n < 10 ? "0" + n : String(n); }
+  function toISO(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function parseDate(iso) {
+    var p = String(iso || "").split("-");
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+  function todayStart() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+  function dateLabel(iso) {
+    if (!iso) return "";
+    var d = parseDate(iso);
+    return (d.getMonth() + 1) + "월 " + d.getDate() + "일(" + DOW[d.getDay()] + ")";
+  }
+
+  /* ---------------- 파생 ---------------- */
+
+  function norm(a) { return typeof a === "string" ? { name: a } : a; }
+  function allNames(ev) {
+    return (ev.attendees || []).map(norm).concat((state.signups[ev.id] || []).map(norm));
+  }
+  function roster(ev) {
+    var all = allNames(ev);
+    if (!ev.capacity || all.length <= ev.capacity) return { going: all, waiting: [] };
+    return { going: all.slice(0, ev.capacity), waiting: all.slice(ev.capacity) };
+  }
+  function effectiveStatus(ev) {
+    if (ev.status && ev.status !== "auto") return ev.status;
+    if (ev.capacity && roster(ev).going.length >= ev.capacity) return "waitlist";
+    return "open";
+  }
+  function sortByDate(list) {
+    return list.slice().sort(function (a, b) {
+      if (a.date !== b.date) return (a.date || "") < (b.date || "") ? -1 : 1;
+      var wa = STATUS_WEIGHT[effectiveStatus(a)], wb = STATUS_WEIGHT[effectiveStatus(b)];
+      if (wa !== wb) return wa - wb;
+      return (a.title || "").localeCompare(b.title || "", "ko");
+    });
+  }
+  function splitEvents() {
+    var today = toISO(todayStart());
+    var up = [], past = [];
+    state.events.forEach(function (ev) { ((ev.date || "") >= today ? up : past).push(ev); });
+    return { upcoming: sortByDate(up), past: sortByDate(past).reverse() };
+  }
+  function findEvent(id) {
+    for (var i = 0; i < state.events.length; i++) if (state.events[i].id === id) return state.events[i];
+    return null;
+  }
+  function makeId(title) {
+    return "ev-" + Date.now().toString(36) + "-" + String(title || "").replace(/\s+/g, "-").slice(0, 12);
+  }
+  function safeUrl(u) { var s = String(u || "").trim(); return /^https?:\/\//i.test(s) ? s : ""; }
+
+  function payload() {
+    return JSON.stringify({ updated: state.updated, events: state.events }, null, 2) + "\n";
+  }
+  function isDirty() {
+    return payload() !== state.published || Object.keys(state.newPosters).length > 0;
+  }
+
+  /* ---------------- DOM ---------------- */
+
+  function el(t, c, x) { var n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; }
+
+  /* ---------------- 목록 ---------------- */
+
+  function renderList() {
+    var g = splitEvents();
+    fill(document.getElementById("rowsUpcoming"), g.upcoming, "예정된 모임이 없습니다.");
+    fill(document.getElementById("rowsPast"), g.past, "지난 모임이 없습니다.");
+  }
+
+  function fill(host, list, emptyMsg) {
+    host.textContent = "";
+    if (!list.length) { host.appendChild(el("p", "list-empty", emptyMsg)); return; }
+    list.forEach(function (ev) {
+      var status = effectiveStatus(ev);
+      var r = roster(ev);
+      var b = el("button", "row"); b.type = "button";
+      if (ev.id === selectedId) b.setAttribute("aria-current", "true");
+
+      var date = el("span", "row-date");
+      if (ev.date) { var d = parseDate(ev.date); date.textContent = (d.getMonth() + 1) + "/" + d.getDate(); }
+      else date.textContent = "—";
+
+      var title = el("span", "row-title", ev.title || "제목 없음");
+
+      var sub = el("span", "row-sub");
+      var dot = el("span", "dot", "● "); dot.dataset.state = status; sub.appendChild(dot);
+      var tail = STATUS_LABEL[status];
+      if (ev.capacity) tail += " · " + r.going.length + "/" + ev.capacity;
+      else if (r.going.length) tail += " · " + r.going.length + "명";
+      if (r.waiting.length) tail += " · 대기 " + r.waiting.length;
+      sub.appendChild(document.createTextNode(tail));
+      if (ev.image) { var pic = el("span", "pic", "  ▣"); sub.appendChild(pic); }
+
+      b.appendChild(date); b.appendChild(title); b.appendChild(sub);
+      b.addEventListener("click", function () { select(ev.id); });
+      host.appendChild(b);
+    });
+  }
+
+  /* ---------------- 포스터 ---------------- */
+
+  var POSTER_EDGE = 1200;
+
+  /* 3:4 로 가운데를 잘라 굽는다. 카드와 상세가 모두 3:4 라 미리 맞춰두는 편이 낫다. */
+  function shrink(file) {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onerror = function () { reject(new Error("파일을 읽지 못했습니다")); };
+      fr.onload = function () {
+        var img = new Image();
+        img.onerror = function () { reject(new Error("이미지 형식이 아닙니다")); };
+        img.onload = function () {
+          var W = POSTER_EDGE * 0.75, H = POSTER_EDGE;   // 900 x 1200
+          var c = document.createElement("canvas");
+          c.width = W; c.height = H;
+          var ctx = c.getContext("2d");
+          ctx.fillStyle = "#121110"; ctx.fillRect(0, 0, W, H);
+          var scale = Math.max(W / img.width, H / img.height);
+          var dw = img.width * scale, dh = img.height * scale;
+          ctx.drawImage(img, (W - dw) / 2, (H - dh) / 2, dw, dh);
+          try { resolve(c.toDataURL("image/jpeg", 0.82)); }
+          catch (e) { reject(new Error("이미지를 변환하지 못했습니다")); }
+        };
+        img.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  }
+
+  function bytesOf(dataUrl) {
+    var i = String(dataUrl || "").indexOf(",");
+    return i < 0 ? 0 : Math.round((dataUrl.length - i - 1) * 3 / 4);
+  }
+  function human(b) {
+    if (b < 1024) return b + " B";
+    if (b < 1048576) return (b / 1024).toFixed(0) + " KB";
+    return (b / 1048576).toFixed(1) + " MB";
+  }
+
+  function posterUrl(ev) {
+    if (!ev || !ev.image) return "";
+    if (state.newPosters[ev.image]) return state.newPosters[ev.image];   // 아직 안 올라간 것
+    return /^https?:\/\//i.test(ev.image) ? ev.image : ev.image;
+  }
+
+  function renderPoster(ev) {
+    var img = document.getElementById("posterPreview");
+    var meta = document.getElementById("posterMeta");
+    var clear = document.getElementById("btnImageClear");
+    var src = posterUrl(ev);
+    if (!src) {
+      img.hidden = true; img.removeAttribute("src");
+      clear.hidden = true; meta.textContent = "없음";
+      return;
+    }
+    img.src = src; img.hidden = false; clear.hidden = false;
+    meta.textContent = state.newPosters[ev.image]
+      ? human(bytesOf(state.newPosters[ev.image])) + " · 게시하면 올라감"
+      : ev.image;
+  }
+
+  document.getElementById("f_imageFile").addEventListener("change", function (e) {
+    var ev = findEvent(selectedId);
+    var file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!ev || !file) return;
+    toast("이미지를 3:4로 굽는 중…");
+    shrink(file).then(function (dataUrl) {
+      var name = ev.id + "-" + Date.now().toString(36) + ".jpg";
+      var path = "posters/" + name;
+      if (ev.image && state.newPosters[ev.image]) delete state.newPosters[ev.image];
+      ev.image = path;
+      state.newPosters[path] = dataUrl;
+      renderPoster(ev); afterChange();
+      toast("포스터를 넣었습니다 — " + human(bytesOf(dataUrl)) + ". [게시]를 눌러야 반영됩니다.");
+    }, function (err) { toast(err.message); });
+  });
+
+  document.getElementById("btnImageClear").addEventListener("click", function () {
+    var ev = findEvent(selectedId);
+    if (!ev) return;
+    if (ev.image && state.newPosters[ev.image]) delete state.newPosters[ev.image];
+    delete ev.image;
+    renderPoster(ev); afterChange();
+  });
+
+  /* ---------------- 참석자 칩 ---------------- */
+
+  var chips = document.getElementById("chips");
+  var attendInput = document.getElementById("f_attendInput");
+
+  function renderChips(ev) {
+    chips.textContent = "";
+    (ev.attendees || []).forEach(function (a, i) {
+      var name = norm(a).name;
+      var chip = el("span", "chip");
+      chip.appendChild(el("span", "n", String(i + 1)));
+      chip.appendChild(document.createTextNode(name));
+      var x = el("button", null, "×"); x.type = "button";
+      x.setAttribute("aria-label", name + " 빼기");
+      x.addEventListener("click", function () {
+        ev.attendees.splice(i, 1); renderChips(ev); afterChange();
+      });
+      chip.appendChild(x);
+      chips.appendChild(chip);
+    });
+  }
+
+  function commitNames(ev, raw) {
+    var added = String(raw || "").split(/[,\n]/).map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!added.length) return false;
+    ev.attendees = (ev.attendees || []).concat(added);
+    renderChips(ev); afterChange();
+    return true;
+  }
+
+  attendInput.addEventListener("keydown", function (e) {
+    var ev = findEvent(selectedId); if (!ev) return;
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      if (commitNames(ev, attendInput.value)) attendInput.value = "";
+    } else if (e.key === "Backspace" && !attendInput.value && (ev.attendees || []).length) {
+      e.preventDefault(); ev.attendees.pop(); renderChips(ev); afterChange();
+    }
+  });
+  attendInput.addEventListener("blur", function () {
+    var ev = findEvent(selectedId);
+    if (ev && commitNames(ev, attendInput.value)) attendInput.value = "";
+  });
+  document.getElementById("chipsBox").addEventListener("click", function (e) {
+    if (e.target === e.currentTarget || e.target === chips) attendInput.focus();
+  });
+
+  /* ---------------- 폼 ---------------- */
+
+  var form = document.getElementById("form");
+  var placeholder = document.getElementById("placeholder");
+  var TEXT = ["title","host","place","time","note","fee","address","capacityText"];
+  var URLS = ["formUrl","placeUrl"];
+
+  function select(id) {
+    var ev = findEvent(id); if (!ev) return;
+    selectedId = id;
+    form.hidden = false; placeholder.hidden = true;
+    document.getElementById("formTitle").textContent = ev.title || "새 이벤트";
+
+    TEXT.concat(URLS).forEach(function (k) { document.getElementById("f_" + k).value = ev[k] || ""; });
+    document.getElementById("f_date").value = ev.date || "";
+    document.getElementById("f_capacity").value = ev.capacity ? String(ev.capacity) : "";
+    document.getElementById("f_status").value = ev.status || "auto";
+    document.getElementById("f_links").value =
+      (ev.links || []).map(function (l) { return l.label + " | " + l.url; }).join("\n");
+
+    document.getElementById("more").open = !!(ev.capacity || ev.capacityText || ev.fee ||
+      ev.address || ev.placeUrl || (ev.links && ev.links.length) || (ev.status && ev.status !== "auto"));
+
+    attendInput.value = "";
+    renderChips(ev); renderPoster(ev); renderSignups(ev);
+    renderList(); renderKakao();
+  }
+
+  function readForm(ev) {
+    TEXT.forEach(function (k) {
+      var v = document.getElementById("f_" + k).value.trim();
+      if (v) ev[k] = v; else delete ev[k];
+    });
+    URLS.forEach(function (k) {
+      var v = safeUrl(document.getElementById("f_" + k).value);
+      if (v) ev[k] = v; else delete ev[k];
+    });
+    ev.date = document.getElementById("f_date").value;
+    var cap = parseInt(document.getElementById("f_capacity").value, 10);
+    if (!isNaN(cap) && cap > 0) ev.capacity = cap; else delete ev.capacity;
+    var links = String(document.getElementById("f_links").value || "").split("\n").map(function (line) {
+      var parts = line.split("|");
+      var url = safeUrl(parts.length > 1 ? parts.slice(1).join("|") : parts[0]);
+      if (!url) return null;
+      return { label: (parts.length > 1 ? parts[0].trim() : "") || "링크", url: url };
+    }).filter(Boolean);
+    if (links.length) ev.links = links; else delete ev.links;
+    ev.status = document.getElementById("f_status").value;
+    if (!ev.attendees) ev.attendees = [];
+  }
+
+  function afterChange() {
+    var ev = findEvent(selectedId);
+    if (ev) {
+      document.getElementById("formTitle").textContent = ev.title || "새 이벤트";
+      renderSignups(ev);
+    }
+    state.updated = toISO(new Date());
+    renderList(); renderKakao(); renderState();
+  }
+
+  form.addEventListener("input", function () {
+    var ev = findEvent(selectedId); if (!ev) return;
+    readForm(ev); afterChange();
+  });
+  form.addEventListener("submit", function (e) { e.preventDefault(); });
+
+  /* ---------------- 신청자 (번호 포함) ---------------- */
+
+  function renderSignups(ev) {
+    var box = document.getElementById("signupsBox");
+    var table = document.getElementById("signupsTable");
+    var rows = (state.signups[ev.id] || []);
+    if (!rows.length) { box.hidden = true; return; }
+    box.hidden = false;
+    document.getElementById("signupsCount").textContent = rows.length + "명";
+    table.textContent = "";
+
+    var seed = (ev.attendees || []).length;
+    var head = document.createElement("tr");
+    ["#", "이름", "휴대폰", "접수"].forEach(function (h) { head.appendChild(el("th", null, h)); });
+    table.appendChild(head);
+
+    rows.forEach(function (r, i) {
+      var pos = seed + i + 1;
+      var over = ev.capacity && pos > ev.capacity;
+      var tr = document.createElement("tr");
+      tr.appendChild(el("td", "num" + (over ? " wait" : ""), over ? "대기" + (pos - ev.capacity) : String(pos)));
+      tr.appendChild(el("td", null, r.name || ""));
+      tr.appendChild(el("td", "num", r.phone || "—"));
+      tr.appendChild(el("td", "num", r.at ? String(r.at).slice(5, 16).replace("T", " ") : ""));
+      table.appendChild(tr);
+    });
+  }
+
+  /* ---------------- 카톡 공지 ---------------- */
+
+  function kakaoText() {
+    var g = splitEvents();
+    var lines = ["✨️Upcoming Events✨️", ""];
+    g.upcoming.forEach(function (ev) {
+      var status = effectiveStatus(ev);
+      var r = roster(ev);
+      lines.push("<" + (ev.title || "제목 없음") + ">" +
+        (status === "closed" ? "(마감)" : status === "waitlist" ? "(대기 모집중)" : ""));
+      if (ev.host) lines.push("호스트: " + ev.host);
+      if (ev.capacity || ev.capacityText) lines.push("정원: " + (ev.capacityText || ev.capacity + "명"));
+      lines.push("일시: " + dateLabel(ev.date) + (ev.time ? " " + ev.time : ""));
+      if (ev.place) lines.push("장소: " + ev.place);
+      if (ev.address) lines.push(ev.address);
+      if (ev.placeUrl) lines.push(ev.placeUrl);
+      if (ev.fee) lines.push("회비: " + ev.fee);
+      if (ev.note) lines.push("비고: " + ev.note);
+      if (r.going.length) {
+        lines.push("참석: " + r.going.map(function (a) { return a.name; }).join(", ") +
+          (status === "closed" ? "" : " (이어주세요)"));
+      }
+      if (r.waiting.length) lines.push("대기: " + r.waiting.map(function (a) { return a.name; }).join(", "));
+      if (ev.formUrl && status !== "closed") lines.push("참석 신청하기: " + ev.formUrl);
+      (ev.links || []).forEach(function (l) { if (l && l.url) lines.push((l.label ? l.label + ": " : "") + l.url); });
+      lines.push("");
+    });
+    return lines.join("\n").trim() + "\n";
+  }
+  function renderKakao() { document.getElementById("kakaoPreview").textContent = kakaoText(); }
+
+  function copyText(text, ok) {
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      var done = false;
+      try { done = document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      toast(done ? ok : "복사에 실패했어요.");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { toast(ok); }, fallback);
+    } else fallback();
+  }
+
+  /* ---------------- GitHub ---------------- */
+
+  function b64encode(str) {
+    var bytes = new TextEncoder().encode(str), bin = "";
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function b64decode(b64) {
+    var bin = atob(String(b64).replace(/\s+/g, ""));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  function gh(path, opts) {
+    opts = opts || {};
+    var headers = {
+      "Accept": "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+    if (token()) headers.Authorization = "Bearer " + token();
+    if (opts.body) headers["Content-Type"] = "application/json";
+    return fetch("https://api.github.com/repos/" + OWNER + "/" + REPO + path, {
+      method: opts.method || "GET", headers: headers, body: opts.body
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (j) {
+        if (!r.ok) {
+          var msg = j && j.message ? j.message : ("GitHub 오류 " + r.status);
+          if (r.status === 401) msg = "토큰이 올바르지 않습니다. [토큰]에서 다시 넣어 주세요.";
+          if (r.status === 403) msg = "토큰에 쓰기 권한(Contents: Read and write)이 없습니다.";
+          if (r.status === 409) msg = "다른 곳에서 먼저 저장됐습니다. 새로고침 후 다시 시도해 주세요.";
+          var err = new Error(msg); err.status = r.status; throw err;
+        }
+        return j;
+      });
+    });
+  }
+
+  function putFile(path, contentB64, sha, message) {
+    var body = { message: message, content: contentB64, branch: BRANCH };
+    if (sha) body.sha = sha;
+    return gh("/contents/" + path, { method: "PUT", body: JSON.stringify(body) });
+  }
+
+  function save() {
+    if (!token()) { openToken(); toast("먼저 GitHub 토큰을 넣어 주세요."); return; }
+    var btn = document.getElementById("btnSave");
+    btn.disabled = true;
+    var posters = Object.keys(state.newPosters);
+    var n = posters.length;
+
+    banner("게시하는 중… " + (n ? "포스터 " + n + "장 포함" : ""), false);
+
+    /* 포스터를 먼저 올린다 — 데이터가 가리키는 파일이 이미 있어야 한다. */
+    var chain = Promise.resolve();
+    posters.forEach(function (path) {
+      chain = chain.then(function () {
+        var data = state.newPosters[path];
+        var b64 = data.slice(data.indexOf(",") + 1);
+        return putFile(path, b64, null, "Add poster " + path).then(function () {
+          delete state.newPosters[path];
+        });
+      });
+    });
+
+    chain.then(function () {
+      return putFile(DATA_PATH, b64encode(payload()), state.sha, "Update events");
+    }).then(function (res) {
+      state.sha = res.content && res.content.sha;
+      state.published = payload();
+      renderList(); renderState();
+      banner("게시했습니다. 1분쯤 뒤 공개 페이지에 반영됩니다.", false);
+      toast("게시 완료");
+    }).catch(function (err) {
+      banner(err.message, true);
+      toast(err.message);
+    }).then(function () {
+      document.getElementById("btnSave").disabled = !isDirty();
+    });
+  }
+
+  function banner(msg, bad) {
+    var b = document.getElementById("banner");
+    b.textContent = ""; b.hidden = false;
+    b.className = "banner" + (bad ? " bad" : "");
+    var s = document.createElement("strong");
+    s.textContent = bad ? "오류" : "알림";
+    b.appendChild(s);
+    b.appendChild(document.createTextNode(" " + msg));
+  }
+
+  function renderState() {
+    var lbl = document.getElementById("stateLabel");
+    var dirty = isDirty();
+    lbl.textContent = "";
+    lbl.appendChild(document.createTextNode(state.events.length + "건 · "));
+    var b = document.createElement("b");
+    b.className = dirty ? "dirty" : "clean";
+    b.textContent = dirty ? "저장 안 됨" : "게시본과 동일";
+    lbl.appendChild(b);
+    document.getElementById("btnSave").disabled = !dirty;
+  }
+
+  /* ---------------- 툴바 ---------------- */
+
+  document.getElementById("btnSave").addEventListener("click", save);
+
+  document.getElementById("btnNew").addEventListener("click", function () {
+    var ev = { id: makeId("new"), title: "", date: toISO(todayStart()), attendees: [], status: "auto" };
+    state.events.push(ev);
+    afterChange(); select(ev.id);
+    document.getElementById("f_title").focus();
+  });
+
+  document.getElementById("btnDuplicate").addEventListener("click", function () {
+    var ev = findEvent(selectedId); if (!ev) return;
+    var copy = JSON.parse(JSON.stringify(ev));
+    copy.id = makeId(copy.title);
+    copy.title = (copy.title || "제목 없음") + " (복사본)";
+    copy.attendees = []; delete copy.image;
+    state.events.push(copy);
+    afterChange(); select(copy.id);
+    toast("복제했습니다. 날짜를 바꿔 주세요.");
+  });
+
+  document.getElementById("btnDelete").addEventListener("click", function () {
+    var ev = findEvent(selectedId); if (!ev) return;
+    if (!confirm("‘" + (ev.title || "제목 없음") + "’을(를) 삭제할까요?\n\n[게시]를 눌러야 실제로 반영됩니다.")) return;
+    if (ev.image && state.newPosters[ev.image]) delete state.newPosters[ev.image];
+    state.events = state.events.filter(function (e) { return e.id !== selectedId; });
+    selectedId = null; form.hidden = true; placeholder.hidden = false;
+    document.getElementById("signupsBox").hidden = true;
+    afterChange();
+    toast("삭제했습니다. [게시]를 눌러야 반영됩니다.");
+  });
+
+  document.getElementById("btnRevert").addEventListener("click", function () {
+    if (!confirm("고친 내용을 버리고 게시된 상태로 되돌릴까요?")) return;
+    state.newPosters = {};
+    var d = JSON.parse(state.published);
+    state.events = d.events; state.updated = d.updated;
+    selectedId = null; form.hidden = true; placeholder.hidden = false;
+    document.getElementById("signupsBox").hidden = true;
+    document.getElementById("banner").hidden = true;
+    renderList(); renderKakao(); renderState();
+    toast("되돌렸습니다.");
+  });
+
+  document.getElementById("btnKakao").addEventListener("click", function () { copyText(kakaoText(), "복사했어요."); });
+  document.getElementById("btnKakao2").addEventListener("click", function () { copyText(kakaoText(), "복사했어요."); });
+
+  /* ---------------- 토큰 ---------------- */
+
+  var tokenSheet = document.getElementById("tokenSheet");
+  function openToken() {
+    document.getElementById("tokenInput").value = token();
+    tokenSheet.showModal();
+  }
+  document.getElementById("btnToken").addEventListener("click", openToken);
+  document.getElementById("tokenClose").addEventListener("click", function () { tokenSheet.close(); });
+  document.getElementById("tokenSave").addEventListener("click", function () {
+    var v = document.getElementById("tokenInput").value.trim();
+    store(K_TOKEN, v || null);
+    tokenSheet.close();
+    renderState();
+    toast(v ? "토큰을 저장했습니다." : "토큰을 지웠습니다.");
+  });
+  document.getElementById("tokenClear").addEventListener("click", function () {
+    store(K_TOKEN, null);
+    document.getElementById("tokenInput").value = "";
+    tokenSheet.close(); renderState();
+    toast("토큰을 지웠습니다.");
+  });
+
+  /* ---------------- toast ---------------- */
+
+  var toastEl = document.getElementById("toast"), toastTimer = null;
+  function toast(m) {
+    toastEl.textContent = m; toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2800);
+  }
+
+  /* ---------------- 부팅 ---------------- */
+
+  async function sha256(t) {
+    var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+    return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+      return b.toString(16).padStart(2, "0");
+    }).join("");
+  }
+
+  function loadSignups() {
+    if (!state.endpoint) return Promise.resolve();
+    var url = state.endpoint + "?action=phones&key=" + encodeURIComponent(state.adminKey) + "&t=" + Date.now();
+    return fetch(url).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.ok && d.signups) state.signups = d.signups; })
+      .catch(function () { /* 신청자를 못 불러와도 편집은 된다. */ });
+  }
+
+  function boot() {
+    document.getElementById("gate").hidden = true;
+    document.getElementById("app").hidden = false;
+
+    fetch("data/config.json?t=" + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (c) {
+        if (c) { state.endpoint = c.signupEndpoint || ""; state.adminKey = c.adminKey || ""; }
+        return loadSignups();
+      })
+      .then(function () {
+        /* 저장할 때 sha 가 필요하므로 파일 자체를 GitHub에서 받는다. */
+        return gh("/contents/" + DATA_PATH + "?ref=" + BRANCH);
+      })
+      .then(function (file) {
+        state.sha = file.sha;
+        var text = b64decode(file.content);
+        var d = JSON.parse(text);
+        state.events = d.events || [];
+        state.updated = d.updated || "";
+        state.published = payload();
+        renderList(); renderKakao(); renderState();
+        if (!token()) banner("GitHub 토큰이 없습니다. 고칠 수는 있지만 [게시]는 안 됩니다. 우측 [토큰]에서 넣어 주세요.", false);
+      })
+      .catch(function (err) {
+        banner("이벤트를 불러오지 못했습니다 — " + err.message, true);
+      });
+  }
+
+  document.getElementById("gateForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var input = document.getElementById("gateInput");
+    var err = document.getElementById("gateErr");
+    var ok = false;
+    try { ok = (await sha256(input.value)) === PASSCODE_HASH; } catch (e2) { ok = false; }
+    if (!ok) { err.textContent = "암호가 맞지 않습니다."; input.select(); return; }
+    err.textContent = "";
+    store(K_UNLOCK, "1");
+    boot();
+  });
+
+  window.addEventListener("beforeunload", function (e) {
+    if (isDirty()) { e.preventDefault(); e.returnValue = ""; }
+  });
+
+  if (read(K_UNLOCK) === "1") boot();
+  else document.getElementById("gateInput").focus();
+})();
+</script>
+</body>
+</html>

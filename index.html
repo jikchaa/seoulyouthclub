@@ -142,11 +142,6 @@
     object-fit: cover; border: 1px solid var(--line);
     border-radius: 2px; background: var(--surface); flex: none;
   }
-  .thumb-empty {
-    display: grid; place-items: center; width: 6rem; aspect-ratio: 3 / 4;
-    border: 1px dashed var(--line); border-radius: 2px;
-    color: var(--text-3); font-size: 0.62rem; letter-spacing: 0.1em;
-  }
 
   .fields { margin: 0; display: grid; grid-template-columns: 3.6rem minmax(0, 1fr); gap: 0.3rem 0.9rem; }
   .fields dt { font-size: 0.78rem; color: var(--text-3); }
@@ -309,7 +304,7 @@
     .rail { padding-right: 0.7rem; }
     .rail-day { font-size: 1.7rem; }
     .fields { grid-template-columns: 3.2rem minmax(0, 1fr); }
-    .thumb, .thumb-empty { width: 4.5rem; }
+    .thumb { width: 4.5rem; }
     .event-main { gap: 0.75rem; }
     .masthead { padding-top: 2.75rem; }
   }
@@ -340,7 +335,7 @@
 
   <footer class="foot">
     <span class="spacer"></span>
-    <span>YOUTH CLUB SEOUL</span>
+    <a href="admin.html">관리자</a>
   </footer>
 </div>
 
@@ -650,9 +645,10 @@
 
   /* ---------------- 카드 ---------------- */
 
+  /* 포스터가 없으면 자리를 아예 만들지 않는다. 빈 상자는 미완성으로 보인다. */
   function buildThumb(ev, clickable) {
     var src = posterSrc(ev.image);
-    if (!src) return el("div", "thumb-empty", "NO IMAGE");
+    if (!src) return null;
     var img = el("img", "thumb");
     img.src = src;
     img.alt = ev.title + " 포스터";
@@ -697,7 +693,8 @@
     left.appendChild(buildFields(ev));
 
     main.appendChild(left);
-    main.appendChild(buildThumb(ev, true));
+    var thumb = buildThumb(ev, true);
+    if (thumb) main.appendChild(thumb);
     body.appendChild(main);
 
     body.appendChild(buildAttend(ev));
