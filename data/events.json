@@ -1,0 +1,269 @@
+{
+  "updated": "2026-08-04",
+  "events": [
+    {
+      "id": "wine-liam-noahs",
+      "title": "리암앤노아스 x 코리안와인즈 와인모임",
+      "host": "지훈",
+      "capacity": 8,
+      "date": "2026-07-29",
+      "time": "7pm",
+      "place": "리암앤노아스",
+      "address": "서울 강남구 테헤란로25길 36 2층",
+      "fee": "12만원 (식사 6만 + 와인 6만)",
+      "note": "날 좋으면 테라스, 꿉꿉하면 실내",
+      "attendees": [
+        "지훈",
+        "성희",
+        "은정",
+        "경중"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "yclb-insight-day-1",
+      "title": "YCLB INSIGHT DAY #1",
+      "capacity": 6,
+      "capacityText": "최대 6명",
+      "date": "2026-08-01",
+      "time": "2pm",
+      "place": "토즈모임센터 강남역 회의실컨퍼런스점",
+      "note": "간단한 다과와 함께 음료가 준비됩니다.",
+      "attendees": [],
+      "formUrl": "https://forms.gle/8hShm5yQEYNDXkRB7",
+      "status": "auto"
+    },
+    {
+      "id": "hyatt-champagne",
+      "title": "하얏트 라운지 샴페인 프리플로우",
+      "date": "2026-08-01",
+      "time": "6pm-8pm",
+      "place": "그랜드하얏트 로비라운지",
+      "attendees": [],
+      "status": "closed"
+    },
+    {
+      "id": "apgujeong-gadam",
+      "title": "압구정 가담 중식모임",
+      "date": "2026-08-05",
+      "time": "7:30pm",
+      "attendees": [],
+      "status": "closed"
+    },
+    {
+      "id": "sports-picnic-day",
+      "title": "YOUTH CLUB SPORTS & PICNIC DAY",
+      "host": "연다인",
+      "date": "2026-08-08",
+      "time": "12:30pm부터",
+      "place": "F45 트레이닝 성수점 & 뚝섬한강공원",
+      "note": "Option 1. F45 트레이닝 프라이빗 트라이얼 클래스\nOption 2. 뚝섬한강공원 수영장\nOption 3. 뚝섬한강공원 피크닉\n참여 희망하시는 이벤트 각각 선택 가능",
+      "attendees": [],
+      "formUrl": "https://forms.gle/LKbvEUCJ5kH3smwT9",
+      "status": "auto"
+    },
+    {
+      "id": "misikhoe-kiiro",
+      "title": "유스미식회: 키이로",
+      "capacity": 8,
+      "capacityText": "8명 (대관)",
+      "date": "2026-08-15",
+      "time": "7pm",
+      "attendees": [],
+      "formUrl": "https://forms.gle/gF9FBPpG8ggUmfRm8",
+      "status": "auto"
+    },
+    {
+      "id": "family-josun-palace",
+      "title": "가족방 정모: 조선팰리스 호텔",
+      "host": "윤승원",
+      "capacity": 10,
+      "date": "2026-06-27",
+      "time": "9pm",
+      "place": "조선팰리스 1914 라운지",
+      "attendees": [
+        "직차",
+        "승원",
+        "주은",
+        "유림",
+        "정이",
+        "희선",
+        "혜진",
+        "상진"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "samseong-cuchara-lunch",
+      "title": "삼성역 쿠차라 런치벙",
+      "host": "김지훈",
+      "date": "2026-06-29",
+      "time": "점심",
+      "place": "쿠차라 코엑스점",
+      "attendees": [
+        "지훈",
+        "다인",
+        "미진",
+        "유진"
+      ],
+      "links": [
+        {
+          "label": "삼성역 거점방",
+          "url": "https://invite.kakao.com/tc/7Y2158XTkH"
+        }
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "pangyo-first",
+      "title": "판교역 거점방 첫 모임",
+      "host": "안상진",
+      "capacity": 10,
+      "date": "2026-06-30",
+      "time": "6pm",
+      "place": "달맞이광장 바베큐",
+      "attendees": [
+        "상진",
+        "순호",
+        "금빈",
+        "유진"
+      ],
+      "links": [
+        {
+          "label": "판교역 거점방",
+          "url": "https://invite.kakao.com/tc/ykCTbRWQ7R"
+        }
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "gangnam-hub",
+      "title": "강남역 거점 모임",
+      "capacity": 8,
+      "capacityText": "8인",
+      "date": "2026-07-01",
+      "time": "7pm",
+      "place": "전설의우대갈비 강남직영점",
+      "placeUrl": "https://naver.me/xUZaPmdD",
+      "address": "서울 강남구 강남대로94길 10 3층 1호",
+      "note": "예약자명: 차현직\n대기 2인 모집합니다.",
+      "attendees": [],
+      "links": [
+        {
+          "label": "강남역 거점방",
+          "url": "https://invite.kakao.com/tc/8SQSk5hnDD"
+        }
+      ],
+      "status": "waitlist"
+    },
+    {
+      "id": "misikhoe-pavlo",
+      "title": "유스미식회: PAVLO GRILL & BAR",
+      "host": "오주은",
+      "capacity": 4,
+      "date": "2026-07-09",
+      "time": "7pm",
+      "place": "PAVLO GRILL & BAR (광화문 일대)",
+      "attendees": [],
+      "formUrl": "https://forms.gle/QT3MjrQjWapMxtqX6",
+      "status": "auto"
+    },
+    {
+      "id": "gwanghwamun-first",
+      "title": "광화문 거점방 첫 모임",
+      "capacity": 8,
+      "date": "2026-07-10",
+      "time": "7pm",
+      "place": "멘노아지 종로점",
+      "placeUrl": "https://naver.me/FxCCw2Vw",
+      "note": "예약자명: 차현직",
+      "attendees": [
+        "산성",
+        "연주",
+        "환준",
+        "은주",
+        "수진"
+      ],
+      "links": [
+        {
+          "label": "광화문역 거점방",
+          "url": "https://invite.kakao.com/tc/R5S0sk7pZR"
+        }
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "us-wine-cheongdam",
+      "title": "미국 와인 테이스팅 in 청담",
+      "host": "직차",
+      "capacity": 8,
+      "date": "2026-07-11",
+      "time": "6pm",
+      "place": "피카 청담 (프라이빗 공간)",
+      "fee": "110,000원 (식대 + 와인)",
+      "note": "식사 구성: 웨스턴 코스 + 페어링 와인",
+      "attendees": [
+        "직차",
+        "대승",
+        "경태"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "coffee-day",
+      "title": "유스클럽 커피 데이",
+      "date": "2026-07-19",
+      "time": "11AM-1PM",
+      "place": "강남역 앙트레블 (CGV 뒷편)",
+      "note": "유스클럽의 구성원들과 건강하고 깊이있는 커피 네트워킹을 즐길 수 있는 기회입니다.",
+      "attendees": [],
+      "formUrl": "https://forms.gle/US4D5WT1WuukrtqR7",
+      "status": "auto"
+    },
+    {
+      "id": "bookclub-july",
+      "title": "유스클럽 독서모임: 엉킨 북스 7월 모임",
+      "host": "이성환",
+      "capacity": 10,
+      "date": "2026-07-25",
+      "time": "1-5pm",
+      "place": "공간더하기 강남타워점",
+      "fee": "15,000원 (1회, 장소 대관 용도)",
+      "note": "도서: 시계태엽 오렌지 (앤서니 버지스)\n뒷풀이 있습니다.",
+      "attendees": [
+        "성환",
+        "혜연",
+        "지혜",
+        "병관"
+      ],
+      "links": [
+        {
+          "label": "독서모임 종합 단톡방",
+          "url": "https://invite.kakao.com/tc/n8OxUHGhuh"
+        }
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "ev-mseeoa3h-new",
+      "title": "유스미식회: 이목(유용욱 바베큐연구소장)",
+      "host": "윤태웅",
+      "date": "2026-08-14",
+      "time": "6:30pm",
+      "place": "이목 스모크다이닝(가로수길)",
+      "attendees": [],
+      "formUrl": "https://forms.gle/xH9Yc13rJMjB9Zpw6",
+      "status": "auto"
+    },
+    {
+      "id": "ev-msepvyb-new",
+      "title": "YC Insight Day",
+      "date": "2026-08-21",
+      "time": "7pm",
+      "place": "강남역 일대(TBD)",
+      "note": "곧 상세 정보가 업데이트됩니다.",
+      "attendees": [],
+      "status": "auto"
+    }
+  ]
+}
