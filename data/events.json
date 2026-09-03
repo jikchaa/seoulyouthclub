@@ -1,5 +1,5 @@
 {
-  "updated": "2026-08-26",
+  "updated": "2026-09-03",
   "events": [
     {
       "id": "wine-liam-noahs",
@@ -273,7 +273,8 @@
       "place": "Andaz Seoul Gangnam",
       "attendees": [],
       "formUrl": "https://forms.gle/n2RFgB9f8EizMuQd7",
-      "status": "auto"
+      "status": "auto",
+      "image": "posters/networking-andaz-mtl7lvu3.jpg"
     },
     {
       "id": "family-dinner-noryangjin",
