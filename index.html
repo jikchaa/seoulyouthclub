@@ -167,6 +167,25 @@
 
   .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.82rem; }
 
+  /* ---------- 대형 이벤트: 참석 소속 ---------- */
+
+  /* 개인 명단 대신 소속을 보인다. 한 줄로 흘러 붙지 않게 각각을 상자에 담는다. */
+  .orgs { display: flex; flex-direction: column; gap: 0.55rem; }
+  .orgs-lead {
+    font-size: 0.82rem; color: var(--text-3);
+    letter-spacing: 0.01em;
+  }
+  .orgs-list { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .org {
+    display: inline-block;
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+    padding: 0.2rem 0.55rem;
+    font-size: 0.82rem;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
   /* ---------- 신청 폼 ---------- */
 
   .signup {
@@ -408,6 +427,24 @@
      신청한 사람들이고, 그 뒤에 웹으로 신청한 순서가 붙는다. */
   function norm(a) { return typeof a === "string" ? { name: a } : a; }
 
+  /* 소모임은 참석자 이름을, 대형 이벤트는 소속만 보인다. */
+  function isBigEvent(ev) { return ev.kind === "event"; }
+
+  /* 알파벳순, 중복 제거. 표기는 입력한 그대로 둔다. */
+  function orgList(ev) {
+    var seen = {}, out = [];
+    (ev.orgs || []).forEach(function (o) {
+      var name = String(o || "").trim();
+      if (!name) return;
+      var k = name.toLowerCase();
+      if (seen[k]) return;
+      seen[k] = 1; out.push(name);
+    });
+    return out.sort(function (a, b) {
+      return a.toLowerCase().localeCompare(b.toLowerCase(), "en");
+    });
+  }
+
   function roster(ev) {
     var all = (ev.attendees || []).map(norm).concat((state.signups[ev.id] || []).map(norm));
     if (!ev.capacity || all.length <= ev.capacity) return { going: all, waiting: [] };
@@ -416,6 +453,8 @@
 
   function effectiveStatus(ev) {
     if (ev.status && ev.status !== "auto") return ev.status;
+    /* 대형 이벤트는 명단으로 마감을 판단하지 않는다 — 정원 개념이 다르다. */
+    if (isBigEvent(ev)) return "open";
     var r = roster(ev);
     if (ev.capacity && r.going.length >= ev.capacity) return "waitlist";
     return "open";
@@ -504,7 +543,20 @@
     return dl;
   }
 
+  function buildOrgs(ev) {
+    var list = orgList(ev);
+    if (!list.length) return null;
+    var box = el("div", "orgs");
+    box.appendChild(el("p", "orgs-lead", "We will welcome the attendees from"));
+    var row = el("div", "orgs-list");
+    list.forEach(function (name) { row.appendChild(el("span", "org", name)); });
+    box.appendChild(row);
+    return box;
+  }
+
   function buildAttend(ev) {
+    if (isBigEvent(ev)) return buildOrgs(ev);
+
     var box = el("div", "attend");
     var r = roster(ev);
     var status = effectiveStatus(ev);
@@ -551,14 +603,13 @@
     var status = effectiveStatus(ev);
     if (status === "closed" || daysUntil(ev.date) < 0) return null;
 
-    /* 접수 서버가 없으면 기존 방식으로 떨어진다. */
-    if (!SIGNUP_ENDPOINT) {
-      if (ev.formUrl) {
-        var a = link(ev.formUrl, "참석 신청하기");
-        if (a.tagName === "A") { a.className = "apply"; return a; }
-      }
-      return null;
+    /* 구글폼 주소를 넣어둔 이벤트는 그쪽으로 보낸다 — 관리자가 일부러 지정한 경로다.
+       비어 있을 때만 페이지 안의 신청 폼을 쓴다. */
+    if (ev.formUrl) {
+      var a = link(ev.formUrl, "참석 신청하기");
+      if (a.tagName === "A") { a.className = "apply"; return a; }
     }
+    if (!SIGNUP_ENDPOINT) return null;
 
     var r = roster(ev);
     var full = ev.capacity && r.going.length >= ev.capacity;
@@ -697,7 +748,8 @@
     if (thumb) main.appendChild(thumb);
     body.appendChild(main);
 
-    body.appendChild(buildAttend(ev));
+    var attend = buildAttend(ev);
+    if (attend) body.appendChild(attend);
 
     if (ev.links && ev.links.length) {
       var links = el("div", "links");
@@ -758,7 +810,8 @@
     detailBody.appendChild(head);
 
     detailBody.appendChild(buildFields(ev));
-    detailBody.appendChild(buildAttend(ev));
+    var dAttend = buildAttend(ev);
+    if (dAttend) detailBody.appendChild(dAttend);
 
     if (ev.links && ev.links.length) {
       var links = el("div", "links");
@@ -794,7 +847,7 @@
     document.getElementById("pastSummary").textContent = "지난 모임 " + g.past.length;
 
     var openSeats = g.upcoming.reduce(function (sum, ev) {
-      if (!ev.capacity || effectiveStatus(ev) === "closed") return sum;
+      if (isBigEvent(ev) || !ev.capacity || effectiveStatus(ev) === "closed") return sum;
       return sum + Math.max(0, ev.capacity - roster(ev).going.length);
     }, 0);
 

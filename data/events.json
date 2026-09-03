@@ -274,7 +274,8 @@
       "attendees": [],
       "formUrl": "https://forms.gle/n2RFgB9f8EizMuQd7",
       "status": "auto",
-      "image": "posters/networking-andaz-mtl7lvu3.jpg"
+      "image": "posters/networking-andaz-mtl7lvu3.jpg",
+      "kind": "event"
     },
     {
       "id": "family-dinner-noryangjin",

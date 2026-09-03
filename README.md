@@ -72,6 +72,8 @@
   "fee": "205,000원",
   "note": "줄바꿈으로 여러 줄 가능",
   "image": "posters/grand-hyatt.jpg",
+  "kind": "event",
+  "orgs": ["Google", "Amazon", "Apple"],
   "attendees": ["직차", "성보"],
   "formUrl": "https://forms.gle/...",
   "links": [{ "label": "강남역 거점방", "url": "https://invite.kakao.com/tc/..." }],
@@ -79,6 +81,10 @@
 }
 ```
 
+- `kind` 가 `"event"` 면 대형 이벤트로 본다 — 참석자 이름 대신 `orgs` 를 알파벳순
+  상자로 보여주고, 좌석 눈금과 대기 판정을 하지 않는다. 비우면 소모임(기본)이다.
+- `orgs` 는 참석 소속 목록. 관리자 화면에서 쉼표로 적으면 된다.
+- `formUrl` 을 채우면 그 구글폼으로 보낸다. 비우면 페이지 안의 신청 폼을 쓴다.
 - 요일은 `date` 에서 자동으로 계산한다. `time` 에는 시간만 적는다.
 - `attendees` 는 카톡에서 받아 적은 사람들이다. 웹 신청자는 그 **뒤에** 순서대로 붙는다.
 - `capacity` 를 채우면 좌석 눈금이 생기고, 다 차면 이후 신청은 **대기**로 넘어간다.

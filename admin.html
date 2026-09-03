@@ -163,6 +163,14 @@
   .poster-actions label.btn { cursor: pointer; }
   .poster-meta { font-size: .72rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
 
+  /* 소속 미리보기 */
+  .org-preview { display: flex; flex-wrap: wrap; gap: .35rem; margin-top: .15rem; }
+  .org-preview span {
+    display: inline-block; border: 1px solid var(--line-strong); border-radius: 2px;
+    padding: .15rem .5rem; font-size: .8rem; color: var(--text); white-space: nowrap;
+  }
+  .org-preview:empty { display: none; }
+
   /* 참석자 칩 */
   .chips-box {
     background: var(--surface); border: 1px solid var(--line-strong); border-radius: 2px;
@@ -274,6 +282,7 @@
     <span class="spacer"></span>
     <a class="btn btn-quiet" href="index.html" target="_blank" rel="noopener">공개 페이지 ↗</a>
     <button type="button" class="btn btn-quiet" id="btnToken">토큰</button>
+    <button type="button" class="btn btn-quiet" id="btnLock">잠그기</button>
     <button type="button" class="btn btn-quiet btn-danger" id="btnRevert">되돌리기</button>
   </div>
 
@@ -297,6 +306,22 @@
             <label for="f_title">이벤트명</label>
             <input id="f_title" name="title" required placeholder="유스미식회: 키이로" />
           </div>
+          <div class="field wide">
+            <label for="f_kind">종류</label>
+            <select id="f_kind" name="kind">
+              <option value="group">소모임 — 참석자 이름을 그대로 보여줌 (직차, 성보, 주은…)</option>
+              <option value="event">이벤트 — 이름 대신 참석 소속을 보여줌</option>
+            </select>
+          </div>
+
+          <div class="field wide" id="orgsField" hidden>
+            <label for="f_orgs">참석 소속</label>
+            <input id="f_orgs" name="orgs" placeholder="google, amazon, apple" />
+            <span class="help">쉼표로 구분해 적으면 알파벳순으로 정렬해 하나씩 상자에 담아 보여줍니다.
+              공개 페이지에는 <b>We will welcome the attendees from</b> 아래에 놓입니다.</span>
+            <div class="org-preview" id="orgPreview"></div>
+          </div>
+
           <div class="field">
             <label for="f_host">호스트 <span class="opt">선택</span></label>
             <input id="f_host" name="host" placeholder="김지훈" />
@@ -338,7 +363,7 @@
             <span class="help">3:4로 잘라서 1200px, JPEG로 저장합니다. 게시할 때 저장소에 함께 올라갑니다.</span>
           </div>
 
-          <div class="field wide">
+          <div class="field wide" id="attendField">
             <label for="f_attendInput">참석자 <span class="opt">카톡에서 받은 사람</span></label>
             <div class="chips-box" id="chipsBox">
               <span id="chips"></span>
@@ -452,7 +477,7 @@
    * 토큰은 이 브라우저(localStorage)에만 있다. 저장소에 커밋되지 않는다.
    * ------------------------------------------------------------------ */
 
-  var PASSCODE_HASH = "1659f09c01cc1414ae221c0007b6a7630194b7e937a9729ddfdca6bd71a8bed2";
+  var PASSCODE_HASH = "ed0478973a6c233d4cba8a20af7c6a156599c88e5f6dfdd8ea10cdbf2c8c4cfd";
   var OWNER = "jikchaa";
   var REPO = "seoulyouthclub";
   var BRANCH = "main";
@@ -727,6 +752,38 @@
   var form = document.getElementById("form");
   var placeholder = document.getElementById("placeholder");
   var TEXT = ["title","host","place","time","note","fee","address","capacityText"];
+
+  /* 알파벳순, 중복 제거 — 공개 페이지와 같은 규칙이어야 미리보기가 거짓말을 하지 않는다. */
+  function orgList(ev) {
+    var seen = {}, out = [];
+    (ev.orgs || []).forEach(function (o) {
+      var name = String(o || "").trim();
+      if (!name) return;
+      var k = name.toLowerCase();
+      if (seen[k]) return;
+      seen[k] = 1; out.push(name);
+    });
+    return out.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase(), "en"); });
+  }
+
+  /* 종류에 따라 무엇을 묻는지가 달라진다. 안 쓰는 칸은 숨긴다. */
+  function applyKind(ev) {
+    var isEvent = ev.kind === "event";
+    document.getElementById("orgsField").hidden = !isEvent;
+    document.getElementById("attendField").hidden = isEvent;
+    renderOrgPreview(ev);
+  }
+
+  function renderOrgPreview(ev) {
+    var box = document.getElementById("orgPreview");
+    box.textContent = "";
+    if (ev.kind !== "event") return;
+    orgList(ev).forEach(function (name) {
+      var s = document.createElement("span");
+      s.textContent = name;
+      box.appendChild(s);
+    });
+  }
   var URLS = ["formUrl","placeUrl"];
 
   function select(id) {
@@ -739,6 +796,8 @@
     document.getElementById("f_date").value = ev.date || "";
     document.getElementById("f_capacity").value = ev.capacity ? String(ev.capacity) : "";
     document.getElementById("f_status").value = ev.status || "auto";
+    document.getElementById("f_kind").value = ev.kind === "event" ? "event" : "group";
+    document.getElementById("f_orgs").value = (ev.orgs || []).join(", ");
     document.getElementById("f_links").value =
       (ev.links || []).map(function (l) { return l.label + " | " + l.url; }).join("\n");
 
@@ -746,6 +805,7 @@
       ev.address || ev.placeUrl || (ev.links && ev.links.length) || (ev.status && ev.status !== "auto"));
 
     attendInput.value = "";
+    applyKind(ev);
     renderChips(ev); renderPoster(ev); renderSignups(ev);
     renderList(); renderKakao();
   }
@@ -770,6 +830,14 @@
     }).filter(Boolean);
     if (links.length) ev.links = links; else delete ev.links;
     ev.status = document.getElementById("f_status").value;
+
+    var kind = document.getElementById("f_kind").value;
+    if (kind === "event") ev.kind = "event"; else delete ev.kind;
+
+    var orgs = String(document.getElementById("f_orgs").value || "")
+      .split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+    if (orgs.length && kind === "event") ev.orgs = orgs; else delete ev.orgs;
+
     if (!ev.attendees) ev.attendees = [];
   }
 
@@ -777,6 +845,7 @@
     var ev = findEvent(selectedId);
     if (ev) {
       document.getElementById("formTitle").textContent = ev.title || "새 이벤트";
+      applyKind(ev);
       renderSignups(ev);
     }
     state.updated = toISO(new Date());
@@ -835,11 +904,17 @@
       if (ev.placeUrl) lines.push(ev.placeUrl);
       if (ev.fee) lines.push("회비: " + ev.fee);
       if (ev.note) lines.push("비고: " + ev.note);
-      if (r.going.length) {
-        lines.push("참석: " + r.going.map(function (a) { return a.name; }).join(", ") +
-          (status === "closed" ? "" : " (이어주세요)"));
+      if (ev.kind === "event") {
+        /* 대형 이벤트는 공지에도 개인 이름 대신 소속을 싣는다. */
+        var orgs = orgList(ev);
+        if (orgs.length) lines.push("참석 소속: " + orgs.join(", "));
+      } else {
+        if (r.going.length) {
+          lines.push("참석: " + r.going.map(function (a) { return a.name; }).join(", ") +
+            (status === "closed" ? "" : " (이어주세요)"));
+        }
+        if (r.waiting.length) lines.push("대기: " + r.waiting.map(function (a) { return a.name; }).join(", "));
       }
-      if (r.waiting.length) lines.push("대기: " + r.waiting.map(function (a) { return a.name; }).join(", "));
       if (ev.formUrl && status !== "closed") lines.push("참석 신청하기: " + ev.formUrl);
       (ev.links || []).forEach(function (l) { if (l && l.url) lines.push((l.label ? l.label + ": " : "") + l.url); });
       lines.push("");
@@ -1023,6 +1098,13 @@
     tokenSheet.showModal();
   }
   document.getElementById("btnToken").addEventListener("click", openToken);
+
+  document.getElementById("btnLock").addEventListener("click", function () {
+    if (isDirty() && !confirm("저장하지 않은 변경이 있습니다. 그대로 잠글까요?")) return;
+    /* 암호 통과 표시만 지운다. 토큰과 키는 그대로 둔다 — 다시 넣기 번거롭다. */
+    store(K_UNLOCK, null);
+    location.reload();
+  });
   document.getElementById("tokenClose").addEventListener("click", function () { tokenSheet.close(); });
   document.getElementById("tokenSave").addEventListener("click", function () {
     var v = document.getElementById("tokenInput").value.trim();
