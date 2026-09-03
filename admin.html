@@ -424,6 +424,11 @@
       <li>생성된 <code>github_pat_…</code> 를 아래에 붙여넣기</li>
     </ol>
     <input type="password" id="tokenInput" placeholder="github_pat_..." autocomplete="off" />
+
+    <h2 style="margin-top:.6rem">신청자 조회 키</h2>
+    <p>신청자의 휴대폰 번호를 이 화면에서 보려면 필요합니다. Apps Script 코드 맨 위의
+      <code>ADMIN_KEY</code> 값과 같아야 합니다. 이것도 이 브라우저에만 저장됩니다.</p>
+    <input type="password" id="keyInput" placeholder="Apps Script 의 ADMIN_KEY" autocomplete="off" />
   </div>
   <div class="sheet-foot">
     <button type="button" class="btn btn-primary" id="tokenSave">저장</button>
@@ -454,6 +459,7 @@
   var DATA_PATH = "data/events.json";
 
   var K_TOKEN = "yclub.gh.token";
+  var K_ADMINKEY = "yclub.signup.key";
   var K_UNLOCK = "yclub.admin.unlocked";
 
   var DOW = ["일","월","화","수","목","금","토"];
@@ -463,7 +469,7 @@
   /* published = 저장소에 올라가 있는 그대로. dirty 판정의 기준선이다. */
   var state = {
     events: [], updated: "", sha: null,
-    published: "", signups: {}, endpoint: "", adminKey: "",
+    published: "", signups: {}, endpoint: "",
     newPosters: {}   // path -> dataURL (아직 저장소에 없는 포스터)
   };
   var selectedId = null;
@@ -475,6 +481,9 @@
   }
   function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function token() { return read(K_TOKEN) || ""; }
+  /* 신청자 조회 키는 공개 파일에 둘 수 없다 — data/config.json 은 누구나 읽는다.
+     이 브라우저에만 보관하고, 여기서만 번호를 불러온다. */
+  function adminKey() { return read(K_ADMINKEY) || ""; }
 
   /* ---------------- 날짜 ---------------- */
 
@@ -1010,22 +1019,34 @@
   var tokenSheet = document.getElementById("tokenSheet");
   function openToken() {
     document.getElementById("tokenInput").value = token();
+    document.getElementById("keyInput").value = adminKey();
     tokenSheet.showModal();
   }
   document.getElementById("btnToken").addEventListener("click", openToken);
   document.getElementById("tokenClose").addEventListener("click", function () { tokenSheet.close(); });
   document.getElementById("tokenSave").addEventListener("click", function () {
     var v = document.getElementById("tokenInput").value.trim();
+    var k = document.getElementById("keyInput").value.trim();
     store(K_TOKEN, v || null);
+    store(K_ADMINKEY, k || null);
     tokenSheet.close();
     renderState();
-    toast(v ? "토큰을 저장했습니다." : "토큰을 지웠습니다.");
+    toast("저장했습니다.");
+    if (k) loadSignups().then(function () {
+      var ev = findEvent(selectedId);
+      if (ev) renderSignups(ev);
+      renderList();
+    });
   });
   document.getElementById("tokenClear").addEventListener("click", function () {
-    store(K_TOKEN, null);
+    store(K_TOKEN, null); store(K_ADMINKEY, null);
     document.getElementById("tokenInput").value = "";
-    tokenSheet.close(); renderState();
-    toast("토큰을 지웠습니다.");
+    document.getElementById("keyInput").value = "";
+    state.signups = {};
+    tokenSheet.close(); renderState(); renderList();
+    var ev = findEvent(selectedId);
+    if (ev) renderSignups(ev);
+    toast("토큰과 키를 지웠습니다.");
   });
 
   /* ---------------- toast ---------------- */
@@ -1048,7 +1069,8 @@
 
   function loadSignups() {
     if (!state.endpoint) return Promise.resolve();
-    var url = state.endpoint + "?action=phones&key=" + encodeURIComponent(state.adminKey) + "&t=" + Date.now();
+    if (!adminKey()) return Promise.resolve();
+    var url = state.endpoint + "?action=phones&key=" + encodeURIComponent(adminKey()) + "&t=" + Date.now();
     return fetch(url).then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { if (d && d.ok && d.signups) state.signups = d.signups; })
       .catch(function () { /* 신청자를 못 불러와도 편집은 된다. */ });
@@ -1061,7 +1083,7 @@
     fetch("data/config.json?t=" + Date.now())
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (c) {
-        if (c) { state.endpoint = c.signupEndpoint || ""; state.adminKey = c.adminKey || ""; }
+        if (c) state.endpoint = c.signupEndpoint || "";
         return loadSignups();
       })
       .then(function () {
