@@ -402,7 +402,7 @@
   var STATUS_LABEL = { open: "모집중", closed: "마감", waitlist: "대기 모집중" };
   var STATUS_WEIGHT = { open: 0, waitlist: 1, closed: 2 };
 
-  var state = { events: [], updated: "", signups: {} };
+  var state = { events: [], updated: "", counts: {} };
 
   /* ---------------- 날짜 ---------------- */
 
@@ -447,8 +447,11 @@
     });
   }
 
+  /* 카톡에서 받아 적은 사람만 이름이 있다. 웹 신청자는 숫자로만 오므로
+     자리만 차지하는 익명 항목으로 넣는다 — 눈금과 순번은 그대로 맞는다. */
   function roster(ev) {
-    var all = (ev.attendees || []).map(norm).concat((state.signups[ev.id] || []).map(norm));
+    var all = (ev.attendees || []).map(norm);
+    for (var w = state.counts[ev.id] || 0; w > 0; w--) all.push({ name: null });
     if (!ev.capacity || all.length <= ev.capacity) return { going: all, waiting: [] };
     return { going: all.slice(0, ev.capacity), waiting: all.slice(ev.capacity) };
   }
@@ -565,12 +568,17 @@
 
     if (r.going.length) {
       var names = el("div", "attend-names");
-      r.going.forEach(function (a, i) {
+      var named = r.going.filter(function (a) { return a.name; });
+      named.forEach(function (a, i) {
         if (i) names.appendChild(document.createTextNode(", "));
-        var n = el("span", "n", (i + 1) + " ");
-        names.appendChild(n);
+        names.appendChild(el("span", "n", (i + 1) + " "));
         names.appendChild(document.createTextNode(a.name));
       });
+      var anon = r.going.length - named.length;
+      if (anon) {
+        if (named.length) names.appendChild(document.createTextNode(", "));
+        names.appendChild(document.createTextNode("웹 신청 " + anon + "명"));
+      }
       box.appendChild(names);
     } else if (status === "closed") {
       box.appendChild(el("div", "attend-empty", "마감된 모임입니다."));
@@ -579,8 +587,11 @@
     }
 
     if (r.waiting.length) {
-      box.appendChild(el("div", "attend-wait",
-        "대기 " + r.waiting.map(function (a) { return a.name; }).join(", ")));
+      var wait = r.waiting.filter(function (a) { return a.name; })
+        .map(function (a) { return a.name; });
+      var wAnon = r.waiting.length - wait.length;
+      if (wAnon) wait.push("웹 신청 " + wAnon + "명");
+      box.appendChild(el("div", "attend-wait", "대기 " + wait.join(", ")));
     }
 
     if (ev.capacity) {
@@ -691,7 +702,7 @@
     return fetch(SIGNUP_ENDPOINT + "?action=list&t=" + Date.now())
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (d && d.ok && d.signups) { state.signups = d.signups; render(); }
+        if (d && d.ok && d.counts) { state.counts = d.counts; render(); }
       })
       .catch(function () { /* 명단을 못 불러와도 페이지는 그대로 보인다. */ });
   }
