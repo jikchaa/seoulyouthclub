@@ -13,8 +13,12 @@
  *      실행: 나 / 액세스: 모든 사용자 → 배포 → /exec URL 복사
  */
 
-/* 관리자 화면에서 번호를 불러올 때 쓰는 열쇠. 아무에게도 주지 말 것. */
-var ADMIN_KEY = 'XPuTp2Fr52XqvgvHw-V6QOtu71yBsTAG';
+/* 관리자 열쇠는 코드에 적지 않는다. 이 저장소는 공개이므로 여기 적으면
+   접수 주소와 열쇠가 한자리에 놓여 누구나 번호를 받아 갈 수 있다.
+   Apps Script → 프로젝트 설정 → 스크립트 속성에 ADMIN_KEY 를 넣어 둔다. */
+function adminKey_() {
+  return PropertiesService.getScriptProperties().getProperty('ADMIN_KEY') || '';
+}
 
 /* 정원을 여기서 따로 관리하지 않는다. 공개된 이벤트 데이터가 유일한 출처다. */
 var EVENTS_URL = 'https://jikchaa.github.io/seoulyouthclub/data/events.json';
@@ -87,9 +91,9 @@ function rosterOf_(eventId, all) {
 }
 
 /* ------------------------------------------------------------------ *
- * GET — 공개. 이름과 순번만 나간다.
- *   ?action=list                     모든 이벤트의 명단
- *   ?action=phones&key=ADMIN_KEY     관리자 전용, 번호 포함
+ * GET — 공개 응답에는 숫자만 나간다. 이름도 번호도 싣지 않는다.
+ *   ?action=list                     이벤트별 접수 인원 수
+ *   ?action=phones&key=ADMIN_KEY     관리자 전용, 이름과 번호
  * ------------------------------------------------------------------ */
 
 function doGet(e) {
@@ -97,7 +101,9 @@ function doGet(e) {
   var action = params.action || 'list';
 
   if (action === 'phones') {
-    if (params.key !== ADMIN_KEY) {
+    var key = adminKey_();
+    /* 속성이 비어 있으면 어떤 요청도 통과시키지 않는다 — 빈 열쇠로 뚫리면 안 된다. */
+    if (!key || params.key !== key) {
       return json_({ ok: false, error: 'not authorized' });
     }
     var full = {};
@@ -115,13 +121,14 @@ function doGet(e) {
 
   if (action !== 'list') return json_({ ok: false, error: 'unknown action' });
 
-  var out = {};
+  /* 좌석 눈금과 대기 판정에 필요한 것은 숫자뿐이다. 접수 주소는 공개
+     저장소에 들어 있어 누구나 부를 수 있으므로, 이름은 내주지 않는다. */
+  var counts = {};
   rows_().forEach(function (r) {
     var id = String(r[1]);
-    if (!out[id]) out[id] = [];
-    out[id].push({ name: String(r[3]) });   // 번호는 여기에 절대 넣지 않는다
+    counts[id] = (counts[id] || 0) + 1;
   });
-  return json_({ ok: true, signups: out });
+  return json_({ ok: true, counts: counts });
 }
 
 /* ------------------------------------------------------------------ *
