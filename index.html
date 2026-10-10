@@ -513,6 +513,27 @@
   }
   .month-div::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
+  .featured { margin-top: 2.2rem; }
+  .featured .section-label { margin-top: 0.6rem; }
+  .featured[hidden] { display: none; }
+  .cover {
+    display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); gap: 2rem;
+    padding: 1.8rem 0 2rem; border-bottom: 2px solid var(--text-2);
+  }
+  .cover.no-image { grid-template-columns: minmax(0, 1fr); }
+  .cover-poster { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border: 1px solid var(--line); display: block; }
+  .cover-body { min-width: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+  .cover-k { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.18em; color: var(--accent); }
+  .cover-title { margin: 0; font-size: 2rem; line-height: 1.15; letter-spacing: -0.03em; font-weight: 700; text-wrap: balance; }
+  .cover-body .fields { margin-top: 0.2rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .cover-body .event-desc { margin: 0; }
+  .cover-body .row-btn { align-self: flex-start; margin-top: 0.3rem; text-decoration: none; }
+  @media (max-width: 47.99rem) {
+    .cover { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; padding: 1.4rem 0 1.6rem; }
+    .cover-poster { aspect-ratio: 4 / 5; }
+    .cover-title { font-size: 1.5rem; }
+  }
+
   .event-desc { margin: 0 0 1rem; font-size: 0.92rem; line-height: 1.7; color: var(--text-2); white-space: pre-line; }
   .verify-note { margin: 1.2rem 0 0; font-size: 0.78rem; color: var(--text-2); }
 
@@ -546,6 +567,7 @@
   <main>
     <p class="section-label section-members">Members Only</p>
     <div class="filters" id="filters" role="group" aria-label="모임 종류"></div>
+    <section class="featured" id="featured" aria-label="대형 모임" hidden></section>
     <div class="list" id="upcomingList"></div>
 
     <section class="past" id="pastWrap" hidden>
@@ -999,6 +1021,61 @@
     return b;
   }
 
+  /* 대형 행사는 목록 위에 커버 카드로 고정한다. 예정 모임이 먼저, 지난 모임은 그 뒤에. */
+  function renderCover(ev) {
+    var past = daysUntil(ev.date) < 0;
+    var src = posterSrc(ev.image);
+    var cover = el("article", "cover" + (src ? "" : " no-image"));
+    if (past) cover.classList.add("is-past");
+
+    if (src) {
+      var img = el("img", "cover-poster");
+      img.src = src;
+      img.alt = ev.title + " 포스터";
+      img.loading = "lazy";
+      cover.appendChild(img);
+    }
+
+    var body = el("div", "cover-body");
+    var d = parseDate(ev.date);
+    body.appendChild(el("div", "cover-k", "FEATURED · " + pad(d.getMonth() + 1) + "." + pad(d.getDate()) + " " + DOW_EN[d.getDay()] + (past ? " · 종료" : "")));
+    body.appendChild(el("h2", "cover-title", ev.title));
+    if (ev.desc) body.appendChild(el("p", "event-desc", ev.desc));
+    body.appendChild(buildFields(ev));
+    if (ev.links && ev.links.length) {
+      var links = el("div", "links");
+      ev.links.forEach(function (l) { if (l && l.url) links.appendChild(link(l.url, l.label || l.url)); });
+      if (links.childNodes.length) body.appendChild(links);
+    }
+
+    var act;
+    if (past) {
+      act = el("span", "row-btn off", "종료된 모임");
+    } else if (safeUrl(ev.formUrl)) {
+      act = el("a", "row-btn", "신청하기");
+      act.href = safeUrl(ev.formUrl);
+      act.target = "_blank";
+      act.rel = "noopener noreferrer";
+    } else {
+      act = el("span", "row-btn off", "신청 준비 중");
+    }
+    body.appendChild(act);
+    cover.appendChild(body);
+    return cover;
+  }
+
+  function renderFeatured() {
+    var box = document.getElementById("featured");
+    var bigs = state.events.filter(isBigEvent);
+    box.textContent = "";
+    if (!bigs.length) { box.hidden = true; return; }
+    var up = bigs.filter(function (ev) { return daysUntil(ev.date) >= 0; });
+    var pa = bigs.filter(function (ev) { return daysUntil(ev.date) < 0; });
+    box.hidden = false;
+    box.appendChild(el("p", "section-label section-members", "Featured"));
+    sortByDate(up).concat(sortByDate(pa).reverse()).forEach(function (ev) { box.appendChild(renderCover(ev)); });
+  }
+
   var MONTH_NAMES = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
 
   /* 월이 바뀌는 자리에 'NOVEMBER' 같은 구분선을 넣는다. */
@@ -1174,13 +1251,16 @@
     renderNotices();
     renderFilters();
 
-    var up = g.upcoming.filter(passTag);
-    var pa = g.past.filter(passTag);
+    renderFeatured();
+
+    var normalUp = g.upcoming.filter(function (ev) { return !isBigEvent(ev); });
+    var up = normalUp.filter(passTag);
+    var pa = g.past.filter(function (ev) { return !isBigEvent(ev) && passTag(ev); });
 
     upcomingList.textContent = "";
     if (up.length) {
       appendRows(upcomingList, up);
-    } else if (g.upcoming.length) {
+    } else if (normalUp.length) {
       upcomingList.appendChild(el("p", "empty", "이 종류의 예정 모임은 아직 없습니다."));
     } else {
       upcomingList.appendChild(el("p", "empty", "예정된 모임이 아직 없습니다. 곧 새로운 소식으로 찾아올게요."));
