@@ -488,33 +488,69 @@
     .row-title h3 { font-size: 1.02rem; }
     .announce { padding-top: 2.4rem; }
   }
+
+  /* ================= A-2 시안 맞춤 ================= */
+  .topbar-brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--text); }
+  .topbar-brand .sq {
+    display: grid; place-items: center; width: 2.3rem; height: 2.3rem;
+    background: var(--accent-solid); color: #fff;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em;
+  }
+  .topbar-brand .bn { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.01em; }
+
+  .announce { padding: 1.6rem 0 1.2rem; }
+  .topbar { border-bottom: 2px solid var(--text); }
+
+  .masthead { padding: 2.4rem 0 1.8rem; }
+  @media (max-width: 47.99rem) { .masthead { padding-top: 1.6rem; } }
+  .masthead h1 {
+    font-size: clamp(2.1rem, 8.6vw, 6rem);
+    line-height: 0.95; letter-spacing: -0.045em;
+  }
+  .masthead-meta {
+    display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1rem;
+    margin-top: 1.1rem; font-size: 0.8rem; color: var(--text-3);
+  }
+  @media (min-width: 48rem) {
+    .masthead h1 { font-size: clamp(3.4rem, 7.6vw, 6rem); }
+    .masthead-meta { margin-top: 1.3rem; }
+  }
+
+  .list > .row:last-child { border-bottom: 2px solid var(--text-2); }
+  .row[data-state="closed"]:not(.is-past) { opacity: 0.5; }
+
+  .verify-note { margin: 1.2rem 0 0; font-size: 0.78rem; color: var(--text-2); }
+
+  .foot {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    font-size: 0.75rem; color: var(--text-3);
+  }
 </style>
 </head>
 <body>
 
 <div class="shell">
   <nav class="topbar" aria-label="메인 메뉴">
-    <a class="topbar-brand" href="index.html"><img src="assets/logo.png" alt="YOUTH CLUB SEOUL" /></a>
+    <a class="topbar-brand" href="index.html"><span class="sq">YOUTH</span><span class="bn">YOUTH CLUB SEOUL</span></a>
     <ul class="topbar-nav">
       <li><a href="index.html" class="on" aria-current="page">Events</a></li>
       <li><a href="yclb-index.html">Index</a></li>
       <li><a href="about.html">About</a></li>
     </ul>
   </nav>
-  <section class="announce" id="announce" hidden>
-    <div class="notice-list" id="noticeList"></div>
-  </section>
 
   <header class="masthead">
     <div class="masthead-top">
       <h1>Upcoming Events</h1>
     </div>
     <div class="masthead-meta">
-      <span id="statSeats">&mdash;</span>
-      <span id="statUpdated">&mdash;</span>
-      <span id="statVerified" class="legend" hidden></span>
+      <span>2026년 10월 · 서울</span>
+      <span>Members-only gatherings · 참석자 이름만 공개</span>
     </div>
   </header>
+  <section class="announce" id="announce" hidden>
+    <div class="notice-list" id="noticeList"></div>
+  </section>
 
   <main>
     <p class="section-label section-members">Members Only</p>
@@ -525,9 +561,12 @@
       <p class="section-label">Past Events</p>
       <div class="list" id="pastList"></div>
     </section>
+
+    <p class="verify-note"><span id="statVerified" class="legend" hidden></span></p>
   </main>
 
   <footer class="foot">
+    <span>© Youth Club Seoul</span>
     <a href="admin.html">관리자</a>
   </footer>
 </div>
@@ -1176,14 +1215,6 @@
     pastList.textContent = "";
     pa.forEach(function (ev) { pastList.appendChild(renderCard(ev)); });
     document.getElementById("pastWrap").hidden = pa.length === 0;
-
-    var openSeats = g.upcoming.reduce(function (sum, ev) {
-      if (isBigEvent(ev) || !ev.capacity || effectiveStatus(ev) === "closed") return sum;
-      return sum + Math.max(0, ev.capacity - roster(ev).going.length);
-    }, 0);
-
-    document.getElementById("statSeats").textContent = "남은 자리 " + openSeats;
-    document.getElementById("statUpdated").textContent = "업데이트 " + String(state.updated || "").replace(/-/g, ".");
 
     /* 예정 모임 명단에 인증된 사람이 있을 때만 딱지의 뜻을 알려준다. */
     var anyVerified = g.upcoming.some(function (ev) {
