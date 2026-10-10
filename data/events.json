@@ -349,7 +349,7 @@
     },
     {
       "id": "garak-market-crab-byob",
-      "title": "가락시장 꽃게&해산물 + 와인 BYOB",
+      "title": "가락시장 주정뱅이 파티모집: 꽃게&해산물 + 와인 BYOB",
       "host": "지훈",
       "capacity": 6,
       "capacityText": "3-6명",
@@ -359,9 +359,12 @@
       "fee": "10만원 내외 와인 1병 + 실비정산 (콜키지 병당 1만원)",
       "attendees": [
         "지훈",
-        "은지"
+        "은지",
+        "대승",
+        "은별"
       ],
-      "status": "auto"
+      "status": "auto",
+      "note": "은별 (이어주세요)"
     },
     {
       "id": "hanwoo-dream-revisit",
@@ -396,7 +399,8 @@
         "민아",
         "재현"
       ],
-      "status": "auto"
+      "status": "auto",
+      "desc": "가을을 맞아 하얏트의 익스클루시브한 분위기에서 제철 식재료를 즐기는 네트워킹 자리를 마련합니다.\n\n대게, 송이버섯, 트러플, 한우 등 귀한 식재료를 사용해 특별한 코스메뉴를 함께 즐깁니다. 단순 식사에서 그치지 않고 참석자들의 공통분모를 사전에 파악해 소수정예의 깊이있는 네트워킹이 이루어지도록 만들 계획입니다."
     },
     {
       "id": "chailin-dinner-odyssey-part2",
@@ -418,6 +422,21 @@
       "note": "주류(Drink)방에서 모집 완료",
       "attendees": [],
       "status": "closed"
+    },
+    {
+      "id": "host-coffee-chat-networking-1101",
+      "title": "호스트 커피챗 네트워킹",
+      "host": "직차",
+      "capacity": 6,
+      "capacityText": "6명",
+      "date": "2026-11-01",
+      "time": "3pm",
+      "place": "강남역 일대 (추후 공지)",
+      "attendees": [
+        "직차"
+      ],
+      "note": "대상: 2025년과 2026년 중 호스팅 유경험자 (소모임, 벙, 세션, 동아리, 클래스 등 모든 자리)\n호스트 여러분을 위한 커피챗 네트워킹입니다. 다과는 직차가 지원합니다.",
+      "status": "auto"
     }
   ],
   "notices": [

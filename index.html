@@ -520,6 +520,7 @@
   .list > .row:last-child { border-bottom: 2px solid var(--text-2); }
   .row[data-state="closed"]:not(.is-past) { opacity: 0.5; }
 
+  .event-desc { margin: 0 0 1rem; font-size: 0.92rem; line-height: 1.7; color: var(--text-2); white-space: pre-line; }
   .verify-note { margin: 1.2rem 0 0; font-size: 0.78rem; color: var(--text-2); }
 
   .foot {
@@ -543,10 +544,6 @@
   <header class="masthead">
     <div class="masthead-top">
       <h1>Upcoming Events</h1>
-    </div>
-    <div class="masthead-meta">
-      <span>2026년 10월 · 서울</span>
-      <span>Members-only gatherings · 참석자 이름만 공개</span>
     </div>
   </header>
   <section class="announce" id="announce" hidden>
@@ -1130,6 +1127,7 @@
     head.appendChild(badge);
     detailBody.appendChild(head);
 
+    if (ev.desc) detailBody.appendChild(el("p", "event-desc", ev.desc));
     detailBody.appendChild(buildFields(ev));
     var dAttend = buildAttend(ev);
     if (dAttend) detailBody.appendChild(dAttend);
