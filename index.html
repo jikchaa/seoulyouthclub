@@ -65,7 +65,7 @@
   a:hover { color: var(--text); }
   :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 2px; }
 
-  .shell { max-width: var(--shell); margin: 0 auto; padding: 0 1.25rem 5rem; }
+  .shell { max-width: var(--shell); margin: 0 auto; padding: 0 1.25rem 6.5rem; }
 
   /* ---------- masthead ---------- */
 
@@ -118,7 +118,18 @@
   }
   .notice-body .apply { margin-top: 0.7rem; }
 
-  .foot-logo { display: block; height: 2.2rem; width: auto; opacity: 0.92; }
+  /* 하단 고정 로고. 스크롤해도 아래 가운데에 머문다.
+     작은 알약 모양 바탕에 올려 글과 겹쳐도 읽힌다. 클릭은 아래 내용으로 통과시킨다. */
+  .dock {
+    position: fixed; left: 50%; bottom: 0.6rem; transform: translateX(-50%);
+    z-index: 40; pointer-events: none;
+    padding: 0.42rem 0.9rem;
+    background: rgba(10, 9, 8, 0.78);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  .dock-logo { display: block; height: 1.25rem; width: auto; opacity: 0.92; }
 
   .section-label {
     font-size: 0.66rem; font-weight: 700; letter-spacing: 0.22em;
@@ -338,7 +349,7 @@
   .spacer { flex: 1 1 auto; }
 
   .toast {
-    position: fixed; left: 50%; bottom: 1.5rem; transform: translate(-50%, 1.5rem);
+    position: fixed; left: 50%; bottom: 4.4rem; transform: translate(-50%, 1.5rem);
     background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: 2px;
     color: var(--text); font-size: 0.82rem; padding: 0.6rem 1rem;
     max-width: calc(100vw - 2rem); opacity: 0; pointer-events: none;
@@ -372,7 +383,9 @@
   /* ================= 모바일 (48rem 미만) =================
      한 줄 흐름. 공지는 세로로 쌓고, 상세창은 화면을 가득 채운다. */
   @media (max-width: 47.99rem) {
-    .shell { padding: 0 1.15rem 4rem; }
+    .shell { padding: 0 1.15rem 5.5rem; }
+    .dock { bottom: 0.45rem; padding: 0.34rem 0.75rem; }
+    .dock-logo { height: 1.05rem; }
     .announce { padding-top: 2.6rem; }
     .announce-head { margin-bottom: 0.9rem; }
     .notice-list { grid-template-columns: 1fr; gap: 0.7rem; }
@@ -432,7 +445,6 @@
   </main>
 
   <footer class="foot">
-    <img class="foot-logo" src="assets/logo.png" alt="YOUTH CLUB SEOUL" />
     <a href="admin.html">관리자</a>
   </footer>
 </div>
@@ -446,6 +458,10 @@
     </div>
   </div>
 </dialog>
+
+<div class="dock" aria-hidden="true">
+  <img class="dock-logo" src="assets/logo.png" alt="" />
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
