@@ -189,6 +189,12 @@
   .chip .n { font-size: .68rem; color: var(--brass); font-variant-numeric: tabular-nums; }
   .chip button { appearance: none; background: transparent; border: 0; color: var(--text-3); font: inherit; font-size: .9rem; line-height: 1; padding: 0 .15rem; cursor: pointer; }
   .chip button:hover { color: var(--rust); }
+  /* 인증 토글. 켜지면 공개 명단에 딱지가 붙는다. */
+  .chip .vt { font-size: .74rem; color: var(--line-strong); padding: 0 .1rem; }
+  .chip .vt:hover { color: var(--brass); }
+  .chip .vt[aria-pressed="true"] { color: var(--brass); }
+  .chip.is-verified { border-color: var(--brass); }
+  .signups td.ok { color: var(--brass); }
   .chips-box input { flex: 1 1 7rem; min-width: 7rem; background: transparent; border: 0; color: var(--text); font-family: inherit; font-size: .85rem; padding: .25rem .2rem; }
   .chips-box input:focus { outline: none; }
 
@@ -746,9 +752,22 @@
     chips.textContent = "";
     (ev.attendees || []).forEach(function (a, i) {
       var name = norm(a).name;
-      var chip = el("span", "chip");
+      var on = !!norm(a).verified;
+      var chip = el("span", "chip" + (on ? " is-verified" : ""));
       chip.appendChild(el("span", "n", String(i + 1)));
       chip.appendChild(document.createTextNode(name));
+
+      /* 카톡 명단에는 번호가 없어 명부와 자동으로 맞출 수 없다. 관리자가 직접 켠다. */
+      var v = el("button", "vt", "✓"); v.type = "button";
+      v.setAttribute("aria-pressed", String(on));
+      v.setAttribute("aria-label", name + (on ? " 인증 해제" : " 인증"));
+      v.title = on ? "YCLB Index 인증됨 — 누르면 해제" : "YCLB Index 인증 표시";
+      v.addEventListener("click", function () {
+        ev.attendees[i] = on ? name : { name: name, verified: true };
+        renderChips(ev); afterChange();
+      });
+      chip.appendChild(v);
+
       var x = el("button", null, "×"); x.type = "button";
       x.setAttribute("aria-label", name + " 빼기");
       x.addEventListener("click", function () {
@@ -897,6 +916,14 @@
 
   /* ---------------- 신청자 (번호 포함) ---------------- */
 
+  /* 보기 좋게만 하이픈을 넣는다. 저장·비교는 숫자만으로 한다. */
+  function fmtPhone(p) {
+    var d = String(p || "").replace(/[^0-9]/g, "");
+    if (d.length === 11) return d.slice(0, 3) + "-" + d.slice(3, 7) + "-" + d.slice(7);
+    if (d.length === 10) return d.slice(0, 3) + "-" + d.slice(3, 6) + "-" + d.slice(6);
+    return d || "—";
+  }
+
   function renderSignups(ev) {
     var box = document.getElementById("signupsBox");
     var table = document.getElementById("signupsTable");
@@ -908,7 +935,7 @@
 
     var seed = (ev.attendees || []).length;
     var head = document.createElement("tr");
-    ["#", "이름", "휴대폰", "접수"].forEach(function (h) { head.appendChild(el("th", null, h)); });
+    ["#", "이름", "휴대폰", "카카오톡 닉네임", "인증", "접수"].forEach(function (h) { head.appendChild(el("th", null, h)); });
     table.appendChild(head);
 
     rows.forEach(function (r, i) {
@@ -917,7 +944,9 @@
       var tr = document.createElement("tr");
       tr.appendChild(el("td", "num" + (over ? " wait" : ""), over ? "대기" + (pos - ev.capacity) : String(pos)));
       tr.appendChild(el("td", null, r.name || ""));
-      tr.appendChild(el("td", "num", r.phone || "—"));
+      tr.appendChild(el("td", "num", fmtPhone(r.phone)));
+      tr.appendChild(el("td", null, r.kakao || "—"));
+      tr.appendChild(el("td", r.verified ? "ok" : null, r.verified ? "✓ 명부" : "—"));
       tr.appendChild(el("td", "num", r.at ? String(r.at).slice(5, 16).replace("T", " ") : ""));
       table.appendChild(tr);
     });

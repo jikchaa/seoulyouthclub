@@ -210,6 +210,16 @@
   .attend-empty { color: var(--text-3); font-size: 0.88rem; }
   .attend-wait { font-size: 0.85rem; color: var(--amber); overflow-wrap: anywhere; }
 
+  /* YCLB Index 인증 딱지. 이름 바로 뒤에 붙는 작은 톱니 원. */
+  .vbadge {
+    display: inline-block; width: 0.95em; height: 0.95em;
+    margin-left: 0.18em; vertical-align: -0.12em;
+  }
+  .vbadge svg { display: block; width: 100%; height: 100%; }
+  .vbadge .seal { fill: var(--brass); }
+  .vbadge .tick { fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .legend { display: inline-flex; align-items: center; gap: 0.25rem; }
+
   .seats { display: flex; align-items: center; gap: 0.5rem; }
   .seat-ticks { display: flex; gap: 3px; }
   .seat-ticks i { display: block; width: 13px; height: 2px; background: var(--line-strong); border-radius: 1px; }
@@ -255,6 +265,7 @@
   .signup input::placeholder { color: var(--text-3); opacity: 0.7; }
   .signup input.name { flex: 1 1 7rem; }
   .signup input.phone { flex: 1 1 10rem; }
+  .signup input.kakao { flex: 1 1 9rem; }
   .signup .hint { font-size: 0.72rem; color: var(--text-3); }
   .signup .err { font-size: 0.75rem; color: var(--rust); }
   .signup .ok { font-size: 0.78rem; color: var(--sage); }
@@ -434,6 +445,7 @@
       <span id="statUpcoming">&mdash;</span>
       <span id="statSeats">&mdash;</span>
       <span id="statUpdated">&mdash;</span>
+      <span id="statVerified" class="legend" hidden></span>
     </div>
   </header>
 
@@ -543,8 +555,13 @@
     });
   }
 
+  /* 카톡에서 받아 적은 명단 뒤에 웹 신청 명단을 잇는다. */
+  function allAttendees(ev) {
+    return (ev.attendees || []).map(norm).concat((state.signups[ev.id] || []).map(norm));
+  }
+
   function roster(ev) {
-    var all = (ev.attendees || []).map(norm).concat((state.signups[ev.id] || []).map(norm));
+    var all = allAttendees(ev);
     if (!ev.capacity || all.length <= ev.capacity) return { going: all, waiting: [] };
     return { going: all.slice(0, ev.capacity), waiting: all.slice(ev.capacity) };
   }
@@ -652,6 +669,28 @@
     return box;
   }
 
+  /* 정적인 SVG 문자열이라 innerHTML 로 넣어도 안전하다. */
+  var BADGE_SVG =
+    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path class="seal" d="M12.00 0.80 L14.48 2.73 L17.60 2.30 L18.79 5.21 L21.70 6.40 L21.27 9.52 L23.20 12.00 L21.27 14.48 L21.70 17.60 L18.79 18.79 L17.60 21.70 L14.48 21.27 L12.00 23.20 L9.52 21.27 L6.40 21.70 L5.21 18.79 L2.30 17.60 L2.73 14.48 L0.80 12.00 L2.73 9.52 L2.30 6.40 L5.21 5.21 L6.40 2.30 L9.52 2.73Z"/>' +
+    '<path class="tick" d="M7.4 12.3 L10.6 15.4 L16.8 8.9"/></svg>';
+
+  function badge() {
+    var b = el("span", "vbadge");
+    b.innerHTML = BADGE_SVG;
+    b.setAttribute("role", "img");
+    b.setAttribute("aria-label", "YCLB Index 인증");
+    b.title = "YCLB Index 인증 회원";
+    return b;
+  }
+
+  /* 이름 하나를 그린다. 명부와 맞은 사람이면 딱지를 붙인다. */
+  function nameNode(a) {
+    var span = el("span", "who", a.name);
+    if (a.verified) span.appendChild(badge());
+    return span;
+  }
+
   function buildAttend(ev) {
     if (isBigEvent(ev)) return buildOrgs(ev);
 
@@ -665,7 +704,7 @@
         if (i) names.appendChild(document.createTextNode(", "));
         var n = el("span", "n", (i + 1) + " ");
         names.appendChild(n);
-        names.appendChild(document.createTextNode(a.name));
+        names.appendChild(nameNode(a));
       });
       box.appendChild(names);
     } else if (status === "closed") {
@@ -675,8 +714,12 @@
     }
 
     if (r.waiting.length) {
-      box.appendChild(el("div", "attend-wait",
-        "대기 " + r.waiting.map(function (a) { return a.name; }).join(", ")));
+      var wait = el("div", "attend-wait", "대기 ");
+      r.waiting.forEach(function (a, i) {
+        if (i) wait.appendChild(document.createTextNode(", "));
+        wait.appendChild(nameNode(a));
+      });
+      box.appendChild(wait);
     }
 
     if (ev.capacity) {
@@ -725,15 +768,20 @@
     phone.setAttribute("aria-label", ev.title + " 신청자 휴대폰 번호");
     phone.inputMode = "numeric"; phone.maxLength = 20;
 
+    var kakao = el("input", "kakao");
+    kakao.type = "text"; kakao.placeholder = "카카오톡 닉네임";
+    kakao.setAttribute("aria-label", ev.title + " 신청자 카카오톡 닉네임");
+    kakao.maxLength = 30;
+
     var btn = el("button", "btn btn-primary", full ? "대기 신청" : "참석 신청");
     btn.type = "button";
 
-    row.appendChild(name); row.appendChild(phone); row.appendChild(btn);
+    row.appendChild(name); row.appendChild(phone); row.appendChild(kakao); row.appendChild(btn);
     box.appendChild(row);
 
     var msg = el("div", "hint", full
       ? "정원이 찼습니다. 신청하면 대기 순번으로 올라갑니다."
-      : "휴대폰 번호는 주최자만 봅니다. 명단에는 이름만 보입니다.");
+      : "휴대폰 번호와 닉네임은 주최자만 봅니다. 명단에는 이름만 보입니다.");
     box.appendChild(msg);
 
     btn.addEventListener("click", function () {
@@ -741,22 +789,24 @@
       var pv = phone.value.replace(/[^0-9]/g, "");
       if (nv.length < 2) { msg.className = "err"; msg.textContent = "이름을 두 글자 이상 입력해 주세요."; name.focus(); return; }
       if (pv.length < 10 || pv.length > 11) { msg.className = "err"; msg.textContent = "휴대폰 번호를 정확히 입력해 주세요."; phone.focus(); return; }
+      var kv = kakao.value.trim();
+      if (!kv) { msg.className = "err"; msg.textContent = "카카오톡 닉네임을 입력해 주세요."; kakao.focus(); return; }
 
-      btn.disabled = true; name.disabled = true; phone.disabled = true;
+      btn.disabled = true; name.disabled = true; phone.disabled = true; kakao.disabled = true;
       msg.className = "hint"; msg.textContent = "신청 중…";
 
-      submitSignup(ev.id, nv, pv).then(function (res) {
+      submitSignup(ev.id, nv, pv, kv).then(function (res) {
         var done = res.waitlisted
           ? nv + "님, 대기 " + res.position + "번으로 접수됐습니다."
           : nv + "님, 신청됐습니다 — " + res.position + "번째입니다.";
         msg.className = "ok";
         msg.textContent = done;
-        name.value = ""; phone.value = "";
+        name.value = ""; phone.value = ""; kakao.value = "";
         /* 명단을 새로 받으면 이 폼은 다시 그려지며 사라진다. 확인은 토스트가 남긴다. */
         toast(done);
         return refreshSignups();
       }, function (err) {
-        btn.disabled = false; name.disabled = false; phone.disabled = false;
+        btn.disabled = false; name.disabled = false; phone.disabled = false; kakao.disabled = false;
         msg.className = "err";
         msg.textContent = err && err.message ? err.message : "신청에 실패했어요. 잠시 후 다시 시도해 주세요.";
       });
@@ -767,12 +817,12 @@
 
   /* ---------------- 접수 ---------------- */
 
-  function submitSignup(eventId, name, phone) {
+  function submitSignup(eventId, name, phone, kakao) {
     return fetch(SIGNUP_ENDPOINT, {
       method: "POST",
       /* text/plain 이면 preflight 없이 간다. */
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "signup", eventId: eventId, name: name, phone: phone })
+      body: JSON.stringify({ action: "signup", eventId: eventId, name: name, phone: phone, kakao: kakao })
     }).then(function (r) {
       if (!r.ok) throw new Error("서버가 응답하지 않았어요 (" + r.status + ")");
       return r.json();
@@ -996,6 +1046,18 @@
     document.getElementById("statUpcoming").textContent = "예정 " + g.upcoming.length + "건";
     document.getElementById("statSeats").textContent = "남은 자리 " + openSeats;
     document.getElementById("statUpdated").textContent = "업데이트 " + String(state.updated || "").replace(/-/g, ".");
+
+    /* 예정 모임 명단에 인증된 사람이 있을 때만 딱지의 뜻을 알려준다. */
+    var anyVerified = g.upcoming.some(function (ev) {
+      return !isBigEvent(ev) && allAttendees(ev).some(function (a) { return a.verified; });
+    });
+    var legend = document.getElementById("statVerified");
+    legend.textContent = "";
+    if (anyVerified) {
+      legend.appendChild(badge());
+      legend.appendChild(document.createTextNode("YCLB Index 인증"));
+    }
+    legend.hidden = !anyVerified;
 
     if (detailId) {
       var ev = findEvent(detailId);
