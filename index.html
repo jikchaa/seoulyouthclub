@@ -27,16 +27,18 @@
 
   :root {
     color-scheme: dark;
-    --ink: #0A0908;
-    --surface: #121110;
-    --surface-2: #171613;
-    --line: #26231E;
-    --line-strong: #3B362D;
-    --text: #ECE7DC;
-    --text-2: #A79F91;
-    --text-3: #6E675C;
-    --brass: #C8A96A;
-    --brass-dim: #8A7440;
+    --ink: #0A0A0A;
+    --surface: #121212;
+    --surface-2: #171717;
+    --line: #262626;
+    --line-strong: #3A3A3A;
+    --text: #F3F1EC;
+    --text-2: #A8A59E;
+    --text-3: #6E6B66;
+    /* 포인트는 크림슨 한 색. 글자·선에는 밝은 쪽, 채움에는 진한 쪽을 쓴다. */
+    --accent: #E04A4C;
+    --accent-dim: #7E2427;
+    --accent-solid: #C62A2D;
     --sage: #8CB08F;
     --amber: #C98A45;
     --rust: #C0705E;
@@ -61,22 +63,32 @@
     overflow-x: hidden;
   }
 
-  a { color: var(--brass); text-underline-offset: 3px; }
+  a { color: var(--accent); text-underline-offset: 3px; }
   a:hover { color: var(--text); }
-  :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; border-radius: 2px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
 
   .shell { max-width: var(--shell); margin: 0 auto; padding: 0 1.25rem 6.5rem; }
 
   /* ---------- masthead ---------- */
 
   .masthead { padding: 0 0 2rem; border-bottom: 1px solid var(--line); }
+  .masthead-top {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 0.6rem 1rem; flex-wrap: wrap;
+  }
   .masthead h1 {
     font-weight: 700;
-    font-size: clamp(1.9rem, 6.5vw, 2.5rem);
+    font-size: clamp(1.7rem, 6vw, 2.5rem);
     line-height: 1.02;
     letter-spacing: -0.035em;
     margin: 0;
-    text-wrap: balance;
+    white-space: nowrap;
+  }
+  /* 예전 숫자 자리. 제목보다 두 단계 작게, 자간을 넓혀 라벨처럼 쓴다. */
+  .members-only {
+    font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--accent);
   }
   .masthead-meta {
     display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem;
@@ -93,7 +105,7 @@
   }
   .announce-head h2 {
     margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em;
-    text-transform: uppercase; color: var(--brass);
+    text-transform: uppercase; color: var(--accent);
   }
   .announce-head span { font-size: 0.72rem; color: var(--text-3); }
 
@@ -114,7 +126,7 @@
     font-size: 0.98rem; font-weight: 700; letter-spacing: -0.015em; line-height: 1.4;
     text-wrap: balance;
   }
-  .notice > summary:hover .notice-title { color: var(--brass); }
+  .notice > summary:hover .notice-title { color: var(--accent); }
   .notice-body {
     margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed var(--line-strong);
     font-size: 0.84rem; color: var(--text-2); white-space: pre-line; overflow-wrap: anywhere;
@@ -158,14 +170,14 @@
     font-variant-numeric: tabular-nums;
     border-right: 1px solid var(--line); padding-right: 1rem;
   }
-  .rail-mon { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--brass); }
+  .rail-mon { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
   .rail-day { font-size: 2.05rem; font-weight: 700; line-height: 1.05; letter-spacing: -0.045em; }
   .rail-dow { font-size: 0.72rem; color: var(--text-3); }
   .rail-dday {
     margin-top: 0.45rem; font-size: 0.68rem; color: var(--text-3);
     border: 1px solid var(--line); padding: 0.1rem 0.35rem; border-radius: 2px;
   }
-  .rail-dday[data-soon="true"] { color: var(--brass); border-color: var(--brass-dim); }
+  .rail-dday[data-soon="true"] { color: var(--accent); border-color: var(--accent-dim); }
 
   .event-body { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
 
@@ -216,14 +228,14 @@
     margin-left: 0.18em; vertical-align: -0.12em;
   }
   .vbadge svg { display: block; width: 100%; height: 100%; }
-  .vbadge .seal { fill: var(--brass); }
+  .vbadge .seal { fill: var(--accent); }
   .vbadge .tick { fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
   .legend { display: inline-flex; align-items: center; gap: 0.25rem; }
 
   .seats { display: flex; align-items: center; gap: 0.5rem; }
   .seat-ticks { display: flex; gap: 3px; }
   .seat-ticks i { display: block; width: 13px; height: 2px; background: var(--line-strong); border-radius: 1px; }
-  .seat-ticks i.filled { background: var(--brass); }
+  .seat-ticks i.filled { background: var(--accent); }
   .seat-count { font-size: 0.74rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
 
   .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; font-size: 0.82rem; }
@@ -261,7 +273,7 @@
     font-family: inherit; font-size: 0.85rem; padding: 0.45rem 0.6rem;
     min-width: 0;
   }
-  .signup input:focus { border-color: var(--brass-dim); outline: none; }
+  .signup input:focus { border-color: var(--accent-dim); outline: none; }
   .signup input::placeholder { color: var(--text-3); opacity: 0.7; }
   .signup input.name { flex: 1 1 7rem; }
   .signup input.phone { flex: 1 1 8.5rem; }
@@ -278,19 +290,19 @@
     white-space: nowrap;
     transition: border-color 0.15s, color 0.15s, background-color 0.15s;
   }
-  .btn:hover { border-color: var(--brass-dim); color: var(--text); }
+  .btn:hover { border-color: var(--accent-dim); color: var(--text); }
   .btn:disabled { opacity: 0.45; cursor: default; }
   .btn:disabled:hover { border-color: var(--line-strong); color: var(--text-2); }
-  .btn-primary { border-color: var(--brass-dim); color: var(--brass); }
-  .btn-primary:hover:not(:disabled) { background: rgba(200, 169, 106, 0.1); }
+  .btn-primary { background: var(--accent-solid); border-color: var(--accent-solid); color: #fff; font-weight: 700; }
+  .btn-primary:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   .apply {
     display: inline-flex; align-items: center; gap: 0.45rem;
-    font-size: 0.82rem; text-decoration: none; color: var(--brass);
-    border: 1px solid var(--brass-dim); border-radius: 2px;
+    font-size: 0.82rem; text-decoration: none; color: var(--accent);
+    border: 1px solid var(--accent-dim); border-radius: 2px;
     padding: 0.42rem 0.8rem; align-self: flex-start;
   }
-  .apply:hover { background: rgba(200, 169, 106, 0.1); color: var(--brass); }
+  .apply:hover { background: rgba(198, 42, 45, 0.14); color: var(--accent); }
   .apply::after { content: "\2192"; }
 
   /* ---------- 상세 ---------- */
@@ -300,7 +312,7 @@
     color: var(--text-3); font-family: inherit; font-size: 0.78rem;
     cursor: pointer; align-self: flex-start;
   }
-  .detail-open:hover { color: var(--brass); }
+  .detail-open:hover { color: var(--accent); }
   .detail-open::after { content: " \2192"; }
 
   dialog.detail {
@@ -334,20 +346,12 @@
     color: var(--text-2); border-radius: 2px; width: 1.9rem; height: 1.9rem;
     font-size: 1rem; line-height: 1; cursor: pointer;
   }
-  .detail-close:hover { color: var(--text); border-color: var(--brass-dim); }
+  .detail-close:hover { color: var(--text); border-color: var(--accent-dim); }
 
   /* ---------- past / footer ---------- */
 
-  .past { margin-top: 2.75rem; border-top: 1px solid var(--line); }
-  .past > summary {
-    list-style: none; cursor: pointer; padding: 1.1rem 0;
-    display: flex; align-items: center; gap: 0.6rem;
-    font-size: 0.8rem; color: var(--text-3); font-variant-numeric: tabular-nums;
-  }
-  .past > summary::-webkit-details-marker { display: none; }
-  .past > summary::before { content: "+"; color: var(--brass-dim); }
-  .past[open] > summary::before { content: "\2013"; }
-  .past > summary:hover { color: var(--text-2); }
+  .past { margin-top: 2.75rem; }
+  .past > .section-label { margin-top: 0; }
   .past .event { opacity: 0.62; }
 
   .empty { padding: 3rem 0; color: var(--text-3); }
@@ -383,6 +387,9 @@
     .shell { max-width: 68rem; padding: 0 2.5rem 6rem; }
     .announce { padding-top: 4rem; }
     .masthead h1 { font-size: clamp(2.2rem, 3.4vw, 2.8rem); }
+    .members-only { font-size: 0.9rem; }
+    /* 하단 로고: 한 단계 키움 */
+    .dock-logo { height: 1.5rem; }
     .masthead-meta { margin-top: 1.4rem; }
     .section-label { margin-top: 2.8rem; }
 
@@ -440,9 +447,11 @@
   </section>
 
   <header class="masthead">
-    <h1>Upcoming Events</h1>
+    <div class="masthead-top">
+      <h1>Upcoming Events</h1>
+      <span class="members-only">Members Only</span>
+    </div>
     <div class="masthead-meta">
-      <span id="statUpcoming">&mdash;</span>
       <span id="statSeats">&mdash;</span>
       <span id="statUpdated">&mdash;</span>
       <span id="statVerified" class="legend" hidden></span>
@@ -453,10 +462,10 @@
     <p class="section-label">Upcoming</p>
     <div class="list" id="upcomingList"></div>
 
-    <details class="past" id="pastWrap" hidden>
-      <summary><span id="pastSummary">지난 모임</span></summary>
+    <section class="past" id="pastWrap" hidden>
+      <p class="section-label">Past Events</p>
       <div class="list" id="pastList"></div>
-    </details>
+    </section>
   </main>
 
   <footer class="foot">
@@ -885,8 +894,10 @@
     var head = el("div", "event-head");
     var h = el("h2", "event-title", ev.title);
     head.appendChild(h);
-    var badge = el("span", "badge", STATUS_LABEL[status]);
-    badge.dataset.state = status;
+    /* 지난 모임은 모집 상태를 보여주지 않는다. */
+    var past = diff < 0;
+    var badge = el("span", "badge", past ? "종료" : STATUS_LABEL[status]);
+    badge.dataset.state = past ? "closed" : status;
     head.appendChild(badge);
     left.appendChild(head);
     left.appendChild(buildFields(ev));
@@ -952,8 +963,9 @@
     var head = el("div", "event-head");
     head.appendChild(el("h2", null, ev.title));
     var status = effectiveStatus(ev);
-    var badge = el("span", "badge", STATUS_LABEL[status]);
-    badge.dataset.state = status;
+    var pastEv = daysUntil(ev.date) < 0;
+    var badge = el("span", "badge", pastEv ? "종료" : STATUS_LABEL[status]);
+    badge.dataset.state = pastEv ? "closed" : status;
     head.appendChild(badge);
     detailBody.appendChild(head);
 
@@ -1036,14 +1048,12 @@
     pastList.textContent = "";
     g.past.forEach(function (ev) { pastList.appendChild(renderCard(ev)); });
     document.getElementById("pastWrap").hidden = g.past.length === 0;
-    document.getElementById("pastSummary").textContent = "지난 모임 " + g.past.length;
 
     var openSeats = g.upcoming.reduce(function (sum, ev) {
       if (isBigEvent(ev) || !ev.capacity || effectiveStatus(ev) === "closed") return sum;
       return sum + Math.max(0, ev.capacity - roster(ev).going.length);
     }, 0);
 
-    document.getElementById("statUpcoming").textContent = "예정 " + g.upcoming.length + "건";
     document.getElementById("statSeats").textContent = "남은 자리 " + openSeats;
     document.getElementById("statUpdated").textContent = "업데이트 " + String(state.updated || "").replace(/-/g, ".");
 
