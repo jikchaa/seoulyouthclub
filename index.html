@@ -72,7 +72,7 @@
   .masthead { padding: 0 0 2rem; border-bottom: 1px solid var(--line); }
   .masthead h1 {
     font-weight: 700;
-    font-size: clamp(2.3rem, 8.5vw, 3.4rem);
+    font-size: clamp(1.9rem, 6.5vw, 2.5rem);
     line-height: 1.02;
     letter-spacing: -0.035em;
     margin: 0;
@@ -103,10 +103,13 @@
     padding: 1.05rem 1.1rem; min-width: 0;
   }
   .notice > summary {
-    list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 0.45rem;
+    list-style: none; cursor: pointer;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.2rem 0.7rem;
   }
   .notice > summary::-webkit-details-marker { display: none; }
-  .notice-date { font-size: 0.7rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .notice-date {
+    font-size: 0.7rem; color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
   .notice-title {
     font-size: 0.98rem; font-weight: 700; letter-spacing: -0.015em; line-height: 1.4;
     text-wrap: balance;
@@ -368,7 +371,7 @@
   @media (min-width: 48rem) {
     .shell { max-width: 68rem; padding: 0 2.5rem 6rem; }
     .announce { padding-top: 4rem; }
-    .masthead h1 { font-size: clamp(3rem, 5vw, 4rem); }
+    .masthead h1 { font-size: clamp(2.2rem, 3.4vw, 2.8rem); }
     .masthead-meta { margin-top: 1.4rem; }
     .section-label { margin-top: 2.8rem; }
 
