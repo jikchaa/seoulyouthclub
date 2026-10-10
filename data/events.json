@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-03",
+  "updated": "2026-10-10",
   "events": [
     {
       "id": "wine-liam-noahs",
@@ -322,6 +322,102 @@
         "성보"
       ],
       "status": "auto"
+    },
+    {
+      "id": "autumn-hiking-surak-songsan",
+      "title": "가을 휴일 수락산 하이킹 + 송산 맛집",
+      "host": "Amy",
+      "capacity": 6,
+      "date": "2026-10-09",
+      "time": "12pm",
+      "place": "수락산역 + 송산",
+      "fee": "실비정산",
+      "note": "송산 참석: 준호 (이어주세요)",
+      "attendees": [
+        "Amy",
+        "현석"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "club-autumn-rounding",
+      "title": "유스클럽 가을 라운딩",
+      "date": "2026-10-09",
+      "place": "베뉴지",
+      "attendees": [],
+      "status": "closed"
+    },
+    {
+      "id": "garak-market-crab-byob",
+      "title": "가락시장 꽃게&해산물 + 와인 BYOB",
+      "host": "지훈",
+      "capacity": 6,
+      "capacityText": "3-6명",
+      "date": "2026-10-10",
+      "time": "1pm 즈음",
+      "place": "가락시장",
+      "fee": "10만원 내외 와인 1병 + 실비정산 (콜키지 병당 1만원)",
+      "attendees": [
+        "지훈",
+        "은지"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "hanwoo-dream-revisit",
+      "title": "오랜만에 한우드림",
+      "host": "성보",
+      "capacity": 6,
+      "date": "2026-10-21",
+      "time": "7pm",
+      "place": "한우드림 신사점",
+      "fee": "8만원(식대) + 콜키지 병당 3만원",
+      "note": "한우드림에서 새롭게 가성비로 준비한 8만원 코스 + 와인 모임! (와인은 호스트가 제공합니다)",
+      "attendees": [
+        "성보",
+        "윤서",
+        "직차",
+        "정이",
+        "수희"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "park-hyatt-autumn-dining",
+      "title": "유스미식회: 파크하얏트 가을 코스 다이닝",
+      "host": "직차",
+      "capacity": 4,
+      "date": "2026-10-24",
+      "time": "6pm",
+      "place": "파크 하얏트 서울 더 팀버 하우스",
+      "fee": "152,100원 (169,000원에서 10% 할인혜택 적용)",
+      "attendees": [
+        "직차",
+        "민아",
+        "재현"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "chailin-dinner-odyssey-part2",
+      "title": "삼성중앙역 차이린 디너: 오디세이 후기 나눔 Part 2",
+      "host": "지희",
+      "capacity": 6,
+      "date": "2026-10-31",
+      "time": "6pm",
+      "place": "삼성중앙역 차이린",
+      "fee": "음식+와인 비용 1/n",
+      "note": "신청: 카카오톡 [ssohappyy]\n간단한 자기소개와 참여하고 싶은 이유 한두 줄 보내주세요.",
+      "attendees": [],
+      "status": "auto"
+    },
+    {
+      "id": "paris-judgment-50th",
+      "title": "파리의 심판 50주년 기념 모임",
+      "date": "2026-10-31",
+      "note": "주류(Drink)방에서 모집 완료",
+      "attendees": [],
+      "status": "closed"
     }
   ]
 }
