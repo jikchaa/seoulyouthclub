@@ -69,8 +69,7 @@
 
   /* ---------- masthead ---------- */
 
-  .masthead { padding: 3.75rem 0 2rem; border-bottom: 1px solid var(--line); }
-  .brand-logo { display: block; height: 2.4rem; width: auto; margin-bottom: 2.1rem; }
+  .masthead { padding: 0 0 2rem; border-bottom: 1px solid var(--line); }
   .masthead h1 {
     font-weight: 700;
     font-size: clamp(2.3rem, 8.5vw, 3.4rem);
@@ -84,6 +83,42 @@
     font-size: 0.74rem; letter-spacing: 0.02em; color: var(--text-3);
     font-variant-numeric: tabular-nums; margin-top: 1.1rem;
   }
+
+  /* ---------- 공지 (Announcements) ---------- */
+
+  .announce { padding: 3.5rem 0 2.6rem; }
+  .announce-head {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    border-bottom: 1px solid var(--line); padding-bottom: 0.7rem; margin-bottom: 1.1rem;
+  }
+  .announce-head h2 {
+    margin: 0; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--brass);
+  }
+  .announce-head span { font-size: 0.72rem; color: var(--text-3); }
+
+  .notice-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .notice {
+    border: 1px solid var(--line); border-radius: 2px; background: var(--surface);
+    padding: 1.05rem 1.1rem; min-width: 0;
+  }
+  .notice > summary {
+    list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 0.45rem;
+  }
+  .notice > summary::-webkit-details-marker { display: none; }
+  .notice-date { font-size: 0.7rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .notice-title {
+    font-size: 0.98rem; font-weight: 700; letter-spacing: -0.015em; line-height: 1.4;
+    text-wrap: balance;
+  }
+  .notice > summary:hover .notice-title { color: var(--brass); }
+  .notice-body {
+    margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed var(--line-strong);
+    font-size: 0.84rem; color: var(--text-2); white-space: pre-line; overflow-wrap: anywhere;
+  }
+  .notice-body .apply { margin-top: 0.7rem; }
+
+  .foot-logo { display: block; height: 2.2rem; width: auto; opacity: 0.92; }
 
   .section-label {
     font-size: 0.66rem; font-weight: 700; letter-spacing: 0.22em;
@@ -292,11 +327,14 @@
 
   .empty { padding: 3rem 0; color: var(--text-3); }
 
+  /* 푸터: 로고를 맨 아래 가운데에 둔다. */
   .foot {
-    margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--line);
-    display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;
-    font-size: 0.78rem; color: var(--text-3);
+    margin-top: 4rem; padding: 2.4rem 0 0; border-top: 1px solid var(--line);
+    display: flex; flex-direction: column; align-items: center; gap: 1.1rem;
+    font-size: 0.74rem; color: var(--text-3);
   }
+  .foot a { color: var(--text-3); text-decoration: none; }
+  .foot a:hover { color: var(--text-2); }
   .spacer { flex: 1 1 auto; }
 
   .toast {
@@ -314,10 +352,43 @@
     * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
   }
 
-  @media (max-width: 44rem) {
-    .detail-grid { grid-template-columns: 1fr; }
-    .detail-figure { border-right: 0; border-bottom: 1px solid var(--line); }
-    .detail-figure img { max-width: 16rem; margin: 0 auto; }
+  /* ================= PC (48rem 이상) =================
+     넓은 화면을 쓴다: 공지는 3열, 포스터는 크게, 제목은 한 단계 크게. */
+  @media (min-width: 48rem) {
+    .shell { max-width: 68rem; padding: 0 2.5rem 6rem; }
+    .announce { padding-top: 4rem; }
+    .masthead h1 { font-size: clamp(3rem, 5vw, 4rem); }
+    .masthead-meta { margin-top: 1.4rem; }
+    .section-label { margin-top: 2.8rem; }
+
+    .event { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 2.2rem; padding: 2.4rem 0; }
+    .rail-day { font-size: 2.6rem; }
+    .event-title { font-size: 1.25rem; }
+    .thumb { width: 10rem; }
+    .fields { grid-template-columns: 4.4rem minmax(0, 1fr); gap: 0.4rem 1.2rem; }
+    .fields dd { font-size: 0.95rem; }
+  }
+
+  /* ================= 모바일 (48rem 미만) =================
+     한 줄 흐름. 공지는 세로로 쌓고, 상세창은 화면을 가득 채운다. */
+  @media (max-width: 47.99rem) {
+    .shell { padding: 0 1.15rem 4rem; }
+    .announce { padding-top: 2.6rem; }
+    .announce-head { margin-bottom: 0.9rem; }
+    .notice-list { grid-template-columns: 1fr; gap: 0.7rem; }
+    .notice { padding: 0.85rem 0.95rem; }
+    .notice-title { font-size: 0.92rem; }
+
+    dialog.detail {
+      width: 100vw; max-width: 100vw; height: 100%; max-height: 100%;
+      border: 0; border-radius: 0;
+    }
+    .detail-grid { grid-template-columns: 1fr; height: 100%; }
+    .detail-figure { border-right: 0; border-bottom: 1px solid var(--line); padding: 0.9rem; }
+    .detail-figure img { max-width: 15rem; margin: 0 auto; }
+    .detail-side { flex: 1; min-height: 0; }
+    .detail-scroll { max-height: none; }
+    .detail-close { top: 0.6rem; right: 0.6rem; }
   }
 
   @media (max-width: 34rem) {
@@ -327,15 +398,21 @@
     .fields { grid-template-columns: 3.2rem minmax(0, 1fr); }
     .thumb { width: 4.5rem; }
     .event-main { gap: 0.75rem; }
-    .masthead { padding-top: 2.75rem; }
   }
 </style>
 </head>
 <body>
 
 <div class="shell">
+  <section class="announce" id="announce" hidden>
+    <div class="announce-head">
+      <h2>Announcements</h2>
+      <span>최근 공지 3건</span>
+    </div>
+    <div class="notice-list" id="noticeList"></div>
+  </section>
+
   <header class="masthead">
-    <img class="brand-logo" src="assets/logo.png" alt="YOUTH CLUB SEOUL" />
     <h1>Upcoming Events</h1>
     <div class="masthead-meta">
       <span id="statUpcoming">&mdash;</span>
@@ -355,7 +432,7 @@
   </main>
 
   <footer class="foot">
-    <span class="spacer"></span>
+    <img class="foot-logo" src="assets/logo.png" alt="YOUTH CLUB SEOUL" />
     <a href="admin.html">관리자</a>
   </footer>
 </div>
@@ -402,7 +479,7 @@
   var STATUS_LABEL = { open: "모집중", closed: "마감", waitlist: "대기 모집중" };
   var STATUS_WEIGHT = { open: 0, waitlist: 1, closed: 2 };
 
-  var state = { events: [], updated: "", signups: {} };
+  var state = { events: [], notices: [], updated: "", signups: {} };
 
   /* ---------------- 날짜 ---------------- */
 
@@ -833,8 +910,52 @@
   var upcomingList = document.getElementById("upcomingList");
   var pastList = document.getElementById("pastList");
 
+  /* ---------------- 공지 ---------------- */
+
+  var noticeList = document.getElementById("noticeList");
+
+  function fmtDate(iso) {
+    var p = String(iso || "").split("-");
+    return p.length === 3 ? p[0] + "." + p[1] + "." + p[2] : "";
+  }
+
+  /* 최근 3건만. 날짜가 같으면 목록에 나중에 적힌 것을 앞에 둔다. */
+  function renderNotices() {
+    var box = document.getElementById("announce");
+    var items = (state.notices || []).map(function (n, i) { return { n: n, i: i }; })
+      .sort(function (a, b) {
+        var da = a.n.date || "", db = b.n.date || "";
+        if (da !== db) return da < db ? 1 : -1;
+        return b.i - a.i;
+      })
+      .slice(0, 3)
+      .map(function (x) { return x.n; });
+
+    noticeList.textContent = "";
+    box.hidden = items.length === 0;
+
+    items.forEach(function (n) {
+      var d = el("details", "notice");
+      var s = el("summary");
+      s.appendChild(el("span", "notice-date", fmtDate(n.date)));
+      s.appendChild(el("span", "notice-title", n.title || ""));
+      d.appendChild(s);
+      if (n.body || safeUrl(n.link)) {
+        var body = el("div", "notice-body", n.body || "");
+        if (safeUrl(n.link)) {
+          var a = link(n.link, "자세히 보기 →");
+          a.className = "apply";
+          body.appendChild(a);
+        }
+        d.appendChild(body);
+      }
+      noticeList.appendChild(d);
+    });
+  }
+
   function render() {
     var g = splitEvents();
+    renderNotices();
 
     upcomingList.textContent = "";
     if (g.upcoming.length) {
@@ -884,6 +1005,7 @@
     })
     .then(function (d) {
       state.events = Array.isArray(d.events) ? d.events : [];
+      state.notices = Array.isArray(d.notices) ? d.notices : [];
       state.updated = d.updated || "";
       render();
       return refreshSignups();

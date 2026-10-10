@@ -98,6 +98,8 @@
   .btn-quiet:hover { color: var(--text-2); border-color: transparent; }
   .btn-danger:hover:not(:disabled) { border-color: #8C4A3F; color: #D98878; }
   .btn-sm { font-size: .72rem; padding: .3rem .55rem; }
+  .btn[aria-pressed="true"] { border-color: var(--brass-dim); color: var(--brass); background: rgba(200,169,106,.07); }
+  .mode { display: inline-flex; gap: .35rem; }
   a.btn { text-decoration: none; display: inline-block; }
 
   .banner {
@@ -279,6 +281,10 @@
 
   <div class="toolbar">
     <button type="button" class="btn btn-primary" id="btnSave" disabled>게시</button>
+    <span class="mode">
+      <button type="button" class="btn btn-sm" id="modeEvents" aria-pressed="true">이벤트</button>
+      <button type="button" class="btn btn-sm" id="modeNotices" aria-pressed="false">공지</button>
+    </span>
     <button type="button" class="btn" id="btnNew">+ 새 이벤트</button>
     <button type="button" class="btn" id="btnKakao">카톡 공지 복사</button>
     <span class="spacer"></span>
@@ -292,9 +298,9 @@
 
   <div class="work">
     <aside class="side">
-      <p class="list-head">Upcoming</p>
+      <p class="list-head" id="lblUpcoming">Upcoming</p>
       <div class="rows" id="rowsUpcoming"></div>
-      <p class="list-head">Past</p>
+      <p class="list-head" id="lblPast">Past</p>
       <div class="rows" id="rowsPast"></div>
     </aside>
 
@@ -423,6 +429,34 @@
         </div>
       </form>
 
+      <form id="noticeForm" hidden autocomplete="off">
+        <h2 class="form-title">공지</h2>
+        <div class="grid">
+          <div class="field wide">
+            <label for="n_title">제목</label>
+            <input id="n_title" required placeholder="10월 정기 모임 안내" />
+          </div>
+          <div class="field">
+            <label for="n_date">날짜</label>
+            <input id="n_date" type="date" required />
+            <span class="help">최근 날짜 순으로 3건이 공개 페이지 맨 위에 보입니다.</span>
+          </div>
+          <div class="field wide">
+            <label for="n_body">내용 <span class="opt">선택</span></label>
+            <textarea id="n_body" placeholder="줄바꿈이 그대로 보입니다. 펼쳤을 때만 보입니다."></textarea>
+          </div>
+          <div class="field wide">
+            <label for="n_link">링크 <span class="opt">선택</span></label>
+            <input id="n_link" type="url" placeholder="https://..." />
+            <span class="help">넣으면 펼친 공지 안에 「자세히 보기」 버튼이 생깁니다.</span>
+          </div>
+        </div>
+        <div class="form-foot">
+          <span class="spacer"></span>
+          <button type="button" class="btn btn-danger" id="btnNoticeDel">삭제</button>
+        </div>
+      </form>
+
       <section class="signups" id="signupsBox" hidden>
         <h2>신청자 <span id="signupsCount"></span></h2>
         <div class="scroll"><table id="signupsTable"></table></div>
@@ -495,7 +529,7 @@
 
   /* published = 저장소에 올라가 있는 그대로. dirty 판정의 기준선이다. */
   var state = {
-    events: [], updated: "", sha: null,
+    events: [], notices: [], updated: "", sha: null,
     published: "", signups: {}, endpoint: "",
     newPosters: {}   // path -> dataURL (아직 저장소에 없는 포스터)
   };
@@ -567,7 +601,7 @@
   function safeUrl(u) { var s = String(u || "").trim(); return /^https?:\/\//i.test(s) ? s : ""; }
 
   function payload() {
-    return JSON.stringify({ updated: state.updated, events: state.events }, null, 2) + "\n";
+    return JSON.stringify({ updated: state.updated, events: state.events, notices: state.notices }, null, 2) + "\n";
   }
   function isDirty() {
     return payload() !== state.published || Object.keys(state.newPosters).length > 0;
@@ -580,6 +614,7 @@
   /* ---------------- 목록 ---------------- */
 
   function renderList() {
+    if (mode === "notices") { renderNoticeList(); return; }
     var g = splitEvents();
     fill(document.getElementById("rowsUpcoming"), g.upcoming, "예정된 모임이 없습니다.");
     fill(document.getElementById("rowsPast"), g.past, "지난 모임이 없습니다.");
@@ -1035,7 +1070,7 @@
     var lbl = document.getElementById("stateLabel");
     var dirty = isDirty();
     lbl.textContent = "";
-    lbl.appendChild(document.createTextNode(state.events.length + "건 · "));
+    lbl.appendChild(document.createTextNode("이벤트 " + state.events.length + "건 · 공지 " + state.notices.length + "건 · "));
     var b = document.createElement("b");
     b.className = dirty ? "dirty" : "clean";
     b.textContent = dirty ? "저장 안 됨" : "게시본과 동일";
@@ -1043,11 +1078,128 @@
     document.getElementById("btnSave").disabled = !dirty;
   }
 
+  /* ---------------- 공지 ---------------- */
+
+  var mode = "events";            // "events" | "notices"
+  var selectedNoticeId = null;
+
+  function findNotice(id) {
+    for (var i = 0; i < state.notices.length; i++) if (state.notices[i].id === id) return state.notices[i];
+    return null;
+  }
+
+  /* 날짜 최신순. 같은 날짜면 나중에 추가한 것을 앞에 둔다. 앞의 3건만 공개된다. */
+  function sortedNotices() {
+    return state.notices.map(function (n, i) { return { n: n, i: i }; })
+      .sort(function (a, b) {
+        var da = a.n.date || "", db = b.n.date || "";
+        if (da !== db) return da < db ? 1 : -1;
+        return b.i - a.i;
+      })
+      .map(function (x) { return x.n; });
+  }
+
+  function renderNoticeList() {
+    var host = document.getElementById("rowsUpcoming");
+    host.textContent = "";
+    host.appendChild(el("p", "help", "최근 3건만 공개 페이지에 보입니다. 나머지는 보관됩니다."));
+    var list = sortedNotices();
+    if (!list.length) { host.appendChild(el("p", "list-empty", "등록된 공지가 없습니다.")); return; }
+    list.forEach(function (n, idx) {
+      var b = el("button", "row"); b.type = "button";
+      if (n.id === selectedNoticeId) b.setAttribute("aria-current", "true");
+      b.appendChild(el("span", "row-date", n.date ? n.date.slice(5).replace("-", "/") : "—"));
+      b.appendChild(el("span", "row-title", n.title || "제목 없음"));
+      b.appendChild(el("span", "row-sub", idx < 3 ? "● 공개 중" : "보관"));
+      b.addEventListener("click", function () { selectNotice(n.id); });
+      host.appendChild(b);
+    });
+  }
+
+  function showPlaceholder() {
+    var none = mode === "events" ? !selectedId : !selectedNoticeId;
+    placeholder.hidden = !none;
+    placeholder.innerHTML = mode === "events"
+      ? '왼쪽에서 모임을 고르거나 <strong>+ 새 이벤트</strong>를 누르세요.'
+      : '왼쪽에서 공지를 고르거나 <strong>+ 새 공지</strong>를 누르세요.';
+  }
+
+  function selectNotice(id) {
+    var n = findNotice(id); if (!n) return;
+    selectedNoticeId = id;
+    document.getElementById("noticeForm").hidden = false;
+    document.getElementById("n_title").value = n.title || "";
+    document.getElementById("n_date").value = n.date || "";
+    document.getElementById("n_body").value = n.body || "";
+    document.getElementById("n_link").value = n.link || "";
+    showPlaceholder();
+    renderNoticeList();
+  }
+
+  function noticeChanged() {
+    state.updated = toISO(new Date());
+    renderNoticeList(); renderState();
+  }
+
+  document.getElementById("noticeForm").addEventListener("input", function () {
+    var n = findNotice(selectedNoticeId); if (!n) return;
+    n.title = document.getElementById("n_title").value.trim();
+    n.date = document.getElementById("n_date").value;
+    n.body = document.getElementById("n_body").value.trim();
+    var l = safeUrl(document.getElementById("n_link").value);
+    if (l) n.link = l; else delete n.link;
+    noticeChanged();
+  });
+  document.getElementById("noticeForm").addEventListener("submit", function (e) { e.preventDefault(); });
+
+  document.getElementById("btnNoticeDel").addEventListener("click", function () {
+    var n = findNotice(selectedNoticeId); if (!n) return;
+    if (!confirm("‘" + (n.title || "제목 없음") + "’ 공지를 삭제할까요?\n\n[게시]를 눌러야 실제로 반영됩니다.")) return;
+    state.notices = state.notices.filter(function (x) { return x.id !== selectedNoticeId; });
+    selectedNoticeId = null;
+    document.getElementById("noticeForm").hidden = true;
+    showPlaceholder();
+    noticeChanged();
+    toast("삭제했습니다. [게시]를 눌러야 반영됩니다.");
+  });
+
+  function setMode(m) {
+    mode = m;
+    var isEv = m === "events";
+    document.getElementById("modeEvents").setAttribute("aria-pressed", String(isEv));
+    document.getElementById("modeNotices").setAttribute("aria-pressed", String(!isEv));
+    document.getElementById("btnNew").textContent = isEv ? "+ 새 이벤트" : "+ 새 공지";
+    document.getElementById("lblUpcoming").textContent = isEv ? "Upcoming" : "Announcements";
+    document.getElementById("lblPast").hidden = !isEv;
+    document.getElementById("rowsPast").hidden = !isEv;
+    if (isEv) {
+      selectedNoticeId = null;
+      document.getElementById("noticeForm").hidden = true;
+    } else {
+      selectedId = null;
+      form.hidden = true;
+      document.getElementById("signupsBox").hidden = true;
+    }
+    showPlaceholder();
+    renderList();
+    renderState();
+  }
+  document.getElementById("modeEvents").addEventListener("click", function () { setMode("events"); });
+  document.getElementById("modeNotices").addEventListener("click", function () { setMode("notices"); });
+
   /* ---------------- 툴바 ---------------- */
 
   document.getElementById("btnSave").addEventListener("click", save);
 
   document.getElementById("btnNew").addEventListener("click", function () {
+    if (mode === "notices") {
+      var n = { id: makeId("notice"), title: "", date: toISO(todayStart()), body: "" };
+      state.notices.push(n);
+      selectNotice(n.id);
+      noticeChanged();
+      document.getElementById("n_title").focus();
+      return;
+    }
     var ev = { id: makeId("new"), title: "", date: toISO(todayStart()), attendees: [], status: "auto" };
     state.events.push(ev);
     afterChange(); select(ev.id);
@@ -1080,8 +1232,10 @@
     if (!confirm("고친 내용을 버리고 게시된 상태로 되돌릴까요?")) return;
     state.newPosters = {};
     var d = JSON.parse(state.published);
-    state.events = d.events; state.updated = d.updated;
-    selectedId = null; form.hidden = true; placeholder.hidden = false;
+    state.events = d.events; state.notices = d.notices || []; state.updated = d.updated;
+    selectedId = null; selectedNoticeId = null; form.hidden = true;
+    document.getElementById("noticeForm").hidden = true;
+    showPlaceholder();
     document.getElementById("signupsBox").hidden = true;
     document.getElementById("banner").hidden = true;
     renderList(); renderKakao(); renderState();
@@ -1179,6 +1333,7 @@
         var text = b64decode(file.content);
         var d = JSON.parse(text);
         state.events = d.events || [];
+        state.notices = d.notices || [];
         state.updated = d.updated || "";
         state.published = payload();
         renderList(); renderKakao(); renderState();
