@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>YCLB Index · YOUTH CLUB SEOUL</title>
+<meta name="color-scheme" content="dark" />
+<style>
+  @font-face { font-family: "Barun"; src: url("assets/nbg-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Barun"; src: url("assets/nbg-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+  :root { --ink:#0A0A0A; --line:#262626; --text:#F3F1EC; --text-2:#A8A59E; --text-3:#6E6B66; --accent:#E04A4C; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--ink); color:var(--text); font-family:"Helvetica Neue",Helvetica,Arial,"Barun","Malgun Gothic",sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .shell { max-width:68rem; margin:0 auto; padding:0 1.15rem 6rem; }
+  @media (min-width:48rem) { .shell { padding:0 2.5rem 6rem; } }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.3rem 0 1.1rem; border-bottom:1px solid var(--line); }
+  .topbar-brand img { display:block; height:1rem; width:auto; opacity:.95; }
+  .topbar-nav { display:flex; gap:1.4rem; list-style:none; margin:0; padding:0; }
+  .topbar-nav a { font-size:.82rem; font-weight:700; letter-spacing:.02em; color:var(--text-2); text-decoration:none; }
+  .topbar-nav a:hover { color:var(--text); }
+  .topbar-nav a.on { color:var(--accent); }
+  h1 { font-size:clamp(1.7rem,6vw,2.5rem); letter-spacing:-.035em; margin:2.6rem 0 .6rem; }
+  .soon { font-size:.8rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); }
+  p { color:var(--text-2); }
+  .dock { position:fixed; left:0; right:0; bottom:0; z-index:40; pointer-events:none; display:flex; justify-content:center; align-items:center; padding:.7rem 0; background:rgba(10,10,10,.96); border-top:1px solid var(--line); }
+  .dock img { display:block; height:1.25rem; width:auto; opacity:.92; }
+  @media (min-width:48rem) { .dock img { height:1.5rem; } }
+  @media (max-width:47.99rem) { .dock { padding:.55rem 0; } .dock img { height:1.05rem; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <nav class="topbar" aria-label="메인 메뉴">
+    <a class="topbar-brand" href="index.html"><img src="assets/logo.png" alt="YOUTH CLUB SEOUL" /></a>
+    <ul class="topbar-nav">
+      <li><a href="index.html">Events</a></li>
+      <li><a href="yclb-index.html" class="on" aria-current="page">Index</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+  <h1>YCLB Index</h1>
+  <p class="soon">Coming soon</p>
+  <p>회원명부는 다음 단계에서 채웁니다.</p>
+</div>
+<div class="dock" aria-hidden="true"><img src="assets/logo.png" alt="" /></div>
+</body>
+</html>

@@ -84,12 +84,6 @@
     margin: 0;
     white-space: nowrap;
   }
-  /* 예전 숫자 자리. 제목보다 두 단계 작게, 자간을 넓혀 라벨처럼 쓴다. */
-  .members-only {
-    font-size: 0.78rem; font-weight: 700;
-    letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--accent);
-  }
   .masthead-meta {
     display: flex; flex-wrap: wrap; gap: 0.4rem 0.9rem;
     font-size: 0.74rem; letter-spacing: 0.02em; color: var(--text-3);
@@ -133,15 +127,15 @@
   }
   .notice-body .apply { margin-top: 0.7rem; }
 
-  /* 하단 고정 로고. 스크롤해도 아래 가운데에 머문다.
-     작은 알약 모양 바탕에 올려 글과 겹쳐도 읽힌다. 클릭은 아래 내용으로 통과시킨다. */
+  /* 하단 고정 띠. 로고 위아래에 여백을 두고, 띠 전체가 화면 아래에 고정된다.
+     바탕이 불투명해서 스크롤된 글이 로고 옆으로 비치지 않는다. */
   .dock {
-    position: fixed; left: 50%; bottom: 0.6rem; transform: translateX(-50%);
+    position: fixed; left: 0; right: 0; bottom: 0;
     z-index: 40; pointer-events: none;
-    padding: 0.42rem 0.9rem;
-    background: rgba(10, 9, 8, 0.78);
-    border: 1px solid var(--line);
-    border-radius: 999px;
+    display: flex; justify-content: center; align-items: center;
+    padding: 0.7rem 0;
+    background: rgba(10, 10, 10, 0.96);
+    border-top: 1px solid var(--line);
     backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   }
   .dock-logo { display: block; height: 1.25rem; width: auto; opacity: 0.92; }
@@ -387,7 +381,6 @@
     .shell { max-width: 68rem; padding: 0 2.5rem 6rem; }
     .announce { padding-top: 4rem; }
     .masthead h1 { font-size: clamp(2.2rem, 3.4vw, 2.8rem); }
-    .members-only { font-size: 0.9rem; }
     /* 하단 로고: 한 단계 키움 */
     .dock-logo { height: 1.5rem; }
     .masthead-meta { margin-top: 1.4rem; }
@@ -405,7 +398,7 @@
      한 줄 흐름. 공지는 세로로 쌓고, 상세창은 화면을 가득 채운다. */
   @media (max-width: 47.99rem) {
     .shell { padding: 0 1.15rem 5.5rem; }
-    .dock { bottom: 0.45rem; padding: 0.34rem 0.75rem; }
+    .dock { padding: 0.55rem 0; }
     .dock-logo { height: 1.05rem; }
     .announce { padding-top: 2.6rem; }
     .announce-head { margin-bottom: 0.9rem; }
@@ -433,11 +426,39 @@
     .thumb { width: 4.5rem; }
     .event-main { gap: 0.75rem; }
   }
+
+  /* 상단 메뉴 */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 1rem; padding: 1.3rem 0 1.1rem; border-bottom: 1px solid var(--line);
+  }
+  .topbar-brand img { display: block; height: 1rem; width: auto; opacity: 0.95; }
+  .topbar-nav { display: flex; gap: 1.4rem; list-style: none; margin: 0; padding: 0; }
+  .topbar-nav a {
+    font-size: 0.82rem; font-weight: 700; letter-spacing: 0.02em;
+    color: var(--text-2); text-decoration: none;
+  }
+  .topbar-nav a:hover { color: var(--text); }
+  .topbar-nav a.on { color: var(--accent); }
+  /* 예정 목록 위 라벨. 예전 숫자 자리에 있던 'Members Only' 를 그대로 옮긴 것. */
+  .section-members {
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 0.2em;
+    color: var(--accent); margin: 2.5rem 0 0.25rem;
+  }
+  @media (min-width: 48rem) { .section-members { font-size: 0.9rem; margin-top: 2.8rem; } }
 </style>
 </head>
 <body>
 
 <div class="shell">
+  <nav class="topbar" aria-label="메인 메뉴">
+    <a class="topbar-brand" href="index.html"><img src="assets/logo.png" alt="YOUTH CLUB SEOUL" /></a>
+    <ul class="topbar-nav">
+      <li><a href="index.html" class="on" aria-current="page">Events</a></li>
+      <li><a href="yclb-index.html">Index</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
   <section class="announce" id="announce" hidden>
     <div class="announce-head">
       <h2>Announcements</h2>
@@ -449,7 +470,6 @@
   <header class="masthead">
     <div class="masthead-top">
       <h1>Upcoming Events</h1>
-      <span class="members-only">Members Only</span>
     </div>
     <div class="masthead-meta">
       <span id="statSeats">&mdash;</span>
@@ -459,7 +479,7 @@
   </header>
 
   <main>
-    <p class="section-label">Upcoming</p>
+    <p class="section-label section-members">Members Only</p>
     <div class="list" id="upcomingList"></div>
 
     <section class="past" id="pastWrap" hidden>
