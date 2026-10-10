@@ -264,7 +264,7 @@
   .signup input:focus { border-color: var(--brass-dim); outline: none; }
   .signup input::placeholder { color: var(--text-3); opacity: 0.7; }
   .signup input.name { flex: 1 1 7rem; }
-  .signup input.phone { flex: 1 1 10rem; }
+  .signup input.phone { flex: 1 1 8.5rem; }
   .signup input.kakao { flex: 1 1 9rem; }
   .signup .hint { font-size: 0.72rem; color: var(--text-3); }
   .signup .err { font-size: 0.75rem; color: var(--rust); }
@@ -764,9 +764,9 @@
     name.maxLength = 20;
 
     var phone = el("input", "phone");
-    phone.type = "tel"; phone.placeholder = "휴대폰 번호";
-    phone.setAttribute("aria-label", ev.title + " 신청자 휴대폰 번호");
-    phone.inputMode = "numeric"; phone.maxLength = 20;
+    phone.type = "tel"; phone.placeholder = "휴대폰 뒷자리 4자리";
+    phone.setAttribute("aria-label", ev.title + " 신청자 휴대폰 번호 뒷자리 4자리");
+    phone.inputMode = "numeric"; phone.maxLength = 4; phone.autocomplete = "off";
 
     var kakao = el("input", "kakao");
     kakao.type = "text"; kakao.placeholder = "카카오톡 닉네임";
@@ -780,15 +780,15 @@
     box.appendChild(row);
 
     var msg = el("div", "hint", full
-      ? "정원이 찼습니다. 신청하면 대기 순번으로 올라갑니다."
-      : "휴대폰 번호와 닉네임은 주최자만 봅니다. 명단에는 이름만 보입니다.");
+      ? "정원이 찼습니다. 신청하면 대기 순번으로 올라갑니다. 휴대폰 뒷자리는 동명이인 구분에만 쓰입니다."
+      : "휴대폰 뒷자리는 동명이인 구분에만 쓰입니다. 뒷자리와 닉네임은 주최자만 보고, 명단에는 이름만 보입니다.");
     box.appendChild(msg);
 
     btn.addEventListener("click", function () {
       var nv = name.value.trim();
       var pv = phone.value.replace(/[^0-9]/g, "");
       if (nv.length < 2) { msg.className = "err"; msg.textContent = "이름을 두 글자 이상 입력해 주세요."; name.focus(); return; }
-      if (pv.length < 10 || pv.length > 11) { msg.className = "err"; msg.textContent = "휴대폰 번호를 정확히 입력해 주세요."; phone.focus(); return; }
+      if (pv.length !== 4) { msg.className = "err"; msg.textContent = "휴대폰 번호 뒷자리 4자리를 입력해 주세요."; phone.focus(); return; }
       var kv = kakao.value.trim();
       if (!kv) { msg.className = "err"; msg.textContent = "카카오톡 닉네임을 입력해 주세요."; kakao.focus(); return; }
 

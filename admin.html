@@ -493,8 +493,9 @@
     <input type="password" id="tokenInput" placeholder="github_pat_..." autocomplete="off" />
 
     <h2 style="margin-top:.6rem">신청자 조회 키</h2>
-    <p>신청자의 휴대폰 번호를 이 화면에서 보려면 필요합니다. Apps Script 코드 맨 위의
-      <code>ADMIN_KEY</code> 값과 같아야 합니다. 이것도 이 브라우저에만 저장됩니다.</p>
+    <p>신청자의 휴대폰 뒷자리와 카카오톡 닉네임을 이 화면에서 보려면 필요합니다.
+      Apps Script ⚙️ 프로젝트 설정 → 스크립트 속성의 <code>ADMIN_KEY</code> 값과 같아야 합니다.
+      이것도 이 브라우저에만 저장됩니다.</p>
     <input type="password" id="keyInput" placeholder="Apps Script 의 ADMIN_KEY" autocomplete="off" />
   </div>
   <div class="sheet-foot">
@@ -916,12 +917,10 @@
 
   /* ---------------- 신청자 (번호 포함) ---------------- */
 
-  /* 보기 좋게만 하이픈을 넣는다. 저장·비교는 숫자만으로 한다. */
+  /* 신청 때는 뒷자리 4자리만 받는다. 예전에 받은 전체 번호도 끝 네 자리만 보여준다. */
   function fmtPhone(p) {
     var d = String(p || "").replace(/[^0-9]/g, "");
-    if (d.length === 11) return d.slice(0, 3) + "-" + d.slice(3, 7) + "-" + d.slice(7);
-    if (d.length === 10) return d.slice(0, 3) + "-" + d.slice(3, 6) + "-" + d.slice(6);
-    return d || "—";
+    return d ? "···" + d.slice(-4) : "—";
   }
 
   function renderSignups(ev) {
@@ -935,7 +934,7 @@
 
     var seed = (ev.attendees || []).length;
     var head = document.createElement("tr");
-    ["#", "이름", "휴대폰", "카카오톡 닉네임", "인증", "접수"].forEach(function (h) { head.appendChild(el("th", null, h)); });
+    ["#", "이름", "뒷자리", "카카오톡 닉네임", "인증", "접수"].forEach(function (h) { head.appendChild(el("th", null, h)); });
     table.appendChild(head);
 
     rows.forEach(function (r, i) {

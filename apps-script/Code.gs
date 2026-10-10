@@ -2,14 +2,20 @@
  * YOUTH CLUB SEOUL — 참석 신청 접수
  *
  * 이 스크립트가 하는 일은 둘이다.
- *   1. 방문자가 남긴 이름·휴대폰 번호·카카오톡 닉네임을 시트에 받아두고,
+ *   1. 방문자가 남긴 이름·휴대폰 뒷자리 4자리·카카오톡 닉네임을 시트에 받아두고,
  *      바깥에는 이름과 순번만 돌려준다.
- *   2. 신청자가 YCLB Index(회원명부)에 있는지 이름+번호로 맞춰 보고,
+ *   2. 신청자가 YCLB Index(회원명부)에 있는지 이름+뒷자리로 맞춰 보고,
  *      맞으면 공개 명단에 verified 표시만 붙인다.
- * 번호와 닉네임은 어떤 공개 응답에도 실리지 않는다 — 시트와 관리자만 본다.
+ * 전체 번호는 받지 않는다. 뒷자리는 동명이인을 가리는 데만 쓴다.
+ * 뒷자리와 닉네임은 어떤 공개 응답에도 실리지 않는다 — 시트와 관리자만 본다.
  *
  * 정원 판정도 여기서 한다. 브라우저에서 세면 얼마든지 우회할 수 있지만,
  * 접수 시점에 시트가 순번을 매기면 실제 선착순이 보장된다.
+ *
+ * 관리자 열쇠: 이 코드에 적지 않는다(저장소가 공개라서).
+ *   Apps Script 왼쪽 ⚙️ 프로젝트 설정 → 스크립트 속성 → 속성 추가
+ *   속성 이름 ADMIN_KEY / 값 = 관리자 화면에 넣는 것과 같은 열쇠
+ *   스크립트 속성은 코드를 새로 붙여넣어도 그대로 남는다.
  *
  * 배포: 확장 프로그램 → Apps Script → 이 코드 붙여넣기 →
  *      배포 → 새 배포 → 유형 '웹 앱' →
@@ -18,20 +24,23 @@
  * (그래야 주소가 그대로 유지된다)
  */
 
-/* 관리자 화면에서 번호를 불러올 때 쓰는 열쇠. 아무에게도 주지 말 것. */
-var ADMIN_KEY = 'XPuTp2Fr52XqvgvHw-V6QOtu71yBsTAG';
+/* 관리자 화면에서 신청자 정보를 불러올 때 쓰는 열쇠. 스크립트 속성에만 둔다.
+   비어 있으면 관리자 조회는 아예 닫힌다. */
+function adminKey_() {
+  return PropertiesService.getScriptProperties().getProperty('ADMIN_KEY') || '';
+}
 
 /* 정원을 여기서 따로 관리하지 않는다. 공개된 이벤트 데이터가 유일한 출처다. */
 var EVENTS_URL = 'https://jikchaa.github.io/seoulyouthclub/data/events.json';
 
 var SHEET_NAME = 'signups';
 /* 열 순서를 바꾸지 말 것 — 이미 쌓인 행이 이 순서로 들어 있다. 새 열은 끝에만 붙인다. */
-var HEADERS = ['접수시각', '이벤트ID', '이벤트명', '이름', '휴대폰', '취소', '카카오톡 닉네임'];
+var HEADERS = ['접수시각', '이벤트ID', '이벤트명', '이름', '휴대폰 뒷자리', '취소', '카카오톡 닉네임'];
 var COL = { at: 0, eventId: 1, title: 2, name: 3, phone: 4, cancel: 5, kakao: 6 };
 
 /* 회원명부 탭. 이 이름 중 하나로 된 탭을 찾고, 없으면 첫 번째 이름으로 만든다. */
 var INDEX_SHEETS = ['YCLB Index', 'index', 'Index'];
-var INDEX_HEADERS = ['이름', '휴대폰', '카카오톡 닉네임', '이메일', '인스타그램', '소속', '직책', '리멤버/링크드인'];
+var INDEX_HEADERS = ['이름', '휴대폰 뒷자리', '카카오톡 닉네임', '이메일', '인스타그램', '소속', '직책', '리멤버/링크드인'];
 
 /* ------------------------------------------------------------------ */
 
@@ -68,13 +77,14 @@ function json_(obj) {
 
 /* ---------------- 같은 사람인지 비교하기 위한 정리 ---------------- */
 
-/* 하이픈·공백·괄호 상관없이 숫자만 남긴다.
-   +82 로 시작하면 0 으로 바꾸고, 시트가 앞자리 0 을 먹어 10자리가 된 번호도 되살린다. */
-function normPhone_(v) {
+/* 휴대폰 뒷자리 4자리. 하이픈·공백 상관없이 숫자만 보고 끝 네 자리를 쓴다.
+   명부에 전체 번호가 있어도, 뒷자리만 있어도 똑같이 맞춰진다.
+   시트가 숫자로 읽어 앞자리 0 을 먹은 경우(0123 → 123)는 0 을 채워 되살린다. */
+function last4_(v) {
   var d = String(v == null ? '' : v).replace(/[^0-9]/g, '');
-  if (d.indexOf('82') === 0 && d.length >= 11) d = '0' + d.slice(2);
-  if (d.length === 10 && d.charAt(0) === '1') d = '0' + d;
-  return d;
+  if (!d) return '';
+  if (d.length < 4) d = ('0000' + d).slice(-4);
+  return d.slice(-4);
 }
 
 /* 띄어쓰기와 대소문자 차이는 같은 이름으로 본다. (김 민수 = 김민수, Amy = amy) */
@@ -82,7 +92,7 @@ function normName_(v) {
   return String(v == null ? '' : v).replace(/\s+/g, '').toLowerCase();
 }
 
-function key_(name, phone) { return normName_(name) + '|' + normPhone_(phone); }
+function key_(name, phone) { return normName_(name) + '|' + last4_(phone); }
 
 /* ---------------- 회원명부 ---------------- */
 
@@ -107,7 +117,7 @@ function findCol_(head, words) {
   return -1;
 }
 
-/* 명부의 이름+번호 목록. 매 요청마다 시트를 읽으면 느리니 1분 캐시한다. */
+/* 명부의 이름+뒷자리 목록. 매 요청마다 시트를 읽으면 느리니 1분 캐시한다. */
 function indexKeys_() {
   var cache = CacheService.getScriptCache();
   var hit = cache.get('indexKeys');
@@ -169,14 +179,14 @@ function rosterOf_(eventId, all) {
   return (all || rows_())
     .filter(function (r) { return String(r[COL.eventId]) === String(eventId); })
     .map(function (r) {
-      return { at: r[COL.at], name: String(r[COL.name]), phone: normPhone_(r[COL.phone]) };
+      return { at: r[COL.at], name: String(r[COL.name]), key: key_(r[COL.name], r[COL.phone]) };
     });
 }
 
 /* ------------------------------------------------------------------ *
  * GET — 공개. 이름·순번·인증 여부만 나간다.
  *   ?action=list                     모든 이벤트의 명단
- *   ?action=phones&key=ADMIN_KEY     관리자 전용, 번호·닉네임 포함
+ *   ?action=phones&key=ADMIN_KEY     관리자 전용, 뒷자리·닉네임 포함
  * ------------------------------------------------------------------ */
 
 function doGet(e) {
@@ -185,7 +195,8 @@ function doGet(e) {
   var index = indexKeys_();
 
   if (action === 'phones') {
-    if (params.key !== ADMIN_KEY) {
+    var k = adminKey_();
+    if (!k || params.key !== k) {
       return json_({ ok: false, error: 'not authorized' });
     }
     var full = {};
@@ -194,7 +205,7 @@ function doGet(e) {
       if (!full[id]) full[id] = [];
       full[id].push({
         name: String(r[COL.name]),
-        phone: normPhone_(r[COL.phone]),
+        phone: last4_(r[COL.phone]),
         kakao: String(r[COL.kakao] || ''),
         verified: !!index[key_(r[COL.name], r[COL.phone])],
         at: r[COL.at] ? new Date(r[COL.at]).toISOString() : ''
@@ -209,7 +220,7 @@ function doGet(e) {
   rows_().forEach(function (r) {
     var id = String(r[COL.eventId]);
     if (!out[id]) out[id] = [];
-    /* 번호·닉네임은 여기에 절대 넣지 않는다. 인증 여부는 결과만 싣는다. */
+    /* 뒷자리·닉네임은 여기에 절대 넣지 않는다. 인증 여부는 결과만 싣는다. */
     out[id].push({
       name: String(r[COL.name]),
       verified: !!index[key_(r[COL.name], r[COL.phone])]
@@ -234,13 +245,15 @@ function doPost(e) {
 
   var eventId = String(body.eventId || '').trim();
   var name = String(body.name || '').trim().slice(0, 20);
-  var phone = normPhone_(body.phone);
+  /* 뒷자리 4자리만 받는다. 예전 화면이 전체 번호를 보내도 끝 네 자리만 남긴다. */
+  var digits = String(body.phone || '').replace(/[^0-9]/g, '');
+  var phone = digits.slice(-4);
   var kakao = String(body.kakao || '').trim().slice(0, 30);
 
   if (!eventId) return json_({ ok: false, error: '어느 모임인지 알 수 없습니다.' });
   if (name.length < 2) return json_({ ok: false, error: '이름을 두 글자 이상 입력해 주세요.' });
-  if (phone.length < 10 || phone.length > 11) {
-    return json_({ ok: false, error: '휴대폰 번호를 정확히 입력해 주세요.' });
+  if (!(digits.length === 4 || digits.length === 10 || digits.length === 11)) {
+    return json_({ ok: false, error: '휴대폰 번호 뒷자리 4자리를 입력해 주세요.' });
   }
   if (!kakao) return json_({ ok: false, error: '카카오톡 닉네임을 입력해 주세요.' });
 
@@ -267,9 +280,10 @@ function doPost(e) {
     var all = rows_();
     var roster = rosterOf_(eventId, all);
 
-    /* 같은 번호면 같은 사람이다 — 하이픈 유무와 상관없이 비교한다. */
+    /* 이름과 뒷자리가 모두 같으면 같은 사람이다. 동명이인은 뒷자리로 갈린다. */
+    var me = key_(name, phone);
     for (var i = 0; i < roster.length; i++) {
-      if (roster[i].phone === phone) {
+      if (roster[i].key === me) {
         var at = ((meta && meta.seedCount) || 0) + i + 1;
         return json_({ ok: false, error: '이미 신청하셨습니다 — ' + at + '번째입니다.' });
       }
@@ -280,7 +294,7 @@ function doPost(e) {
       eventId,
       (meta && meta.title) || '',
       name,
-      "'" + phone,          // 앞자리 0이 날아가지 않게 문자열로 넣는다
+      "'" + phone,          // 0123 처럼 0으로 시작해도 날아가지 않게 문자열로 넣는다
       '',
       kakao
     ]);
