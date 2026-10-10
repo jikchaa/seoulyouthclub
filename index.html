@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <!-- 회원 이름이 검색에 걸리지 않게 한다. 주소를 아는 사람만 본다. -->
 <meta name="robots" content="noindex, nofollow" />
-<title>Upcoming Events · YOUTH CLUB SEOUL</title>
+<title>Upcoming Events · SEOUL YOUTH CLUB</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
 <link rel="icon" type="image/png" sizes="1024x1024" href="assets/icon.png" />
 <link rel="apple-touch-icon" href="assets/icon-180.png" />
@@ -138,7 +138,6 @@
     border-top: 1px solid var(--line);
     backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   }
-  .dock-logo { display: block; height: 1.25rem; width: auto; opacity: 0.92; }
 
   .section-label {
     font-size: 0.66rem; font-weight: 700; letter-spacing: 0.22em;
@@ -258,37 +257,10 @@
   .apply::after { content: "\2192"; }
 
   /* ---------- 상세 ---------- */
-
-  dialog.detail {
-    width: min(58rem, calc(100vw - 2rem));
-    max-height: min(88vh, 54rem);
-    padding: 0; border: 1px solid var(--line-strong); border-radius: 3px;
-    background: var(--surface); color: var(--text);
-  }
-  dialog.detail::backdrop { background: rgba(5, 5, 4, 0.82); }
-
-  .detail-grid { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); }
   .detail-grid[data-noimage="true"] { grid-template-columns: 1fr; }
-
-  .detail-figure {
-    background: var(--ink); border-right: 1px solid var(--line);
-    display: grid; place-items: center; padding: 1.25rem;
-  }
   .detail-figure img {
     display: block; width: 100%; aspect-ratio: 3 / 4;
     object-fit: contain; border-radius: 2px;
-  }
-
-  .detail-side { display: flex; flex-direction: column; max-height: inherit; min-width: 0; }
-  .detail-scroll { overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-  .detail-scroll h2 {
-    margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; text-wrap: balance;
-  }
-  .detail-close {
-    position: absolute; top: 0.5rem; right: 0.6rem;
-    appearance: none; background: var(--surface); border: 1px solid var(--line-strong);
-    color: var(--text-2); border-radius: 2px; width: 1.9rem; height: 1.9rem;
-    font-size: 1rem; line-height: 1; cursor: pointer;
   }
   .detail-close:hover { color: var(--text); border-color: var(--accent-dim); }
 
@@ -331,8 +303,7 @@
     .announce { padding-top: 4rem; }
     .masthead h1 { font-size: clamp(2.2rem, 3.4vw, 2.8rem); }
     /* 하단 로고: 한 단계 키움 */
-    .dock-logo { height: 1.5rem; }
-    .masthead-meta { margin-top: 1.4rem; }
+      .masthead-meta { margin-top: 1.4rem; }
     .section-label { margin-top: 2.8rem; }
 
     .event { grid-template-columns: 5.5rem minmax(0, 1fr); gap: 2.2rem; padding: 2.4rem 0; }
@@ -348,23 +319,12 @@
   @media (max-width: 47.99rem) {
     .shell { padding: 0 1.15rem 5.5rem; }
     .dock { padding: 0.55rem 0; }
-    .dock-logo { height: 1.05rem; }
     .announce { padding-top: 2.6rem; }
     .announce-head { margin-bottom: 0.9rem; }
     .notice-list { grid-template-columns: 1fr; gap: 0.7rem; }
     .notice { padding: 0.85rem 0.95rem; }
     .notice-title { font-size: 0.92rem; }
-
-    dialog.detail {
-      width: 100vw; max-width: 100vw; height: 100%; max-height: 100%;
-      border: 0; border-radius: 0;
-    }
-    .detail-grid { grid-template-columns: 1fr; height: 100%; }
-    .detail-figure { border-right: 0; border-bottom: 1px solid var(--line); padding: 0.9rem; }
     .detail-figure img { max-width: 15rem; margin: 0 auto; }
-    .detail-side { flex: 1; min-height: 0; }
-    .detail-scroll { max-height: none; }
-    .detail-close { top: 0.6rem; right: 0.6rem; }
   }
 
   @media (max-width: 34rem) {
@@ -520,6 +480,39 @@
   .list > .row:last-child { border-bottom: 2px solid var(--text-2); }
   .row[data-state="closed"]:not(.is-past) { opacity: 0.5; }
 
+  .dock-word { font-size: 0.9rem; font-weight: 700; letter-spacing: 0.14em; color: var(--text); white-space: nowrap; }
+  @media (min-width: 48rem) { .dock-word { font-size: 1.05rem; } }
+  @media (max-width: 47.99rem) { .dock-word { font-size: 0.78rem; } }
+
+  .row-more {
+    appearance: none; background: none; border: 0; padding: 0.3rem 0; margin-top: 0.4rem;
+    font: inherit; font-size: 0.76rem; color: var(--text-3); cursor: pointer;
+  }
+  .row-more::after { content: " \25BE"; }
+  .row-more[aria-expanded="true"]::after { content: " \25B4"; }
+  .row-more:hover { color: var(--accent); }
+  .row-more:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .row-extra {
+    display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 1.2rem;
+    margin-top: 1.1rem; padding-top: 1.1rem; border-top: 1px dashed var(--line-strong);
+  }
+  .row-extra[hidden] { display: none; }
+  .row-extra.no-poster { grid-template-columns: minmax(0, 1fr); }
+  .row-poster { width: 100%; aspect-ratio: 3 / 4; object-fit: cover; border: 1px solid var(--line); display: block; }
+  .row-extra-text { min-width: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+  .row-extra .event-desc { margin: 0; }
+  @media (max-width: 47.99rem) {
+    .row-extra { grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.9rem; }
+  }
+
+  .month-div {
+    display: flex; align-items: center; gap: 0.9rem;
+    margin: 2.4rem 0 0.2rem; font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.24em; color: var(--accent);
+  }
+  .month-div::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
   .event-desc { margin: 0 0 1rem; font-size: 0.92rem; line-height: 1.7; color: var(--text-2); white-space: pre-line; }
   .verify-note { margin: 1.2rem 0 0; font-size: 0.78rem; color: var(--text-2); }
 
@@ -533,7 +526,7 @@
 
 <div class="shell">
   <nav class="topbar" aria-label="메인 메뉴">
-    <a class="topbar-brand" href="index.html"><span class="sq">YOUTH</span><span class="bn">YOUTH CLUB SEOUL</span></a>
+    <a class="topbar-brand" href="index.html"><span class="sq">YOUTH</span><span class="bn">SEOUL YOUTH CLUB</span></a>
     <ul class="topbar-nav">
       <li><a href="index.html" class="on" aria-current="page">Events</a></li>
       <li><a href="yclb-index.html">Index</a></li>
@@ -564,24 +557,13 @@
   </main>
 
   <footer class="foot">
-    <span>© Youth Club Seoul</span>
+    <span>SEOUL YOUTH CLUB</span>
     <a href="admin.html">관리자</a>
   </footer>
 </div>
 
-<dialog class="detail" id="detail">
-  <button type="button" class="detail-close" id="detailClose" aria-label="닫기">&times;</button>
-  <div class="detail-grid" id="detailGrid">
-    <div class="detail-figure" id="detailFigure"><img id="detailImg" alt="" /></div>
-    <div class="detail-side">
-      <div class="detail-scroll" id="detailBody"></div>
-    </div>
-  </div>
-</dialog>
 
-<div class="dock" aria-hidden="true">
-  <img class="dock-logo" src="assets/logo.png" alt="" />
-</div>
+<div class="dock" aria-hidden="true"><span class="dock-word">SEOUL YOUTH CLUB</span></div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -694,13 +676,6 @@
     var up = [], past = [];
     state.events.forEach(function (ev) { ((ev.date || "") >= today ? up : past).push(ev); });
     return { upcoming: sortByDate(up), past: sortByDate(past).reverse() };
-  }
-
-  function findEvent(id) {
-    for (var i = 0; i < state.events.length; i++) {
-      if (state.events[i].id === id) return state.events[i];
-    }
-    return null;
   }
 
   /* ---------------- DOM ---------------- */
@@ -982,6 +957,65 @@
     });
   }
 
+  /* 설명·비고·링크·포스터가 하나라도 있으면 '상세 보기' 를 붙인다. */
+  function hasDetail(ev) {
+    return !!(ev.desc || ev.note || (ev.links && ev.links.length) || posterSrc(ev.image));
+  }
+
+  function buildExtra(ev) {
+    var box = el("div", "row-extra");
+    var src = posterSrc(ev.image);
+    if (!src) box.classList.add("no-poster");
+    if (src) {
+      var img = el("img", "row-poster");
+      img.src = src;
+      img.alt = ev.title + " 포스터";
+      img.loading = "lazy";
+      box.appendChild(img);
+    }
+    var text = el("div", "row-extra-text");
+    if (ev.desc) text.appendChild(el("p", "event-desc", ev.desc));
+    text.appendChild(buildFields(ev));
+    if (ev.links && ev.links.length) {
+      var links = el("div", "links");
+      ev.links.forEach(function (l) { if (l && l.url) links.appendChild(link(l.url, l.label || l.url)); });
+      if (links.childNodes.length) text.appendChild(links);
+    }
+    box.appendChild(text);
+    return box;
+  }
+
+  /* 패널을 여닫는 버튼. 펼치면 '상세 닫기' 로 바뀐다. */
+  function toggleButton(panel, cls) {
+    var b = el("button", cls, "상세 보기");
+    b.type = "button";
+    b.setAttribute("aria-expanded", "false");
+    panel.hidden = true;
+    b.addEventListener("click", function () {
+      panel.hidden = !panel.hidden;
+      b.setAttribute("aria-expanded", String(!panel.hidden));
+      b.textContent = panel.hidden ? "상세 보기" : "상세 닫기";
+    });
+    return b;
+  }
+
+  var MONTH_NAMES = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+
+  /* 월이 바뀌는 자리에 'NOVEMBER' 같은 구분선을 넣는다. */
+  function appendRows(list, events) {
+    var prev = null;
+    events.forEach(function (ev) {
+      var m = parseDate(ev.date).getMonth();
+      if (prev !== null && m !== prev) {
+        var div = el("div", "month-div");
+        div.appendChild(el("span", null, MONTH_NAMES[m]));
+        list.appendChild(div);
+      }
+      list.appendChild(renderCard(ev));
+      prev = m;
+    });
+  }
+
   function renderCard(ev) {
     var status = effectiveStatus(ev);
     var d = parseDate(ev.date);
@@ -990,6 +1024,7 @@
     var big = isBigEvent(ev);
     var r = big ? { going: [], waiting: [] } : roster(ev);
     var going = r.going.length;
+    var extra = hasDetail(ev) ? buildExtra(ev) : null;
 
     var row = el("article", "row");
     row.dataset.state = status;
@@ -1010,10 +1045,7 @@
     /* 제목·시간·장소·명단 */
     var tt = el("div", "row-title");
     var h = el("h3");
-    var name = el("button", "row-name", ev.title);
-    name.type = "button";
-    name.addEventListener("click", function () { openDetail(ev.id); });
-    h.appendChild(name);
+    h.appendChild(el("span", "row-name", ev.title));
     tt.appendChild(h);
     var metaText = [ev.time, ev.place, ev.fee].filter(Boolean).join(" · ");
     if (metaText) tt.appendChild(el("div", "row-meta", metaText));
@@ -1026,6 +1058,7 @@
         tt.appendChild(el("div", "row-meta", "첫 번째 참석자가 되어보세요"));
       }
       if (r.waiting.length) tt.appendChild(el("div", "row-meta", "대기 " + r.waiting.length + "명"));
+      if (extra) tt.appendChild(toggleButton(extra, "row-more"));
     }
     main.appendChild(tt);
 
@@ -1056,9 +1089,7 @@
     var signup = big || past ? null : buildSignup(ev);
     var action;
     if (big) {
-      action = el("button", "row-btn", "자세히 보기");
-      action.type = "button";
-      action.addEventListener("click", function () { openDetail(ev.id); });
+      action = extra ? toggleButton(extra, "row-btn") : el("span", "row-btn off", "정보 준비 중");
     } else if (past) {
       action = el("span", "row-btn off", "종료");
     } else if (status === "closed" || !signup) {
@@ -1070,6 +1101,7 @@
     seat.appendChild(action);
     main.appendChild(seat);
     row.appendChild(main);
+    if (extra) row.appendChild(extra);
 
     /* 참석 신청 칸은 버튼을 눌러야 펼쳐진다. */
     if (signup) {
@@ -1087,63 +1119,6 @@
   }
 
   /* ---------------- 상세 ---------------- */
-
-  var detail = document.getElementById("detail");
-  var detailGrid = document.getElementById("detailGrid");
-  var detailFigure = document.getElementById("detailFigure");
-  var detailImg = document.getElementById("detailImg");
-  var detailBody = document.getElementById("detailBody");
-  var detailId = null;
-
-  function openDetail(id) {
-    var ev = findEvent(id);
-    if (!ev) return;
-    detailId = id;
-    paintDetail(ev);
-    if (!detail.open) detail.showModal();
-  }
-
-  function paintDetail(ev) {
-    var src = posterSrc(ev.image);
-    if (src) {
-      detailImg.src = src;
-      detailImg.alt = ev.title + " 포스터";
-      detailFigure.hidden = false;
-      detailGrid.dataset.noimage = "false";
-    } else {
-      detailImg.removeAttribute("src");
-      detailFigure.hidden = true;
-      detailGrid.dataset.noimage = "true";
-    }
-
-    detailBody.textContent = "";
-
-    var head = el("div", "event-head");
-    head.appendChild(el("h2", null, ev.title));
-    var status = effectiveStatus(ev);
-    var pastEv = daysUntil(ev.date) < 0;
-    var badge = el("span", "badge", pastEv ? "종료" : STATUS_LABEL[status]);
-    badge.dataset.state = pastEv ? "closed" : status;
-    head.appendChild(badge);
-    detailBody.appendChild(head);
-
-    if (ev.desc) detailBody.appendChild(el("p", "event-desc", ev.desc));
-    detailBody.appendChild(buildFields(ev));
-    var dAttend = buildAttend(ev);
-    if (dAttend) detailBody.appendChild(dAttend);
-
-    if (ev.links && ev.links.length) {
-      var links = el("div", "links");
-      ev.links.forEach(function (l) { if (l && l.url) links.appendChild(link(l.url, l.label || l.url)); });
-      if (links.childNodes.length) detailBody.appendChild(links);
-    }
-
-    var signup = buildSignup(ev);
-    if (signup) detailBody.appendChild(signup);
-  }
-
-  document.getElementById("detailClose").addEventListener("click", function () { detail.close(); });
-  detail.addEventListener("close", function () { detailId = null; });
 
   /* ---------------- 렌더 ---------------- */
 
@@ -1204,7 +1179,7 @@
 
     upcomingList.textContent = "";
     if (up.length) {
-      up.forEach(function (ev) { upcomingList.appendChild(renderCard(ev)); });
+      appendRows(upcomingList, up);
     } else if (g.upcoming.length) {
       upcomingList.appendChild(el("p", "empty", "이 종류의 예정 모임은 아직 없습니다."));
     } else {
@@ -1212,7 +1187,7 @@
     }
 
     pastList.textContent = "";
-    pa.forEach(function (ev) { pastList.appendChild(renderCard(ev)); });
+    appendRows(pastList, pa);
     document.getElementById("pastWrap").hidden = pa.length === 0;
 
     /* 예정 모임 명단에 인증된 사람이 있을 때만 딱지의 뜻을 알려준다. */
@@ -1227,10 +1202,6 @@
     }
     legend.hidden = !anyVerified;
 
-    if (detailId) {
-      var ev = findEvent(detailId);
-      if (ev) paintDetail(ev);
-    }
   }
 
   /* ---------------- toast ---------------- */

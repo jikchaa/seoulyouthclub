@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>About · YOUTH CLUB SEOUL</title>
+<title>About · SEOUL YOUTH CLUB</title>
 <meta name="color-scheme" content="dark" />
 <style>
   @font-face { font-family: "Barun"; src: url("assets/nbg-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
@@ -26,15 +26,14 @@
   .soon { font-size:.8rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); }
   p { color:var(--text-2); }
   .dock { position:fixed; left:0; right:0; bottom:0; z-index:40; pointer-events:none; display:flex; justify-content:center; align-items:center; padding:.7rem 0; background:rgba(10,10,10,.96); border-top:1px solid var(--line); }
-  .dock img { display:block; height:1.25rem; width:auto; opacity:.92; }
-  @media (min-width:48rem) { .dock img { height:1.5rem; } }
-  @media (max-width:47.99rem) { .dock { padding:.55rem 0; } .dock img { height:1.05rem; } }
+  .dock-word { font-size:1.05rem; font-weight:700; letter-spacing:.14em; color:var(--text); }
+  @media (max-width:47.99rem) { .dock { padding:.55rem 0; } .dock-word { font-size:.78rem; } }
 </style>
 </head>
 <body>
 <div class="shell">
   <nav class="topbar" aria-label="메인 메뉴">
-    <a class="topbar-brand" href="index.html"><span class="sq">YOUTH</span><span class="bn">YOUTH CLUB SEOUL</span></a>
+    <a class="topbar-brand" href="index.html"><span class="sq">YOUTH</span><span class="bn">SEOUL YOUTH CLUB</span></a>
     <ul class="topbar-nav">
       <li><a href="index.html">Events</a></li>
       <li><a href="yclb-index.html">Index</a></li>
@@ -45,6 +44,6 @@
   <p class="soon">Coming soon</p>
   <p>소개 글은 다음 단계에서 채웁니다.</p>
 </div>
-<div class="dock" aria-hidden="true"><img src="assets/logo.png" alt="" /></div>
+<div class="dock" aria-hidden="true"><span class="dock-word">SEOUL YOUTH CLUB</span></div>
 </body>
 </html>
