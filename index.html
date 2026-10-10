@@ -266,7 +266,6 @@
 
   /* ---------- past / footer ---------- */
 
-  .past { margin-top: 2.75rem; }
   .past > .section-label { margin-top: 0; }
 
   .empty { padding: 3rem 0; color: var(--text-3); }
@@ -372,6 +371,7 @@
   .notice-body { margin-left: 0; }
 
   .filters { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 1.1rem 0 0.2rem; }
+  .filters[hidden] { display: none; }
   .filters button {
     appearance: none; cursor: pointer; font-family: inherit;
     font-size: 0.78rem; font-weight: 700; color: var(--text);
@@ -431,7 +431,6 @@
   .row-panel { margin-top: 1.1rem; padding-top: 1rem; border-top: 1px dashed var(--line-strong); }
   .row-panel[hidden] { display: none; }
 
-  .past { margin-top: 2.75rem; }
   .past > .section-label { margin-top: 0; }
 
   /* 휴대폰(390px 근처): 날짜·제목·자리를 세로로 쌓고, 호스트는 숨긴다. */
@@ -511,7 +510,7 @@
     margin: 2.4rem 0 0.2rem; font-size: 0.78rem; font-weight: 700;
     letter-spacing: 0.24em; color: var(--accent);
   }
-  .month-div::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .month-div.is-past { color: var(--text); opacity: 0.5; }
 
   .featured { margin-top: 2.2rem; }
   .featured .section-label { margin-top: 0.6rem; }
@@ -534,6 +533,15 @@
     .cover-title { font-size: 1.5rem; }
   }
 
+  .past { margin-top: 5rem; }
+  .past .row-btn:not(.off) { background: var(--surface-2); border-color: var(--line-strong); color: var(--text-2); }
+  .past .row-btn:not(.off):hover { background: var(--surface-2); border-color: var(--text-3); color: var(--text); }
+  .past-title {
+    margin: 0 0 1.6rem; font-weight: 700; letter-spacing: -0.045em; line-height: 0.95;
+    font-size: clamp(2.1rem, 8.6vw, 6rem);
+  }
+  @media (min-width: 48rem) { .past-title { font-size: clamp(3.4rem, 7.6vw, 6rem); } }
+
   .event-desc { margin: 0 0 1rem; font-size: 0.92rem; line-height: 1.7; color: var(--text-2); white-space: pre-line; }
   .verify-note { margin: 1.2rem 0 0; font-size: 0.78rem; color: var(--text-2); }
 
@@ -555,23 +563,24 @@
     </ul>
   </nav>
 
+  <section class="announce" id="announce" hidden>
+    <div class="notice-list" id="noticeList"></div>
+  </section>
+
   <header class="masthead">
     <div class="masthead-top">
       <h1>Upcoming Events</h1>
     </div>
   </header>
-  <section class="announce" id="announce" hidden>
-    <div class="notice-list" id="noticeList"></div>
-  </section>
 
   <main>
     <p class="section-label section-members">Members Only</p>
-    <div class="filters" id="filters" role="group" aria-label="모임 종류"></div>
     <section class="featured" id="featured" aria-label="대형 모임" hidden></section>
+    <div class="filters" id="filters" role="group" aria-label="모임 종류" hidden></div>
     <div class="list" id="upcomingList"></div>
 
     <section class="past" id="pastWrap" hidden>
-      <p class="section-label">Past Events</p>
+      <h2 class="past-title">Past Events</h2>
       <div class="list" id="pastList"></div>
     </section>
 
@@ -1070,21 +1079,21 @@
     box.textContent = "";
     if (!bigs.length) { box.hidden = true; return; }
     var up = bigs.filter(function (ev) { return daysUntil(ev.date) >= 0; });
-    var pa = bigs.filter(function (ev) { return daysUntil(ev.date) < 0; });
+    if (!up.length) { box.hidden = true; return; }
     box.hidden = false;
     box.appendChild(el("p", "section-label section-members", "Featured"));
-    sortByDate(up).concat(sortByDate(pa).reverse()).forEach(function (ev) { box.appendChild(renderCover(ev)); });
+    sortByDate(up).forEach(function (ev) { box.appendChild(renderCover(ev)); });
   }
 
   var MONTH_NAMES = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
 
   /* 월이 바뀌는 자리에 'NOVEMBER' 같은 구분선을 넣는다. */
-  function appendRows(list, events) {
+  function appendRows(list, events, past) {
     var prev = null;
     events.forEach(function (ev) {
       var m = parseDate(ev.date).getMonth();
       if (prev !== null && m !== prev) {
-        var div = el("div", "month-div");
+        var div = el("div", "month-div" + (past ? " is-past" : ""));
         div.appendChild(el("span", null, MONTH_NAMES[m]));
         list.appendChild(div);
       }
@@ -1249,17 +1258,20 @@
   function render() {
     var g = splitEvents();
     renderNotices();
-    renderFilters();
-
     renderFeatured();
 
     var normalUp = g.upcoming.filter(function (ev) { return !isBigEvent(ev); });
+    /* 카테고리는 예정 모임이 10개 이상일 때만 보여준다. */
+    var showTags = normalUp.length >= 10;
+    if (!showTags) activeTag = "전체";
+    document.getElementById("filters").hidden = !showTags;
+    if (showTags) renderFilters();
     var up = normalUp.filter(passTag);
-    var pa = g.past.filter(function (ev) { return !isBigEvent(ev) && passTag(ev); });
+    var pa = g.past.filter(passTag);
 
     upcomingList.textContent = "";
     if (up.length) {
-      appendRows(upcomingList, up);
+      appendRows(upcomingList, up, false);
     } else if (normalUp.length) {
       upcomingList.appendChild(el("p", "empty", "이 종류의 예정 모임은 아직 없습니다."));
     } else {
@@ -1267,7 +1279,7 @@
     }
 
     pastList.textContent = "";
-    appendRows(pastList, pa);
+    appendRows(pastList, pa, true);
     document.getElementById("pastWrap").hidden = pa.length === 0;
 
     /* 예정 모임 명단에 인증된 사람이 있을 때만 딱지의 뜻을 알려준다. */
