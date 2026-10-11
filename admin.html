@@ -113,7 +113,11 @@
   .banner.bad strong { color: var(--rust); }
 
   /* ---------- 레이아웃 ---------- */
-  .work { display: grid; grid-template-columns: 17rem minmax(0,1fr); gap: 2rem; align-items: start; padding-top: 1.4rem; }
+  .work { display: block; padding-top: 1.4rem; }
+  .side { max-width: 52rem; }
+  .item { border-bottom: 1px solid var(--line); }
+  .item-body { margin: 0 0 1.2rem; padding: 0.4rem 0 0 1rem; border-left: 2px solid var(--accent-solid); max-width: 48rem; }
+  .item-body[hidden] { display: none; }
 
   .list-head {
     font-size: .64rem; font-weight: 700; letter-spacing: .2em;
@@ -485,10 +489,13 @@
     <h2>GitHub 토큰</h2>
     <p>이 토큰으로 [게시]가 저장소에 직접 씁니다. <strong>이 브라우저에만 저장되고</strong> 저장소나 페이지에는 절대 들어가지 않습니다.</p>
     <ol>
-      <li>github.com/settings/personal-access-tokens 에서 <b>Fine-grained token</b> 생성</li>
-      <li>Repository access → <b>Only select repositories</b> → <code>seoulyouthclub</code></li>
-      <li>Permissions → Repository permissions → <b>Contents: Read and write</b></li>
-      <li>생성된 <code>github_pat_…</code> 를 아래에 붙여넣기</li>
+      <li>GitHub에 로그인 → 오른쪽 위 프로필 사진 → <b>Settings</b></li>
+      <li>맨 아래 <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b></li>
+      <li><b>Token name</b>에 <code>yclub-admin</code>, <b>Expiration</b>은 원하는 기간(예: 1 year)</li>
+      <li><b>Repository access</b> → <b>Only select repositories</b> → <code>seoulyouthclub</code> 선택</li>
+      <li><b>Permissions</b> → <b>Repository permissions</b> → <b>Contents</b> → <b>Read and write</b></li>
+      <li><b>Generate token</b> → 나온 <code>github_pat_…</code> 를 복사 (한 번만 보입니다)</li>
+      <li>아래 칸에 붙여넣고 <b>저장</b></li>
     </ol>
     <input type="password" id="tokenInput" placeholder="github_pat_..." autocomplete="off" />
 
@@ -620,41 +627,103 @@
 
   /* ---------------- 목록 ---------------- */
 
+  var formHome = document.querySelector(".form-wrap");
+
   function renderList() {
+    formHome.appendChild(form);
+    formHome.appendChild(document.getElementById("signupsBox"));
     if (mode === "notices") { renderNoticeList(); return; }
     var g = splitEvents();
     fill(document.getElementById("rowsUpcoming"), g.upcoming, "예정된 모임이 없습니다.");
     fill(document.getElementById("rowsPast"), g.past, "지난 모임이 없습니다.");
+    placeForm();
+  }
+
+  /* 행 한 줄의 글자. 입력 중에는 이것만 다시 그려서 펼친 폼의 포커스를 지키지 않는다. */
+  function rowContent(b, ev) {
+    var status = effectiveStatus(ev);
+    var r = roster(ev);
+    b.textContent = "";
+    b.setAttribute("aria-expanded", String(ev.id === selectedId));
+    if (ev.id === selectedId) b.setAttribute("aria-current", "true"); else b.removeAttribute("aria-current");
+
+    var date = el("span", "row-date");
+    if (ev.date) { var d = parseDate(ev.date); date.textContent = (d.getMonth() + 1) + "/" + d.getDate(); }
+    else date.textContent = "—";
+
+    var title = el("span", "row-title", ev.title || "제목 없음");
+
+    var sub = el("span", "row-sub");
+    var dot = el("span", "dot", "● "); dot.dataset.state = status; sub.appendChild(dot);
+    var tail = STATUS_LABEL[status];
+    if (ev.capacity) tail += " · " + r.going.length + "/" + ev.capacity;
+    else if (r.going.length) tail += " · " + r.going.length + "명";
+    if (r.waiting.length) tail += " · 대기 " + r.waiting.length;
+    sub.appendChild(document.createTextNode(tail));
+    if (ev.image) { var pic = el("span", "pic", "  ▣"); sub.appendChild(pic); }
+
+    b.appendChild(date); b.appendChild(title); b.appendChild(sub);
   }
 
   function fill(host, list, emptyMsg) {
     host.textContent = "";
     if (!list.length) { host.appendChild(el("p", "list-empty", emptyMsg)); return; }
     list.forEach(function (ev) {
-      var status = effectiveStatus(ev);
-      var r = roster(ev);
+      var item = el("div", "item");
+      item.dataset.id = ev.id;
       var b = el("button", "row"); b.type = "button";
-      if (ev.id === selectedId) b.setAttribute("aria-current", "true");
-
-      var date = el("span", "row-date");
-      if (ev.date) { var d = parseDate(ev.date); date.textContent = (d.getMonth() + 1) + "/" + d.getDate(); }
-      else date.textContent = "—";
-
-      var title = el("span", "row-title", ev.title || "제목 없음");
-
-      var sub = el("span", "row-sub");
-      var dot = el("span", "dot", "● "); dot.dataset.state = status; sub.appendChild(dot);
-      var tail = STATUS_LABEL[status];
-      if (ev.capacity) tail += " · " + r.going.length + "/" + ev.capacity;
-      else if (r.going.length) tail += " · " + r.going.length + "명";
-      if (r.waiting.length) tail += " · 대기 " + r.waiting.length;
-      sub.appendChild(document.createTextNode(tail));
-      if (ev.image) { var pic = el("span", "pic", "  ▣"); sub.appendChild(pic); }
-
-      b.appendChild(date); b.appendChild(title); b.appendChild(sub);
-      b.addEventListener("click", function () { select(ev.id); });
-      host.appendChild(b);
+      rowContent(b, ev);
+      b.addEventListener("click", function () { toggleEvent(ev.id); });
+      item.appendChild(b);
+      var body = el("div", "item-body");
+      body.hidden = ev.id !== selectedId;
+      item.appendChild(body);
+      host.appendChild(item);
     });
+  }
+
+  function findItem(id) {
+    var items = document.querySelectorAll(".item[data-id]");
+    for (var k = 0; k < items.length; k++) if (items[k].dataset.id === id) return items[k];
+    return null;
+  }
+
+  /* 폼과 신청자 표는 선택된 모임의 펼침 칸으로 옮긴다. 선택이 없으면 원래 자리로. */
+  function placeForm() {
+    var item = mode === "events" && selectedId ? findItem(selectedId) : null;
+    if (item) {
+      var body = item.querySelector(".item-body");
+      body.hidden = false;
+      body.appendChild(form);
+      body.appendChild(document.getElementById("signupsBox"));
+    } else {
+      formHome.appendChild(form);
+      formHome.appendChild(document.getElementById("signupsBox"));
+    }
+  }
+
+  /* 입력할 때마다 행 글자만 갱신한다. (목록 전체를 다시 그리면 입력 포커스가 날아간다) */
+  function refreshRows() {
+    if (mode !== "events") return;
+    document.querySelectorAll(".item[data-id]").forEach(function (item) {
+      var ev = findEvent(item.dataset.id); if (!ev) return;
+      rowContent(item.querySelector(".row"), ev);
+    });
+  }
+
+  /* 같은 행을 다시 누르면 접는다. 다른 행이면 그 모임을 펼친다. */
+  function toggleEvent(id) {
+    if (selectedId === id) {
+      selectedId = null;
+      form.hidden = true;
+      document.getElementById("signupsBox").hidden = true;
+      showPlaceholder();
+      renderList(); renderState();
+      return;
+    }
+    select(id);
+    var item = findItem(id);
+    if (item) item.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
 
   /* ---------------- 포스터 ---------------- */
@@ -906,7 +975,7 @@
       renderSignups(ev);
     }
     state.updated = toISO(new Date());
-    renderList(); renderKakao(); renderState();
+    refreshRows(); renderKakao(); renderState();
   }
 
   form.addEventListener("input", function () {
@@ -1148,7 +1217,7 @@
     var none = mode === "events" ? !selectedId : !selectedNoticeId;
     placeholder.hidden = !none;
     placeholder.innerHTML = mode === "events"
-      ? '왼쪽에서 모임을 고르거나 <strong>+ 새 이벤트</strong>를 누르세요.'
+      ? '모임을 누르면 아래에서 바로 고칠 수 있어요. 새로 만들려면 <strong>+ 새 이벤트</strong>를 누르세요.'
       : '왼쪽에서 공지를 고르거나 <strong>+ 새 공지</strong>를 누르세요.';
   }
 
