@@ -2,48 +2,454 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>YCLB Index · SEOUL YOUTH CLUB</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<!-- 회원 명부. 검색에 걸리지 않게 한다. 데이터는 이 파일에 없다. -->
+<meta name="robots" content="noindex, nofollow" />
 <meta name="color-scheme" content="dark" />
+<title>YCLB Index · SEOUL YOUTH CLUB</title>
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
+<link rel="icon" type="image/png" sizes="1024x1024" href="assets/icon.png" />
+<link rel="apple-touch-icon" href="assets/icon-180.png" />
 <style>
-  @font-face { font-family: "Barun"; src: url("assets/nbg-400.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-  @font-face { font-family: "Barun"; src: url("assets/nbg-700.woff2") format("woff2"); font-weight: 700; font-display: swap; }
-  :root { --ink:#0A0A0A; --line:#262626; --text:#F3F1EC; --text-2:#A8A59E; --text-3:#6E6B66; --accent:#E04A4C; }
+  /* YCLB Index. 본인 확인 → 산업 분포 → 검색·필터 → 회원 카드. 데이터는 Apps Script가 확인한 사람에게만 내려준다. */
+  @font-face { font-family: "Barun"; font-weight: 400; font-display: swap; src: url(assets/nbg-400.woff2) format("woff2");
+    unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF; }
+  @font-face { font-family: "Barun"; font-weight: 700; font-display: swap; src: url(assets/nbg-700.woff2) format("woff2");
+    unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7A3, U+D7B0-D7FF; }
+  :root {
+    color-scheme: dark;
+    --ink: #0A0A0A; --surface: #121212; --surface-2: #171717;
+    --line: #262626; --line-strong: #3A3A3A;
+    --text: #F3F1EC; --text-2: #A8A59E; --text-3: #6E6B66;
+    --accent: #E04A4C; --accent-dim: #7E2427; --accent-solid: #C62A2D;
+    --sage: #8CB08F; --rust: #C0705E;
+    --verified: #1D9BF0;
+    --font-sans: "Barun", "Helvetica Neue", Helvetica, Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  :root[data-theme="light"], :root[data-theme="dark"] { color-scheme: dark; }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--ink); color:var(--text); font-family:"Helvetica Neue",Helvetica,Arial,"Barun","Malgun Gothic",sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased; }
-  .shell { max-width:68rem; margin:0 auto; padding:0 1.15rem 6rem; }
-  @media (min-width:48rem) { .shell { padding:0 2.5rem 6rem; } }
-  .topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.3rem 0 1.1rem; border-bottom:1px solid var(--line); }
-  .topbar-brand { display:flex; align-items:center; gap:.6rem; text-decoration:none; color:var(--text); }
-  .topbar-brand .sq { display:grid; place-items:center; width:2.3rem; height:2.3rem; background:#C62A2D; color:#fff; font-size:.6rem; font-weight:700; letter-spacing:.04em; }
-  .topbar-brand .bn { font-size:.95rem; font-weight:700; letter-spacing:.01em; white-space:nowrap; }
-  @media (max-width:47.99rem) { .topbar-brand .bn { font-size:.8rem; } }
-  .topbar-nav { display:flex; gap:1.4rem; list-style:none; margin:0; padding:0; }
-  .topbar-nav a { font-size:.82rem; font-weight:700; letter-spacing:.02em; color:var(--text-2); text-decoration:none; }
-  .topbar-nav a:hover { color:var(--text); }
-  .topbar-nav a.on { color:var(--accent); }
-  h1 { font-size:clamp(1.7rem,6vw,2.5rem); letter-spacing:-.035em; margin:2.6rem 0 .6rem; }
-  .soon { font-size:.8rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); }
-  p { color:var(--text-2); }
-  .dock { position:fixed; left:0; right:0; bottom:0; z-index:40; pointer-events:none; display:flex; justify-content:center; align-items:center; padding:.7rem 0; background:rgba(10,10,10,.96); border-top:1px solid var(--line); }
-  .dock-word { font-size:1.05rem; font-weight:700; letter-spacing:.14em; color:var(--text); }
-  @media (max-width:47.99rem) { .dock { padding:.55rem 0; } .dock-word { font-size:.78rem; } }
+  body { margin: 0; background: var(--ink); color: var(--text); font-family: var(--font-sans); font-size: 15px;
+    line-height: 1.62; letter-spacing: -0.003em; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:hover { color: var(--text); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  .shell { max-width: 68rem; margin: 0 auto; padding: 0 1.15rem 6rem; }
+  @media (min-width: 48rem) { .shell { padding: 0 2.5rem 6rem; } }
+
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.3rem 0 1.1rem; border-bottom: 2px solid var(--text); }
+  .brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--text); }
+  .brand .sq { display: grid; place-items: center; width: 2.3rem; height: 2.3rem; background: var(--accent-solid); color: #fff; font-size: .6rem; font-weight: 700; letter-spacing: .04em; }
+  .brand .bn { font-size: .95rem; font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
+  .nav { display: flex; gap: 1.4rem; list-style: none; margin: 0; padding: 0; }
+  .nav a { font-size: .82rem; font-weight: 700; letter-spacing: .02em; color: var(--text-2); text-decoration: none; }
+  .nav a.on { color: var(--accent); }
+  @media (max-width: 47.99rem) { .brand .bn { font-size: .78rem; } .brand { gap: .45rem; } .nav { gap: 1rem; } }
+
+  .masthead { padding: 2.4rem 0; }
+  @media (max-width: 47.99rem) { .masthead { padding: 1.8rem 0; } }
+  .masthead h1 { margin: 0; font-weight: 700; line-height: .95; letter-spacing: -.045em; font-size: clamp(2.6rem, 11vw, 6rem); }
+  @media (min-width: 48rem) { .masthead h1 { font-size: clamp(3.4rem, 7.6vw, 6rem); } }
+  .meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .4rem 1rem; margin-top: 1.1rem; font-size: .8rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+  .live { color: var(--sage); }
+  .live::before { content: "● "; font-size: .6rem; vertical-align: .1em; }
+  .members { font-size: .78rem; font-weight: 700; letter-spacing: .2em; color: var(--accent); margin: 2.2rem 0 .25rem; }
+  @media (min-width: 48rem) { .members { font-size: .9rem; } }
+
+  /* 숫자 표지 */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 2px solid var(--text); border-bottom: 1px solid var(--line); }
+  .stat { padding: 1.1rem 1rem 1.2rem 0; min-width: 0; }
+  .stat + .stat { border-left: 1px solid var(--line); padding-left: 1rem; }
+  .stat .v { font-size: clamp(2rem, 7vw, 3.6rem); font-weight: 700; line-height: 1; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+  .stat .k { margin-top: .45rem; font-size: .68rem; font-weight: 700; letter-spacing: .14em; color: var(--text-2); }
+  @media (max-width: 40rem) {
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stat:nth-child(3) { border-left: 0; padding-left: 0; }
+    .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+  }
+
+  /* 분포 */
+  .dist { padding: 1.4rem 0 .4rem; border-top: 2px solid var(--text); }
+  .dist h2 { margin: 0 0 .7rem; font-size: .7rem; font-weight: 700; letter-spacing: .18em; color: var(--text-3); }
+  .bars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem 3rem; }
+  .bar { appearance: none; background: none; border: 0; font: inherit; color: var(--text-2); cursor: pointer; text-align: left;
+    display: grid; grid-template-columns: 8.5rem minmax(0, 1fr) 1.6rem; gap: .8rem; align-items: center; font-size: .8rem; padding: .18rem 0; }
+  .bar:hover, .bar[aria-pressed="true"] { color: var(--text); }
+  .bar i { display: block; height: .42rem; background: var(--line); position: relative; }
+  .bar i b { position: absolute; inset: 0 auto 0 0; background: var(--text-2); }
+  .bar:hover i b { background: var(--text); }
+  .bar[aria-pressed="true"] i b { background: var(--accent); }
+  .bar .c { text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .bar .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 47.99rem) { .bars { grid-template-columns: 1fr; } .bar { grid-template-columns: 7rem minmax(0, 1fr) 1.4rem; } }
+
+  /* 검색 + 필터 */
+  .tools { display: flex; flex-direction: column; gap: .7rem; padding: 1rem 0 0; }
+  .search { width: 100%; background: var(--surface); border: 1px solid var(--line-strong); border-radius: 2px; color: var(--text);
+    font: inherit; font-size: .9rem; padding: .6rem .75rem; min-width: 0; }
+  .search:focus { border-color: var(--accent-dim); outline: none; }
+  .search::placeholder { color: var(--text-3); }
+  .filters { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .filters button { appearance: none; cursor: pointer; font: inherit; font-size: .78rem; font-weight: 700; color: var(--text);
+    background: none; border: 1px solid var(--text); border-radius: 99px; padding: .32rem .85rem; }
+  .filters button[aria-pressed="true"] { background: var(--text); color: var(--ink); }
+  .filters .n { font-weight: 400; opacity: .6; margin-left: .25rem; font-variant-numeric: tabular-nums; }
+  .active { display: flex; flex-wrap: wrap; gap: .4rem .8rem; align-items: center; font-size: .78rem; color: var(--text-3); min-height: 1.6rem; }
+  .active b { color: var(--text); }
+  .clear { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-size: .78rem; color: var(--accent); cursor: pointer; }
+
+  /* 카드 */
+  .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-top: .6rem; }
+  .card { background: var(--ink); padding: 1.2rem 1.15rem 1.05rem; display: flex; flex-direction: column; gap: .75rem; min-width: 0; }
+  .card-top { display: flex; align-items: center; gap: .75rem; }
+  .who { min-width: 0; }
+  .nm { margin: 0; font-size: 1.05rem; line-height: 1.3; font-weight: 700; letter-spacing: -.02em; }
+  .nk { font-weight: 400; font-size: .76rem; color: var(--text-3); margin-left: .3rem; }
+  .org { margin-top: .1rem; font-size: .82rem; color: var(--text); overflow-wrap: anywhere; }
+  .pos { font-size: .78rem; color: var(--text-2); overflow-wrap: anywhere; }
+  .pills { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .pill { font-size: .7rem; font-weight: 700; border: 1px solid var(--line-strong); border-radius: 99px; padding: .1rem .55rem; color: var(--text-2); }
+  .pill.ind { border-color: var(--text-3); color: var(--text); }
+  .give { margin: 0; font-size: .82rem; color: var(--text-2); overflow-wrap: anywhere; }
+  .give::before { content: "도움 줄 수 있는 것"; display: block; font-size: .64rem; font-weight: 700; letter-spacing: .12em; color: var(--text); margin-bottom: .15rem; }
+  .give.clamp { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .give-more { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-size: .74rem; color: var(--text-3); cursor: pointer; align-self: flex-start; }
+  .give-more:hover { color: var(--accent); }
+  .want { font-size: .74rem; color: var(--text-3); }
+  .want b { font-weight: 700; color: var(--text-2); }
+  .card-foot { margin-top: auto; padding-top: .7rem; border-top: 1px dashed var(--line-strong); display: flex; flex-wrap: wrap; gap: .3rem 1rem; align-items: center; font-size: .8rem; }
+  .card-foot a { color: var(--text); text-decoration: none; }
+  .card-foot a:hover { color: var(--accent); }
+  .card-foot .off { color: var(--text-3); }
+  .vb { display: inline-block; width: .95em; height: .95em; margin-left: .18em; vertical-align: -.12em; }
+  .vb svg { display: block; width: 100%; height: 100%; }
+  .vb .seal { fill: var(--verified); }
+  .vb .tick { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .host { display: inline-block; margin-left: .35rem; vertical-align: .12em; background: #fff; color: #0A0A0A; font-size: .64rem; font-weight: 700; letter-spacing: .02em; line-height: 1; padding: .22rem .4rem; border-radius: 2px; white-space: nowrap; }
+  @media (max-width: 60rem) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 34rem) { .cards { grid-template-columns: 1fr; } }
+  .empty { background: var(--ink); padding: 2.5rem 1rem; color: var(--text-3); grid-column: 1 / -1; }
+
+  .btn { appearance: none; cursor: pointer; font: inherit; white-space: nowrap; background: var(--accent-solid); border: 1px solid var(--accent-solid);
+    border-radius: 2px; color: #fff; font-size: .82rem; font-weight: 700; padding: .55rem 1rem; }
+  .btn:hover { background: var(--accent); border-color: var(--accent); }
+
+  .gcard { gap: .55rem; }
+
+  /* 관리자 */
+  .admin-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; background: #fff; color: #0A0A0A; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem 1rem; padding: .55rem 1.15rem; font-size: .8rem; }
+  .admin-bar[hidden] { display: none; }
+  .admin-bar b { letter-spacing: .08em; }
+  .admin-bar .sp { flex: 1; }
+  .admin-bar button { appearance: none; font: inherit; font-size: .76rem; font-weight: 700; background: #0A0A0A; color: #fff; border: 0; border-radius: 2px; padding: .3rem .7rem; cursor: pointer; }
+  .hostck { display: inline-flex; align-items: center; gap: .35rem; font-size: .76rem; font-weight: 700; color: var(--text-2); cursor: pointer; user-select: none; margin-top: .2rem; }
+  .hostck input { width: 1rem; height: 1rem; accent-color: var(--verified); margin: 0; cursor: pointer; }
+  .hostck input:disabled { cursor: wait; }
+  body:not(.is-admin) .hostck { display: none; }
+  .admin-link { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-size: .75rem; color: var(--text-3); cursor: pointer; }
+  .admin-link:hover { color: var(--text-2); }
+  dialog.pw { border: 1px solid var(--line-strong); border-radius: 2px; background: var(--surface); color: var(--text); padding: 1.3rem 1.3rem 1.1rem; width: min(20rem, calc(100vw - 2rem)); }
+  dialog.pw::backdrop { background: rgba(5,5,5,.8); }
+  dialog.pw h2 { margin: 0 0 .8rem; font-size: 1rem; }
+  dialog.pw .acts { display: flex; gap: .5rem; justify-content: flex-end; margin-top: .9rem; }
+  dialog.pw .ghost { background: none; border: 1px solid var(--line-strong); color: var(--text-2); }
+  dialog.pw .err { color: var(--rust); font-size: .76rem; min-height: 1.1em; margin-top: .4rem; }
+
+  /* 입장 화면 */
+  .gate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24rem); gap: 2.5rem; padding: 1rem 0 2rem; align-items: start; }
+  .gate-copy p { margin: 0 0 .8rem; color: var(--text-2); font-size: .92rem; max-width: 32rem; }
+  .gate-copy ol { margin: 1.2rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .55rem; font-size: .84rem; color: var(--text-2); }
+  .gate-copy li { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); }
+  .gate-copy li b { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .gate-form { border-top: 2px solid var(--text); padding-top: 1.2rem; display: flex; flex-direction: column; gap: .9rem; }
+  .gate-form h2 { margin: 0; font-size: 1.15rem; letter-spacing: -.02em; }
+  .gate-form label { display: block; font-size: .74rem; font-weight: 700; letter-spacing: .04em; color: var(--text-2); margin-bottom: .3rem; }
+  .gate-form .row2 { display: grid; grid-template-columns: minmax(0, 1fr) 7rem; gap: .6rem; }
+  .gate-form .hint { font-size: .72rem; color: var(--text-3); margin-top: .25rem; }
+  .gate-form .btn { width: 100%; padding: .7rem 1rem; font-size: .9rem; }
+  .gate-form .msg { font-size: .78rem; color: var(--text-3); min-height: 1.2em; }
+  .gate-form .msg.err { color: var(--rust); }
+  @media (max-width: 47.99rem) { .gate { grid-template-columns: 1fr; gap: 1.6rem; } }
+
+  .notice { margin-top: 3rem; font-size: .76rem; color: var(--text-3); display: flex; flex-direction: column; gap: .3rem; }
+  .foot { margin-top: 2.5rem; padding-top: 1.4rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font-size: .75rem; color: var(--text-3); }
+  .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; pointer-events: none; display: flex; justify-content: center;
+    padding: .7rem 0 calc(.7rem + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,10,.96); border-top: 1px solid var(--line); }
+  .dock span { font-size: .9rem; font-weight: 700; letter-spacing: .14em; white-space: nowrap; }
+  @media (min-width: 48rem) { .dock span { font-size: 1.05rem; } }
+  @media (max-width: 47.99rem) { .dock { padding-block: .55rem calc(.55rem + env(safe-area-inset-bottom, 0px)); } .dock span { font-size: .78rem; } }
+
+  /* 상태 화면 */
+  .state { padding: 2.5rem 0; color: var(--text-2); font-size: .9rem; }
+  .who-bar { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem 1rem; padding-top: .8rem; font-size: .76rem; color: var(--text-3); }
+  .linkish { appearance: none; background: none; border: 0; padding: 0; font: inherit; color: var(--text-3); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .linkish:hover { color: var(--text); }
 </style>
 </head>
 <body>
+<div class="admin-bar" id="adminBar" hidden><b>관리자 모드</b><span id="adminMsg">카드의 '호스트'를 체크하면 바로 저장됩니다.</span><span class="sp"></span><button type="button" id="adminExit">나가기</button></div>
 <div class="shell">
   <nav class="topbar" aria-label="메인 메뉴">
-    <a class="topbar-brand" href="index.html"><span class="sq">YOUTH</span><span class="bn">SEOUL YOUTH CLUB</span></a>
-    <ul class="topbar-nav">
-      <li><a href="index.html">Events</a></li>
-      <li><a href="yclb-index.html" class="on" aria-current="page">Index</a></li>
-      <li><a href="about.html">About</a></li>
-    </ul>
+    <a class="brand" href="index.html"><span class="sq">YOUTH</span><span class="bn">SEOUL YOUTH CLUB</span></a>
+    <ul class="nav"><li><a href="index.html">Events</a></li><li><a href="yclb-index.html" class="on" aria-current="page">Index</a></li><li><a href="about.html">About</a></li></ul>
   </nav>
-  <h1>YCLB Index</h1>
-  <p class="soon">Coming soon</p>
-  <p>회원명부는 다음 단계에서 채웁니다.</p>
+  <header class="masthead">
+    <h1>YCLB Index</h1>
+  </header>
+  <main>
+    <section id="view-gate">
+      <div class="gate">
+        <div class="gate-copy">
+          <p>YCLB Index는 참여와 공개에 동의한 회원끼리 보는 회원 명부입니다.</p>
+          <p>Index 신청서에 적은 이름, 휴대폰 뒷자리, 이메일이 모두 맞아야 열립니다. 확인은 서버에서 하고, 입력한 값은 저장하지 않습니다.</p>
+          <ol><li><b>01</b><span>Index 2026 신청서 제출</span></li><li><b>02</b><span>이름 · 휴대폰 뒷자리 · 이메일로 본인 확인</span></li><li><b>03</b><span>이 기기에서 7일 동안 다시 묻지 않음</span></li></ol>
+        </div>
+        <form class="gate-form" id="gateForm" novalidate>
+          <h2>본인 확인</h2>
+          <div class="row2">
+            <div><label for="g-name">이름</label><input class="search" id="g-name" autocomplete="name" placeholder="홍길동"></div>
+            <div><label for="g-tail">휴대폰 뒷자리</label><input class="search" id="g-tail" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234"></div>
+          </div>
+          <div><label for="g-email">이메일</label><input class="search" id="g-email" type="email" autocomplete="email" placeholder="name@example.com"><div class="hint">Index 신청서에 적은 개인 이메일과 같아야 합니다.</div></div>
+          <button class="btn" type="submit" id="gateBtn">명부 열기</button>
+          <div class="msg" id="gateMsg" role="status"></div>
+          <div class="hint">아직 신청하지 않았다면 <a href="https://forms.gle/X382yeoP3pL44kKF9" target="_blank" rel="noopener noreferrer">Index 2026 참여 신청</a></div>
+        </form>
+      </div>
+    </section>
+    <p class="state" id="view-state" hidden></p>
+    <section id="view-board" hidden>
+      <div class="dist">
+        <h2>데이터가 확인된 산업</h2><div class="bars" id="barsInd"></div>
+      </div>
+      <div class="tools">
+        <input class="search" id="q" type="search" placeholder="키워드 검색하기" aria-label="키워드 검색">
+        <div class="filters" id="indFilters" role="group" aria-label="산업"></div>
+        <div class="active" id="active" role="status"></div>
+      </div>
+      <div class="cards" id="cards"></div>
+      <div class="who-bar"><button type="button" class="linkish" id="logout">이 기기에서 로그아웃</button></div>
+    </section>
+  </main>
+  <div class="notice">
+    <span>이 명부는 참여와 공개에 동의한 회원에게만 열립니다. 캡처나 외부 공유는 삼가 주세요.</span>
+    <span>내 정보 수정·삭제는 언제든 운영진에게 요청하세요. 맞팔은 자율이며 유지할 의무가 없습니다.</span>
+  </div>
+  <footer class="foot"><span>SEOUL YOUTH CLUB</span><button type="button" class="admin-link" id="adminOpen">관리자</button></footer>
+  <dialog class="pw" id="pwDlg"><form method="dialog" id="pwForm"><h2>관리자 접속</h2><label for="pw" style="font-size:.74rem;color:var(--text-2)">비밀번호</label><input class="search" id="pw" type="password" autocomplete="off"><div class="err" id="pwErr" role="status"></div><div class="acts"><button type="button" class="btn ghost" id="pwCancel">취소</button><button type="submit" class="btn">접속</button></div></form></dialog>
 </div>
-<div class="dock" aria-hidden="true"><span class="dock-word">SEOUL YOUTH CLUB</span></div>
+<div class="dock" aria-hidden="true"><span>SEOUL YOUTH CLUB</span></div>
+<script>
+"use strict";
+/* ------------------------------------------------------------------ *
+ * 이 파일에는 회원 데이터가 없다. Apps Script(data/config.json 의
+ * signupEndpoint)가 본인 확인을 마친 사람에게만 명부를 돌려준다.
+ *   로그인: 이름 + 휴대폰 뒷자리 + 이메일 → 7일짜리 토큰(이 기기 localStorage)
+ *   관리자: 비밀번호를 서버가 확인한다(스크립트 속성 INDEX_ADMIN_KEY).
+ * ------------------------------------------------------------------ */
+let ENDPOINT = "";
+let M = [], G = [];
+const HOSTS = new Set();
+const isHost = id => HOSTS.has(id);
+const TOKEN_KEY = "yclb-index-token", ADMIN_KEY = "yclb-index-admin";
+const store = {
+  get(s, k) { try { return s.getItem(k); } catch (_) { return null; } },
+  set(s, k, v) { try { s.setItem(k, v); } catch (_) {} },
+  del(s, k) { try { s.removeItem(k); } catch (_) {} },
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const SEAL = '<span class="vb" role="img" aria-label="YCLB Index 인증"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="seal" d="M12.00 0.80 L14.48 2.73 L17.60 2.30 L18.79 5.21 L21.70 6.40 L21.27 9.52 L23.20 12.00 L21.27 14.48 L21.70 17.60 L18.79 18.79 L17.60 21.70 L14.48 21.27 L12.00 23.20 L9.52 21.27 L6.40 21.70 L5.21 18.79 L2.30 17.60 L2.73 14.48 L0.80 12.00 L2.73 9.52 L2.30 6.40 L5.21 5.21 L6.40 2.30 L9.52 2.73Z"/><path class="tick" d="M7.4 12.3 L10.6 15.4 L16.8 8.9"/></svg></span>';
+const count = arr => { const c = {}; arr.forEach(x => { if (x) c[x] = (c[x] || 0) + 1; }); return Object.entries(c).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "ko")); };
+let inds = [];
+const state = { q: "", ind: "", work: "", job: "" };
+function bars(id, list, key) {
+  const max = list.length ? list[0][1] : 1;
+  document.getElementById(id).innerHTML = list.map(([k, n]) =>
+    `<button type="button" class="bar" data-key="${key}" data-val="${esc(k)}" aria-pressed="false"><span class="t">${esc(k)}</span><i><b style="width:${(n / max * 100).toFixed(1)}%"></b></i><span class="c">${n}</span></button>`).join("");
+}
+const hostTag = id => isHost(id) ? `<span class="host">호스트 경험</span>` : "";
+const hostCk = id => `<label class="hostck"><input type="checkbox" data-host="${id}"${isHost(id) ? " checked" : ""}>호스트</label>`;
+function card(m, i) {
+  const pos = [m.dept, m.title].filter(Boolean).join(" · ");
+  const links = [
+    m.ig ? `<a href="https://instagram.com/${encodeURIComponent(m.ig)}" target="_blank" rel="noopener noreferrer">@${esc(m.ig)}</a>` : "",
+    m.li ? `<a href="${esc(m.li)}" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>` : "",
+  ].filter(Boolean).join("") || `<span class="off">SNS 비공개</span>`;
+  const long = m.give.length > 90;
+  return `<article class="card">
+    <div class="card-top">
+      <div class="who"><h3 class="nm">${esc(m.name)}${SEAL}${hostTag(m.id)}${m.nick ? `<span class="nk">${esc(m.nick)}</span>` : ""}</h3>
+        <div class="org">${esc(m.org)}</div>${pos ? `<div class="pos">${esc(pos)}</div>` : ""}${hostCk(m.id)}</div></div>
+    <div class="pills"><span class="pill ind">${esc(m.ind)}</span><span class="pill">${esc(m.job)}</span>${m.work ? `<span class="pill">${esc(m.work)}</span>` : ""}</div>
+    ${m.give ? `<p class="give${long ? " clamp" : ""}" id="gv${i}">${esc(m.give)}</p>${long ? `<button type="button" class="give-more" data-t="gv${i}">더 보기</button>` : ""}` : ""}
+    ${m.want.length ? `<div class="want"><b>찾는 연결</b> ${m.want.map(esc).join(" · ")}</div>` : ""}
+    <div class="card-foot">${links}</div>
+  </article>`;
+}
+function hitGuest(g) {
+  if (state.work || state.job) return false;
+  if (state.ind && g.ind !== state.ind) return false;
+  if (!state.q) return true;
+  return [g.mask, g.org, g.ind, isHost(g.id) ? "호스트 경험" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
+}
+function gcard(g) {
+  return `<article class="card gcard">
+    <div class="card-top"><div class="who"><h3 class="nm">${esc(g.mask)}${hostTag(g.id)}</h3>
+      ${g.org ? `<div class="org">${esc(g.org)}</div>` : `<div class="pos">소속 미기재</div>`}${hostCk(g.id)}</div></div>
+    ${g.ind ? `<div class="pills"><span class="pill ind">${esc(g.ind)}</span></div>` : ""}
+  </article>`;
+}
+function hit(m) {
+  if (state.ind && m.ind !== state.ind) return false;
+  if (state.work && m.work !== state.work) return false;
+  if (state.job && m.job !== state.job) return false;
+  if (!state.q) return true;
+  return [m.name, m.nick, m.org, m.dept, m.title, m.ind, m.job, m.work, m.ig, m.give, m.want.join(" "), isHost(m.id) ? "호스트 경험" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
+}
+const isLatin = s => /^[A-Za-z]/.test(s);
+// latinFirst=false: 가나다 → A-Z, true: A-Z → 가나다
+function byName(a, b, latinFirst) {
+  const la = isLatin(a), lb = isLatin(b);
+  if (la !== lb) return (la ? -1 : 1) * (latinFirst ? 1 : -1);
+  return la ? a.localeCompare(b, "en", { sensitivity: "base" }) : a.localeCompare(b, "ko");
+}
+function guestOrder(a, b) {
+  return byName(a.mask, b.mask, true) || (!a.org - !b.org) || byName(a.org, b.org, true);
+}
+function draw() {
+  // 한 명단: Index 인증 회원(상세 카드)이 먼저, 그 뒤로 나머지 회원(성·소속·산업).
+  const vs = M.filter(hit).sort((a, b) => byName(a.name, b.name, false)), gs = G.filter(hitGuest).sort(guestOrder), list = vs.concat(gs);
+  const cards = document.getElementById("cards");
+  cards.innerHTML = list.length ? vs.map(card).join("") + gs.map(gcard).join("") : `<p class="empty">조건에 맞는 회원이 없습니다.</p>`;
+  cards.querySelectorAll(".give-more").forEach(b => b.addEventListener("click", () => {
+    const p = document.getElementById(b.dataset.t); p.classList.toggle("clamp"); b.textContent = p.classList.contains("clamp") ? "더 보기" : "접기";
+  }));
+  wireHostChecks();
+  document.querySelectorAll(".bar").forEach(b => b.setAttribute("aria-pressed", String(state[b.dataset.key] === b.dataset.val)));
+  document.querySelectorAll("#indFilters button").forEach(b => b.setAttribute("aria-pressed", String(state.ind === b.dataset.val)));
+  const parts = [state.ind && `산업 <b>${esc(state.ind)}</b>`, state.work && `근무지 <b>${esc(state.work)}</b>`, state.job && `직무 <b>${esc(state.job)}</b>`, state.q && `검색 <b>${esc(state.q)}</b>`].filter(Boolean);
+  document.getElementById("active").innerHTML = (parts.length ? parts.map(p => `<span>${p}</span>`).join("") + `<button type="button" class="clear" id="clear">조건 지우기</button>` : "");
+  const c = document.getElementById("clear");
+  if (c) c.addEventListener("click", () => { state.q = state.ind = state.work = state.job = ""; document.getElementById("q").value = ""; draw(); });
+}
+function setupFilters() {
+  inds = count(M.map(m => m.ind).concat(G.map(g => g.ind)));
+  bars("barsInd", inds, "ind");
+  document.getElementById("indFilters").innerHTML =
+    `<button type="button" data-val="" aria-pressed="true">전체</button>` +
+    inds.map(([k]) => `<button type="button" data-val="${esc(k)}" aria-pressed="false">${esc(k)}</button>`).join("");
+  document.querySelectorAll(".bar").forEach(b => b.addEventListener("click", () => {
+    state[b.dataset.key] = state[b.dataset.key] === b.dataset.val ? "" : b.dataset.val; draw();
+    document.getElementById("q").scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }));
+  document.querySelectorAll("#indFilters button").forEach(b => b.addEventListener("click", () => { state.ind = b.dataset.val; draw(); }));
+}
+document.getElementById("q").addEventListener("input", e => { state.q = e.target.value.trim(); draw(); });
+
+/* ---------- 서버 ---------- */
+function call(body) {
+  return fetch(ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },   // preflight 없이
+    body: JSON.stringify(Object.assign({ action: "index" }, body)),
+  }).then(r => r.json());
+}
+
+function view(which, text) {
+  document.getElementById("view-gate").hidden = which !== "gate";
+  document.getElementById("view-board").hidden = which !== "board";
+  const s = document.getElementById("view-state");
+  s.hidden = which !== "state"; s.textContent = text || "";
+}
+
+let filtersReady = false;
+function show(data) {
+  M = data.members || []; G = data.guests || [];
+  HOSTS.clear(); (data.hosts || []).forEach(id => HOSTS.add(id));
+  if (!filtersReady) { setupFilters(); filtersReady = true; }
+  view("board"); draw();
+}
+
+function load() {
+  const adminKey = store.get(sessionStorage, ADMIN_KEY), token = store.get(localStorage, TOKEN_KEY);
+  if (!adminKey && !token) { view("gate"); return; }
+  view("state", "명부를 불러오는 중입니다…");
+  call(adminKey ? { op: "data", adminKey } : { op: "data", token }).then(res => {
+    if (res.ok) { if (adminKey) setAdmin(true); show(res.data); return; }
+    store.del(localStorage, TOKEN_KEY); store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
+    view("gate"); gateMsg(res.error || "다시 본인 확인을 해 주세요.", false);
+  }).catch(() => view("state", "명부를 불러오지 못했습니다. 잠시 뒤 새로 고쳐 주세요."));
+}
+
+function gateMsg(s, err) { const m = document.getElementById("gateMsg"); m.className = err ? "msg err" : "msg"; m.textContent = s; }
+document.getElementById("gateForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const name = document.getElementById("g-name").value.trim();
+  const tail = document.getElementById("g-tail").value.trim();
+  const email = document.getElementById("g-email").value.trim();
+  if (!name || !/^\d{4}$/.test(tail) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { gateMsg("이름, 뒷자리 4자리, 이메일을 모두 정확히 입력해 주세요.", true); return; }
+  if (!ENDPOINT) { gateMsg("서버 주소를 불러오지 못했습니다. 새로 고쳐 주세요.", true); return; }
+  const btn = document.getElementById("gateBtn"); btn.disabled = true; gateMsg("확인 중입니다…", false);
+  call({ op: "login", name, tail, email }).then(res => {
+    if (!res.ok) { gateMsg(res.error || "확인하지 못했습니다.", true); return; }
+    store.set(localStorage, TOKEN_KEY, res.token);
+    document.getElementById("g-tail").value = "";
+    show(res.data);
+  }).catch(() => gateMsg("서버에 연결하지 못했습니다. 잠시 뒤 다시 시도해 주세요.", true))
+    .finally(() => { btn.disabled = false; });
+});
+document.getElementById("logout").addEventListener("click", () => {
+  store.del(localStorage, TOKEN_KEY); store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
+  M = []; G = []; document.getElementById("cards").innerHTML = ""; view("gate"); gateMsg("로그아웃했습니다.", false);
+});
+
+/* ---------- 관리자 ---------- */
+function setAdmin(on) {
+  document.body.classList.toggle("is-admin", on);
+  document.getElementById("adminBar").hidden = !on;
+}
+function adminMsg(s) { document.getElementById("adminMsg").textContent = s; }
+function wireHostChecks() {
+  document.querySelectorAll("input[data-host]").forEach(cb => cb.addEventListener("change", () => {
+    const id = cb.dataset.host, on = cb.checked, adminKey = store.get(sessionStorage, ADMIN_KEY);
+    cb.disabled = true;
+    call({ op: "host", adminKey, id, on }).then(res => {
+      if (!res.ok) throw new Error(res.error);
+      if (on) HOSTS.add(id); else HOSTS.delete(id);
+      adminMsg(on ? "호스트로 표시했습니다." : "호스트 표시를 해제했습니다.");
+      draw();
+    }).catch(err => { cb.checked = !on; adminMsg((err && err.message) || "저장하지 못했습니다."); })
+      .finally(() => { cb.disabled = false; });
+  }));
+}
+const dlg = document.getElementById("pwDlg");
+document.getElementById("adminOpen").addEventListener("click", () => {
+  document.getElementById("pw").value = ""; document.getElementById("pwErr").textContent = "";
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute("open", "");
+});
+document.getElementById("pwCancel").addEventListener("click", () => dlg.close());
+document.getElementById("pwForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const key = document.getElementById("pw").value;
+  if (!ENDPOINT) { document.getElementById("pwErr").textContent = "서버 주소를 불러오지 못했습니다."; return; }
+  document.getElementById("pwErr").textContent = "확인 중입니다…";
+  call({ op: "admin", adminKey: key }).then(res => {
+    if (!res.ok) { document.getElementById("pwErr").textContent = res.error || "비밀번호가 맞지 않습니다."; return; }
+    store.set(sessionStorage, ADMIN_KEY, key); dlg.close(); load();
+  }).catch(() => { document.getElementById("pwErr").textContent = "서버에 연결하지 못했습니다."; });
+});
+document.getElementById("adminExit").addEventListener("click", () => {
+  store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
+  if (!store.get(localStorage, TOKEN_KEY)) { M = []; G = []; document.getElementById("cards").innerHTML = ""; view("gate"); }
+});
+
+/* 서버 주소는 Events 페이지와 같은 data/config.json 에서 온다. */
+view("state", "불러오는 중입니다…");
+fetch("data/config.json?t=" + Date.now()).then(r => r.ok ? r.json() : null).then(c => {
+  ENDPOINT = (c && typeof c.signupEndpoint === "string") ? c.signupEndpoint.trim() : "";
+  if (!ENDPOINT) { view("state", "명부 서버가 아직 연결되지 않았습니다."); return; }
+  load();
+}).catch(() => view("state", "설정을 불러오지 못했습니다. 새로 고쳐 주세요."));
+</script>
 </body>
 </html>

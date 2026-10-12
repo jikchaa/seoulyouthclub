@@ -138,6 +138,12 @@ function indexKeys_() {
       }
     }
   }
+  /* Index 신청서 응답 시트가 연결돼 있으면 그쪽 신청자도 인증으로 본다. */
+  if (prop_('INDEX_SHEET_ID')) {
+    try {
+      indexPeople_().forEach(function (p) { if (p._phone) keys[key_(p.name, p._phone)] = 1; });
+    } catch (err) { /* 시트를 못 열어도 기존 명부 탭으로 계속 */ }
+  }
   cache.put('indexKeys', JSON.stringify(keys), 60);
   return keys;
 }
@@ -241,6 +247,7 @@ function doPost(e) {
     return json_({ ok: false, error: '요청을 읽지 못했습니다.' });
   }
 
+  if (body.action === 'index') return indexPost_(body);
   if (body.action !== 'signup') return json_({ ok: false, error: 'unknown action' });
 
   var eventId = String(body.eventId || '').trim();
@@ -313,4 +320,354 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/* ================================================================== *
+ * YCLB Index — 회원명부 열람
+ *
+ * 명부 화면(yclb-index.html)에는 데이터가 없다. 이 스크립트가 본인 확인을 한
+ * 사람에게만 명부를 내려준다.
+ *
+ *   본인 확인: Index 신청서에 적은 이름 + 휴대폰 뒷자리 4자리 + 이메일이
+ *             모두 같고, 두 동의 문항에 동의한 행이 있을 때만 통과.
+ *   명부 내용: Index 신청자 = 공개 항목 전체(이메일·휴대폰·거주지 제외)
+ *             그 외 가입자 = 성 + ** , 소속, 산업
+ *   같은 사람: 휴대폰 번호가 같으면 같은 사람. Index 신청자는 가입 명단에서 뺀다.
+ *
+ * 스크립트 속성 (⚙️ 프로젝트 설정 → 스크립트 속성):
+ *   INDEX_SHEET_ID    Index 신청서 응답 스프레드시트 ID  (주소의 /d/ 와 /edit 사이)
+ *   MEMBERS_SHEET_ID  가입 신청서 응답 스프레드시트 ID
+ *   INDEX_ADMIN_KEY   명부 관리자 비밀번호 (호스트 체크용)
+ *   INDEX_SECRET      비워 두면 처음 실행 때 자동으로 만든다. 바꾸면 모두 다시 로그인해야 한다.
+ *
+ * 이 스프레드시트(신청 접수용)에 탭 두 개가 자동으로 생긴다:
+ *   index_hosts  호스트 경험자. 명부 화면의 관리자 모드에서 체크하면 여기 쌓인다.
+ *   org_map      가입 신청서 '소속' 원문 → 화면에 보일 소속 / 산업.
+ *                처음 보는 소속은 '표시 소속'이 빈 채로 자동 추가되고, 채울 때까지 숨긴다.
+ *                (소속 칸에 실명을 같이 적는 사람이 있어서다.)
+ * ================================================================== */
+
+var IDX_HOSTS_SHEET = 'index_hosts';
+var IDX_HOSTS_HEADERS = ['이름', '휴대폰', '체크 시각'];
+var IDX_ORGMAP_SHEET = 'org_map';
+var IDX_ORGMAP_HEADERS = ['소속 원문', '표시 소속 (비우면 숨김)', '산업', '추가된 시각'];
+var IDX_TOKEN_DAYS = 7;
+var IDX_EMPTY = { '': 1, '-': 1, 'na': 1, 'n/a': 1, '없음': 1, '네': 1, 'x': 1, '비공개': 1, 'none': 1 };
+
+function prop_(k) { return PropertiesService.getScriptProperties().getProperty(k) || ''; }
+
+function idxSecret_() {
+  var s = prop_('INDEX_SECRET');
+  if (!s) {
+    s = Utilities.getUuid() + Utilities.getUuid();
+    PropertiesService.getScriptProperties().setProperty('INDEX_SECRET', s);
+  }
+  return s;
+}
+
+function hmac_(text) {
+  var raw = Utilities.computeHmacSha256Signature(text, idxSecret_());
+  return Utilities.base64EncodeWebSafe(raw).replace(/=+$/, '');
+}
+
+/* 휴대폰 전체 번호(숫자만). +82, 앞자리 0 빠짐을 되살린다. */
+function phoneDigits_(v) {
+  var d = String(v == null ? '' : v).replace(/[^0-9]/g, '');
+  if (d.indexOf('82') === 0) d = '0' + d.slice(2);
+  if (d.length === 10 && d.indexOf('10') === 0) d = '0' + d;
+  return d;
+}
+
+/* 사람 id: 휴대폰 번호의 HMAC. 화면에는 번호 대신 이 값만 나간다. */
+function personId_(phone, fallback) {
+  var d = phoneDigits_(phone);
+  return hmac_(d ? 'p:' + d : 'f:' + fallback).slice(0, 16);
+}
+
+function clean_(v) {
+  var s = String(v == null ? '' : v).trim();
+  return IDX_EMPTY[s.toLowerCase()] ? '' : s;
+}
+/* '(비공개) ...' 처럼 적은 칸은 통째로 숨긴다. */
+function priv_(v) { var s = clean_(v); return s.indexOf('비공개') >= 0 ? '' : s; }
+
+function igId_(v) {
+  var s = clean_(v).replace(/^@/, '');
+  var m = s.match(/instagram\.com\/([^\/?#]+)/);
+  if (m) return m[1];
+  return /^[A-Za-z0-9._]{1,30}$/.test(s) ? s : '';
+}
+
+function linkedin_(v) {
+  var s = clean_(v);
+  if (s.indexOf('linkedin.com/') < 0) return '';
+  s = s.split('?')[0].replace(/\/+$/, '');
+  return /^https?:\/\//.test(s) ? s : 'https://' + s;
+}
+
+function nick_(v, name) {
+  var s = clean_(v);
+  if (!s || s === name) return '';
+  if (s.indexOf('->') >= 0) s = s.split('->').pop().trim();
+  return s === name ? '' : s;
+}
+
+function multi_(v) {
+  return clean_(v).split(',').map(function (x) { return x.trim(); }).filter(String);
+}
+
+function mask_(name) {
+  var s = String(name || '').trim();
+  return s ? s.charAt(0).toUpperCase() + '**' : '';
+}
+
+function consented_(v) { return String(v || '').indexOf('동의') >= 0; }
+
+/* 머리글로 열 찾기. 공백 무시, 앞에서부터 처음 맞는 열. */
+function colOf_(head, words) {
+  var norm = head.map(function (h) { return String(h || '').replace(/\s+/g, '').toLowerCase(); });
+  for (var j = 0; j < words.length; j++) {
+    for (var i = 0; i < norm.length; i++) if (norm[i].indexOf(words[j]) >= 0) return i;
+  }
+  return -1;
+}
+
+function readSheet_(id) {
+  if (!id) return null;
+  var sh = SpreadsheetApp.openById(id).getSheets()[0];
+  var last = sh.getLastRow(), width = sh.getLastColumn();
+  if (last < 1 || width < 1) return { head: [], rows: [] };
+  var all = sh.getRange(1, 1, last, width).getValues();
+  return { head: all[0], rows: all.slice(1) };
+}
+
+function tab_(name, headers) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.appendRow(headers);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+
+/* Index 신청서 응답 → 동의한 사람만, 같은 번호는 최신 응답으로. */
+function indexPeople_() {
+  var data = readSheet_(prop_('INDEX_SHEET_ID'));
+  if (!data) return [];
+  var h = data.head, C = {
+    ts: colOf_(h, ['timestamp', '타임스탬프']), name: colOf_(h, ['이름(실명)', '이름']),
+    nick: colOf_(h, ['카카오톡닉네임']), email: colOf_(h, ['이메일']), phone: colOf_(h, ['휴대폰']),
+    org: colOf_(h, ['소속기업', '소속']), dept: colOf_(h, ['부서또는', '부서']), title: colOf_(h, ['직책']),
+    ind: colOf_(h, ['산업/업종', '산업']), job: colOf_(h, ['직무분야', '직무']), work: colOf_(h, ['근무지']),
+    li: colOf_(h, ['linkedin']), ig: colOf_(h, ['인스타그램']), want: colOf_(h, ['네트워킹하고']),
+    give: colOf_(h, ['도움이나가치', '도움']), c1: colOf_(h, ['정보공개동의']), c2: colOf_(h, ['개인정보수집'])
+  };
+  var g = function (r, k) { return C[k] >= 0 ? r[C[k]] : ''; };
+  var byKey = {};
+  data.rows.forEach(function (r) {
+    var name = clean_(g(r, 'name'));
+    if (!name || !consented_(g(r, 'c1')) || !consented_(g(r, 'c2'))) return;
+    var phone = phoneDigits_(g(r, 'phone'));
+    var email = String(g(r, 'email') || '').trim().toLowerCase();
+    var key = phone || ('e:' + email);
+    var prev = byKey[key];
+    if (prev && new Date(prev._ts) > new Date(g(r, 'ts'))) return;
+    byKey[key] = {
+      _ts: g(r, 'ts'), _phone: phone, _email: email,
+      id: personId_(phone, 'e:' + email),
+      name: name, nick: nick_(g(r, 'nick'), name), org: clean_(g(r, 'org')),
+      dept: priv_(g(r, 'dept')), title: priv_(g(r, 'title')),
+      ind: clean_(g(r, 'ind')) || '기타', job: clean_(g(r, 'job')) || '기타', work: clean_(g(r, 'work')),
+      li: linkedin_(g(r, 'li')), ig: igId_(g(r, 'ig')), want: multi_(g(r, 'want')), give: clean_(g(r, 'give'))
+    };
+  });
+  return Object.keys(byKey).map(function (k) { return byKey[k]; });
+}
+
+function orgMap_() {
+  var sh = tab_(IDX_ORGMAP_SHEET, IDX_ORGMAP_HEADERS);
+  var last = sh.getLastRow(), map = {};
+  if (last >= 2) {
+    sh.getRange(2, 1, last - 1, 3).getValues().forEach(function (r) {
+      var raw = String(r[0] || '').trim();
+      if (raw) map[raw] = { org: String(r[1] || '').trim(), ind: String(r[2] || '').trim() };
+    });
+  }
+  return { sheet: sh, map: map };
+}
+
+/* 가입 신청서 응답 → Index 신청자를 뺀 나머지. 같은 번호는 최신 응답으로. */
+function joinPeople_(indexPhones) {
+  var data = readSheet_(prop_('MEMBERS_SHEET_ID'));
+  if (!data) return [];
+  var h = data.head;
+  var cTs = colOf_(h, ['timestamp', '타임스탬프']), cName = colOf_(h, ['성함', '이름']);
+  var cPhone = colOf_(h, ['휴대폰']), cOrg = colOf_(h, ['소속']);
+  var latest = {};
+  data.rows.forEach(function (r) {
+    var name = String(r[cName] || '').trim();
+    if (!name) return;
+    var phone = phoneDigits_(r[cPhone]);
+    var key = phone || ('n:' + name);
+    var prev = latest[key];
+    if (!prev || new Date(r[cTs]) >= new Date(prev[cTs])) latest[key] = r;
+  });
+  var om = orgMap_(), unknown = [];
+  var out = Object.keys(latest).filter(function (k) { return !indexPhones[k]; }).map(function (k) {
+    var r = latest[k], raw = cOrg >= 0 ? String(r[cOrg] || '').trim() : '';
+    var m = raw ? om.map[raw] : null;
+    if (raw && !m) { unknown.push(raw); om.map[raw] = m = { org: '', ind: '' }; }
+    return { id: personId_(phoneDigits_(r[cPhone]), k), mask: mask_(r[cName]), org: m ? m.org : '', ind: m && m.org ? m.ind : '' };
+  });
+  if (unknown.length) {
+    var now = new Date();
+    om.sheet.getRange(om.sheet.getLastRow() + 1, 1, unknown.length, 4)
+      .setValues(unknown.map(function (u) { return [u, '', '', now]; }));
+  }
+  return out;
+}
+
+function hostPhones_() {
+  var sh = tab_(IDX_HOSTS_SHEET, IDX_HOSTS_HEADERS);
+  var last = sh.getLastRow(), set = {};
+  if (last >= 2) sh.getRange(2, 1, last - 1, 2).getValues().forEach(function (r) {
+    var d = phoneDigits_(r[1]); if (d) set[d] = 1;
+  });
+  return set;
+}
+
+/* 화면에 내려줄 명부. 2분 캐시(호스트를 바꾸면 바로 지운다). */
+function indexPayload_() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('indexPayload');
+  if (hit) return JSON.parse(hit);
+
+  var people = indexPeople_(), phones = {};
+  people.forEach(function (p) { if (p._phone) phones[p._phone] = 1; });
+  var hosts = hostPhones_(), hostIds = [];
+  people.forEach(function (p) { if (p._phone && hosts[p._phone]) hostIds.push(p.id); });
+  Object.keys(hosts).forEach(function (d) { if (!phones[d]) hostIds.push(personId_(d)); });
+  var members = people.map(function (p) {
+    var o = {}; Object.keys(p).forEach(function (k) { if (k.charAt(0) !== '_') o[k] = p[k]; }); return o;
+  });
+  var payload = { members: members, guests: joinPeople_(phones), hosts: hostIds };
+  try { cache.put('indexPayload', JSON.stringify(payload), 120); } catch (err) { /* 100KB 넘으면 캐시 없이 */ }
+  return payload;
+}
+
+/* ---------------- 로그인 토큰 ---------------- */
+
+function makeToken_(id) {
+  var body = id + '.' + (Date.now() + IDX_TOKEN_DAYS * 864e5);
+  return body + '.' + hmac_('t:' + body);
+}
+
+/* 서명과 만료를 보고, 지금도 동의한 Index 신청자인지 확인한다. */
+function checkToken_(token) {
+  var parts = String(token || '').split('.');
+  if (parts.length !== 3) return null;
+  var body = parts[0] + '.' + parts[1];
+  if (hmac_('t:' + body) !== parts[2] || Number(parts[1]) < Date.now()) return null;
+  var ok = indexPeople_().some(function (p) { return p.id === parts[0]; });
+  return ok ? parts[0] : null;
+}
+
+/* ---------------- 무차별 대입 막기 ---------------- */
+
+function tooMany_(key, limit) {
+  return Number(CacheService.getScriptCache().get(key) || 0) >= limit;
+}
+function bump_(key, seconds) {
+  var c = CacheService.getScriptCache();
+  c.put(key, String(Number(c.get(key) || 0) + 1), seconds);
+}
+
+function adminOk_(key) {
+  var k = prop_('INDEX_ADMIN_KEY');
+  if (!k || tooMany_('idxAdminFail', 5)) return false;
+  if (String(key || '') === k) return true;
+  bump_('idxAdminFail', 900);
+  return false;
+}
+
+/* ------------------------------------------------------------------ *
+ * POST { action: 'index', ... }
+ *   op 'login'  : name, tail, email      → token + 명부
+ *   op 'data'   : token  또는 adminKey   → 명부
+ *   op 'admin'  : adminKey               → 관리자 확인
+ *   op 'host'   : adminKey, id, on       → 호스트 체크/해제
+ * ------------------------------------------------------------------ */
+
+function indexPost_(body) {
+  var op = body.op;
+
+  if (op === 'login') {
+    var name = normName_(body.name), tail = last4_(body.tail);
+    var email = String(body.email || '').trim().toLowerCase();
+    if (!name || tail.length !== 4 || email.indexOf('@') < 1) {
+      return json_({ ok: false, error: '이름, 휴대폰 뒷자리 4자리, 이메일을 모두 입력해 주세요.' });
+    }
+    if (tooMany_('idxFail:' + name, 5) || tooMany_('idxFailAll', 60)) {
+      return json_({ ok: false, error: '시도가 너무 많습니다. 15분 뒤 다시 시도해 주세요.' });
+    }
+    var me = null;
+    indexPeople_().forEach(function (p) {
+      if (normName_(p.name) === name && last4_(p._phone) === tail && p._email === email) me = p;
+    });
+    if (!me) {
+      bump_('idxFail:' + name, 900); bump_('idxFailAll', 600);
+      return json_({ ok: false, error: 'Index 신청서의 정보와 일치하지 않습니다. 신청서에 적은 이름, 뒷자리, 이메일을 확인해 주세요.' });
+    }
+    return json_({ ok: true, token: makeToken_(me.id), me: me.id, data: indexPayload_() });
+  }
+
+  if (op === 'data') {
+    if (body.adminKey ? adminOk_(body.adminKey) : checkToken_(body.token)) {
+      return json_({ ok: true, data: indexPayload_() });
+    }
+    return json_({ ok: false, expired: true, error: '다시 본인 확인을 해 주세요.' });
+  }
+
+  if (op === 'admin') {
+    return json_(adminOk_(body.adminKey) ? { ok: true } : { ok: false, error: '비밀번호가 맞지 않거나 시도가 너무 많습니다.' });
+  }
+
+  if (op === 'host') {
+    if (!adminOk_(body.adminKey)) return json_({ ok: false, error: '관리자 확인에 실패했습니다.' });
+    var id = String(body.id || ''), on = !!body.on;
+    /* id → 휴대폰 번호. 명부 전체에서 같은 id를 찾는다. */
+    var found = null;
+    indexPeople_().forEach(function (p) { if (p.id === id) found = { name: p.name, phone: p._phone }; });
+    if (!found) {
+      var data = readSheet_(prop_('MEMBERS_SHEET_ID'));
+      if (data) {
+        var cName = colOf_(data.head, ['성함', '이름']), cPhone = colOf_(data.head, ['휴대폰']);
+        data.rows.forEach(function (r) {
+          var d = phoneDigits_(r[cPhone]);
+          if (d && personId_(d) === id) found = { name: String(r[cName] || ''), phone: d };
+        });
+      }
+    }
+    if (!found || !found.phone) return json_({ ok: false, error: '대상을 찾지 못했습니다.' });
+
+    var lock = LockService.getScriptLock();
+    lock.waitLock(15000);
+    try {
+      var sh = tab_(IDX_HOSTS_SHEET, IDX_HOSTS_HEADERS);
+      var last = sh.getLastRow();
+      var rows = last >= 2 ? sh.getRange(2, 2, last - 1, 1).getValues() : [];
+      for (var i = rows.length - 1; i >= 0; i--) {
+        if (phoneDigits_(rows[i][0]) === found.phone) sh.deleteRow(i + 2);
+      }
+      if (on) sh.appendRow([found.name, "'" + found.phone, new Date()]);
+    } finally {
+      lock.releaseLock();
+    }
+    CacheService.getScriptCache().remove('indexPayload');
+    return json_({ ok: true });
+  }
+
+  return json_({ ok: false, error: 'unknown op' });
 }
