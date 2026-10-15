@@ -261,11 +261,6 @@
   .empty { padding: 3rem 0; color: var(--text-3); }
 
   /* 푸터: 로고를 맨 아래 가운데에 둔다. */
-  .foot {
-    margin-top: 4rem; padding: 2.4rem 0 0; border-top: 1px solid var(--line);
-    display: flex; flex-direction: column; align-items: center; gap: 1.1rem;
-    font-size: 0.74rem; color: var(--text-3);
-  }
   .foot a { color: var(--text-3); text-decoration: none; }
   .foot a:hover { color: var(--text-2); }
   .spacer { flex: 1 1 auto; }
@@ -535,10 +530,7 @@
   .event-desc { margin: 0 0 1rem; font-size: 0.92rem; line-height: 1.7; color: var(--text-2); white-space: pre-line; }
   .verify-note { margin: 1.2rem 0 0; font-size: 0.78rem; color: var(--text-2); }
 
-  .foot {
-    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-    font-size: 0.75rem; color: var(--text-3);
-  }
+  .foot { margin-top: 3rem; padding-top: 1.4rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.75rem; color: var(--text-3); }
 </style>
 <link rel="stylesheet" href="assets/site.css" />
 </head>
@@ -1072,7 +1064,6 @@
     var up = bigs.filter(function (ev) { return daysUntil(ev.date) >= 0; });
     if (!up.length) { box.hidden = true; return; }
     box.hidden = false;
-    box.appendChild(el("p", "section-label section-members", "Featured"));
     sortByDate(up).forEach(function (ev) { box.appendChild(renderCover(ev)); });
   }
 
