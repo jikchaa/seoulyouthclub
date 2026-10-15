@@ -440,8 +440,9 @@ function colOf_(head, words) {
   return -1;
 }
 
-/* 응답 탭: 이 스크립트가 만든 탭(org_map, index_hosts)을 뺀 첫 탭. */
-function readSheet_(id) {
+/* 응답 탭: 이 스크립트가 만든 탭(org_map, index_hosts)을 뺀 첫 탭.
+   withColors 면 셀 배경색도 함께 읽는다(가입 신청서의 부적격 표시용). */
+function readSheet_(id, withColors) {
   if (!id) return null;
   var sh = SpreadsheetApp.openById(id).getSheets().filter(function (s) {
     var n = s.getName(); return n !== IDX_ORGMAP_SHEET && n !== IDX_HOSTS_SHEET;
@@ -449,8 +450,11 @@ function readSheet_(id) {
   if (!sh) return { head: [], rows: [] };
   var last = sh.getLastRow(), width = sh.getLastColumn();
   if (last < 1 || width < 1) return { head: [], rows: [] };
-  var all = sh.getRange(1, 1, last, width).getValues();
-  return { head: all[0], rows: all.slice(1) };
+  var range = sh.getRange(1, 1, last, width);
+  var all = range.getValues();
+  var out = { head: all[0], rows: all.slice(1) };
+  if (withColors) out.colors = range.getBackgrounds().slice(1);
+  return out;
 }
 
 /* 운영 탭은 가입 신청서 응답 스프레드시트에 둔다. 맨 뒤에 붙인다. */
@@ -522,24 +526,41 @@ function orgMap_() {
   return { sheet: sh, map: map };
 }
 
-/* 가입 신청서 응답 → Index 신청자를 뺀 나머지. 같은 번호는 최신 응답으로. */
+/* 가입 신청서에서 이름 칸을 빨강·주황(연한 주황 포함)으로 칠한 행은 부적격 — 명부에서 뺀다.
+   노랑·초록·흰색은 그대로 둔다. 판단은 색상환 각도로 한다(빨강~주황 = 0~40°, 330~360°). */
+function isRejectColor_(hex) {
+  var m = String(hex || '').match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  var r = parseInt(m[1], 16) / 255, g = parseInt(m[2], 16) / 255, b = parseInt(m[3], 16) / 255;
+  var max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  if (d < 0.08) return false;                       // 흰색·회색·검정
+  var h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  h = (h * 60 + 360) % 360;
+  return h <= 40 || h >= 330;           // 노랑(약 45°) 은 제외
+}
+
+/* 가입 신청서 응답 → Index 신청자와 부적격자를 뺀 나머지. 같은 번호는 최신 응답으로. */
 function joinPeople_(indexPhones) {
-  var data = readSheet_(prop_('MEMBERS_SHEET_ID'));
+  var data = readSheet_(prop_('MEMBERS_SHEET_ID'), true);
   if (!data) return [];
   var h = data.head;
   var cTs = colOf_(h, ['timestamp', '타임스탬프']), cName = colOf_(h, ['성함', '이름']);
   var cPhone = colOf_(h, ['휴대폰']), cOrg = colOf_(h, ['소속']);
-  var latest = {};
-  data.rows.forEach(function (r) {
+  var latest = {}, rejected = {};
+  data.rows.forEach(function (r, i) {
     var name = String(r[cName] || '').trim();
     if (!name) return;
     var phone = phoneDigits_(r[cPhone]);
     var key = phone || ('n:' + name);
     var prev = latest[key];
-    if (!prev || new Date(r[cTs]) >= new Date(prev[cTs])) latest[key] = r;
+    if (!prev || new Date(r[cTs]) >= new Date(prev[cTs])) {
+      latest[key] = r;
+      /* 같은 사람이 다시 신청했다면 가장 최근 응답의 색을 따른다. */
+      rejected[key] = data.colors ? isRejectColor_(data.colors[i][cName]) : false;
+    }
   });
   var om = orgMap_(), unknown = [];
-  var out = Object.keys(latest).filter(function (k) { return !indexPhones[k]; }).map(function (k) {
+  var out = Object.keys(latest).filter(function (k) { return !indexPhones[k] && !rejected[k]; }).map(function (k) {
     var r = latest[k], raw = cOrg >= 0 ? String(r[cOrg] || '').trim() : '';
     var m = raw ? om.map[raw] : null;
     if (raw && !m) { unknown.push(raw); om.map[raw] = m = { org: '', ind: '' }; }
