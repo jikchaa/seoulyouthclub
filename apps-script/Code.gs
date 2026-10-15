@@ -31,7 +31,8 @@ function adminKey_() {
 }
 
 /* 정원을 여기서 따로 관리하지 않는다. 공개된 이벤트 데이터가 유일한 출처다. */
-var EVENTS_URL = 'https://jikchaa.github.io/seoulyouthclub/data/events.json';
+/* 도메인 연결 상태와 무관하게 읽히도록 GitHub 원본을 직접 읽는다(최대 5분 지연). */
+var EVENTS_URL = 'https://raw.githubusercontent.com/jikchaa/seoulyouthclub/main/data/events.json';
 
 var SHEET_NAME = 'signups';
 /* 열 순서를 바꾸지 말 것 — 이미 쌓인 행이 이 순서로 들어 있다. 새 열은 끝에만 붙인다. */
@@ -222,9 +223,13 @@ function doGet(e) {
 
   if (action !== 'list') return json_({ ok: false, error: 'unknown action' });
 
+  /* 지난 모임의 명단은 공개 응답에 싣지 않는다(관리자 조회 ?action=phones 에는 그대로 있다). */
+  var caps = capacities_();
+  var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
   var out = {};
   rows_().forEach(function (r) {
     var id = String(r[COL.eventId]);
+    if (caps[id] && caps[id].date && caps[id].date < today) return;
     if (!out[id]) out[id] = [];
     /* 뒷자리·닉네임은 여기에 절대 넣지 않는다. 인증 여부는 결과만 싣는다. */
     out[id].push({

@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex, nofollow" />
 <title>Upcoming Events · SEOUL YOUTH CLUB</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
-<link rel="icon" type="image/png" sizes="1024x1024" href="assets/icon.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="assets/icon.png" />
 <link rel="apple-touch-icon" href="assets/icon-180.png" />
 <link rel="stylesheet" href="assets/pretendard/pretendardvariable-dynamic-subset.css" />
 <style>
@@ -640,6 +640,8 @@
 
   /* 소모임은 참석자 이름을, 대형 이벤트는 소속만 보인다. */
   function isBigEvent(ev) { return ev.kind === "event"; }
+  /* 정원·참석자가 없는 소모임. 일정만 안내하고 신청·명단은 없다. */
+  function isOpenMeet(ev) { return ev.kind === "open"; }
 
   /* 알파벳순, 중복 제거. 표기는 입력한 그대로 둔다. */
   function orgList(ev) {
@@ -662,6 +664,7 @@
   }
 
   function roster(ev) {
+    if (isOpenMeet(ev)) return { going: [], waiting: [] };
     var all = allAttendees(ev);
     if (!ev.capacity || all.length <= ev.capacity) return { going: all, waiting: [] };
     return { going: all.slice(0, ev.capacity), waiting: all.slice(ev.capacity) };
@@ -672,7 +675,7 @@
     /* 대형 이벤트는 명단으로 마감을 판단하지 않는다 — 정원 개념이 다르다. */
     if (isBigEvent(ev)) return "open";
     var r = roster(ev);
-    if (ev.capacity && r.going.length >= ev.capacity) return "waitlist";
+    if (!isOpenMeet(ev) && ev.capacity && r.going.length >= ev.capacity) return "waitlist";
     return "open";
   }
 
@@ -736,7 +739,7 @@
   function buildFields(ev) {
     var dl = el("dl", "fields");
     if (ev.host) field(dl, "호스트", ev.host);
-    if (ev.capacity || ev.capacityText) {
+    if (!isOpenMeet(ev) && (ev.capacity || ev.capacityText)) {
       field(dl, "정원", el("span", "num", ev.capacityText || (ev.capacity + "명")));
     }
     field(dl, "일시", el("span", "num", dateLabel(ev.date) + (ev.time ? " " + ev.time : "")), true);
@@ -1090,7 +1093,9 @@
     var diff = daysUntil(ev.date);
     var past = diff < 0;
     var big = isBigEvent(ev);
-    var r = big ? { going: [], waiting: [] } : roster(ev);
+    var openMeet = isOpenMeet(ev);
+    /* 지난 모임의 참석자 명단은 공개하지 않는다(관리자 화면에서만 본다). */
+    var r = big || past ? { going: [], waiting: [] } : roster(ev);
     var going = r.going.length;
     var extra = hasDetail(ev) ? buildExtra(ev) : null;
 
@@ -1122,7 +1127,7 @@
         var names = el("div", "row-names");
         r.going.forEach(function (a) { names.appendChild(nameNode(a)); });
         tt.appendChild(names);
-      } else if (!past && status !== "closed") {
+      } else if (!past && !openMeet && status !== "closed") {
         tt.appendChild(el("div", "row-meta", "첫 번째 참석자가 되어보세요"));
       }
       if (r.waiting.length) tt.appendChild(el("div", "row-meta", "대기 " + r.waiting.length + "명"));
@@ -1138,7 +1143,7 @@
 
     /* 자리 + 신청 */
     var seat = el("div", "row-seat");
-    if (!big && ev.capacity) {
+    if (!big && !openMeet && !past && ev.capacity) {
       var cap = ev.capacity, left = Math.max(0, cap - going);
       seat.appendChild(el("small", null, left > 0 ? going + " / " + cap + " · " + left + "자리 남음" : "만석"));
       if (cap <= 12) {
@@ -1154,9 +1159,11 @@
       seat.appendChild(el("small", null, going + "명 참석"));
     }
 
-    var signup = big || past ? null : buildSignup(ev);
+    var signup = big || past || openMeet ? null : buildSignup(ev);
     var action;
-    if (big) {
+    if (openMeet && !past) {
+      action = el("span", "row-btn off", "자유 참여");   // 상세는 제목 아래 '상세 보기'로 연다
+    } else if (big) {
       action = extra ? toggleButton(extra, "row-btn") : el("span", "row-btn off", "정보 준비 중");
     } else if (past) {
       action = el("span", "row-btn off", "종료");

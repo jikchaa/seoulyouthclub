@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex, nofollow" />
 <title>관리자 · YOUTH CLUB SEOUL</title>
 <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
-<link rel="icon" type="image/png" sizes="1024x1024" href="assets/icon.png" />
+<link rel="icon" type="image/png" sizes="512x512" href="assets/icon.png" />
 <link rel="apple-touch-icon" href="assets/icon-180.png" />
 <link rel="stylesheet" href="assets/pretendard/pretendardvariable-dynamic-subset.css" />
 <style>
@@ -320,6 +320,7 @@
             <select id="f_kind" name="kind">
               <option value="group">소모임 — 참석자 이름을 그대로 보여줌 (직차, 성보, 주은…)</option>
               <option value="event">이벤트 — 이름 대신 참석 소속을 보여줌</option>
+              <option value="open">소모임 (정원·참석자 없음) — 일정만 안내, 신청 받지 않음</option>
             </select>
           </div>
 
@@ -384,12 +385,12 @@
           <details class="more" id="more">
             <summary>추가 정보 — 정원 · 회비 · 주소 · 장소 링크 · 상태</summary>
             <div class="grid">
-              <div class="field">
+              <div class="field" id="capField">
                 <label for="f_capacity">정원 <span class="opt">숫자</span></label>
                 <input id="f_capacity" name="capacity" inputmode="numeric" placeholder="8" />
                 <span class="help">채우면 남은 자리가 표시되고, 다 차면 이후 신청은 대기로 갑니다.</span>
               </div>
-              <div class="field">
+              <div class="field" id="capTextField">
                 <label for="f_capacityText">정원 표기 <span class="opt">선택</span></label>
                 <input id="f_capacityText" name="capacityText" placeholder="비우면 “8명”. 예: 8명(대관)" />
               </div>
@@ -573,13 +574,14 @@
     return (ev.attendees || []).map(norm).concat((state.signups[ev.id] || []).map(norm));
   }
   function roster(ev) {
+    if (ev.kind === "open") return { going: [], waiting: [] };
     var all = allNames(ev);
     if (!ev.capacity || all.length <= ev.capacity) return { going: all, waiting: [] };
     return { going: all.slice(0, ev.capacity), waiting: all.slice(ev.capacity) };
   }
   function effectiveStatus(ev) {
     if (ev.status && ev.status !== "auto") return ev.status;
-    if (ev.capacity && roster(ev).going.length >= ev.capacity) return "waitlist";
+    if (ev.kind !== "open" && ev.capacity && roster(ev).going.length >= ev.capacity) return "waitlist";
     return "open";
   }
   function sortByDate(list) {
@@ -647,7 +649,8 @@
     var sub = el("span", "row-sub");
     var dot = el("span", "dot", "● "); dot.dataset.state = status; sub.appendChild(dot);
     var tail = STATUS_LABEL[status];
-    if (ev.capacity) tail += " · " + r.going.length + "/" + ev.capacity;
+    if (ev.kind === "open") tail += " · 정원 없음";
+    else if (ev.capacity) tail += " · " + r.going.length + "/" + ev.capacity;
     else if (r.going.length) tail += " · " + r.going.length + "명";
     if (r.waiting.length) tail += " · 대기 " + r.waiting.length;
     sub.appendChild(document.createTextNode(tail));
@@ -885,9 +888,12 @@
 
   /* 종류에 따라 무엇을 묻는지가 달라진다. 안 쓰는 칸은 숨긴다. */
   function applyKind(ev) {
-    var isEvent = ev.kind === "event";
+    var isEvent = ev.kind === "event", isOpen = ev.kind === "open";
     document.getElementById("orgsField").hidden = !isEvent;
-    document.getElementById("attendField").hidden = isEvent;
+    /* 정원·참석자 없는 소모임: 참석자와 정원 칸을 숨긴다. 이미 적힌 값은 지우지 않고 화면에서만 쓰지 않는다. */
+    document.getElementById("attendField").hidden = isEvent || isOpen;
+    document.getElementById("capField").hidden = isOpen;
+    document.getElementById("capTextField").hidden = isOpen;
     renderOrgPreview(ev);
   }
 
@@ -913,7 +919,7 @@
     document.getElementById("f_date").value = ev.date || "";
     document.getElementById("f_capacity").value = ev.capacity ? String(ev.capacity) : "";
     document.getElementById("f_status").value = ev.status || "auto";
-    document.getElementById("f_kind").value = ev.kind === "event" ? "event" : "group";
+    document.getElementById("f_kind").value = ev.kind === "event" || ev.kind === "open" ? ev.kind : "group";
     document.getElementById("f_orgs").value = (ev.orgs || []).join(", ");
     document.getElementById("f_links").value =
       (ev.links || []).map(function (l) { return l.label + " | " + l.url; }).join("\n");
@@ -949,7 +955,7 @@
     ev.status = document.getElementById("f_status").value;
 
     var kind = document.getElementById("f_kind").value;
-    if (kind === "event") ev.kind = "event"; else delete ev.kind;
+    if (kind === "event" || kind === "open") ev.kind = kind; else delete ev.kind;
 
     var orgs = String(document.getElementById("f_orgs").value || "")
       .split(",").map(function (x) { return x.trim(); }).filter(Boolean);
@@ -1022,7 +1028,7 @@
       lines.push("<" + (ev.title || "제목 없음") + ">" +
         (status === "closed" ? "(마감)" : status === "waitlist" ? "(대기 모집중)" : ""));
       if (ev.host) lines.push("호스트: " + ev.host);
-      if (ev.capacity || ev.capacityText) lines.push("정원: " + (ev.capacityText || ev.capacity + "명"));
+      if (ev.kind !== "open" && (ev.capacity || ev.capacityText)) lines.push("정원: " + (ev.capacityText || ev.capacity + "명"));
       lines.push("일시: " + dateLabel(ev.date) + (ev.time ? " " + ev.time : ""));
       if (ev.place) lines.push("장소: " + ev.place);
       if (ev.address) lines.push(ev.address);
