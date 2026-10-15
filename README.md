@@ -1,5 +1,8 @@
 # YOUTH CLUB SEOUL — Upcoming Events
 
+주소: https://members.seoulyouthclub.com (명부 `/yclb-index`, 소개 `/about`). `CNAME` 파일이 이 도메인을 가리키고,
+DNS는 Squarespace Domains 에서 `members` CNAME → `jikchaa.github.io` 로 걸려 있다.
+
 서울유스클럽 모임·이벤트 보드. GitHub Pages로 발행하는 정적 사이트다.
 
 | 파일 | 하는 일 |
