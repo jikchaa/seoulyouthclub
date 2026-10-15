@@ -457,8 +457,19 @@ function tab_(name, headers) {
   return sh;
 }
 
-/* Index 신청서 응답 → 동의한 사람만, 같은 번호는 최신 응답으로. */
+/* Index 신청자 목록. 로그인·토큰 확인·명부 만들기가 모두 이걸 쓰므로 1분 캐시한다.
+   (스크립트 캐시는 서버 안에만 있다. 화면으로 나가지 않는다.) */
 function indexPeople_() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('indexPeople');
+  if (hit) return JSON.parse(hit);
+  var people = indexPeopleFromSheet_();
+  try { cache.put('indexPeople', JSON.stringify(people), 60); } catch (err) { /* 너무 크면 캐시 없이 */ }
+  return people;
+}
+
+/* Index 신청서 응답 → 동의한 사람만, 같은 번호는 최신 응답으로. */
+function indexPeopleFromSheet_() {
   var data = readSheet_(prop_('INDEX_SHEET_ID'));
   if (!data) return [];
   var h = data.head, C = {
@@ -633,6 +644,12 @@ function indexPost_(body) {
       return json_({ ok: true, data: indexPayload_() });
     }
     return json_({ ok: false, expired: true, error: '다시 본인 확인을 해 주세요.' });
+  }
+
+  /* 화면이 열리자마자 부른다. 사람이 입력하는 동안 서버를 깨우고 캐시를 채워 둔다. 데이터는 안 나간다. */
+  if (op === 'warm') {
+    indexPayload_();
+    return json_({ ok: true });
   }
 
   if (op === 'admin') {
