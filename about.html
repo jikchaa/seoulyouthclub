@@ -4,30 +4,67 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>About · SEOUL YOUTH CLUB</title>
+<meta name="description" content="YOUTH란 나이가 아니라 일상을 대하는 태도입니다. 서울유스클럽은 신뢰를 기반으로 연결과 성장을 만들어가는 네트워크입니다." />
 <meta name="color-scheme" content="dark" />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
+<link rel="icon" type="image/png" sizes="1024x1024" href="assets/icon.png" />
+<link rel="apple-touch-icon" href="assets/icon-180.png" />
 <link rel="stylesheet" href="assets/pretendard/pretendardvariable-dynamic-subset.css" />
 <style>
-
-  :root { --ink:#0A0A0A; --line:#262626; --text:#F3F1EC; --text-2:#A8A59E; --text-3:#6E6B66; --accent:#E04A4C; }
+  /* About. 본문은 jikchaa/yclb 의 About(위키 원문)과 같은 글이다. 고칠 때는 두 곳을 같이 고친다. */
+  :root {
+    color-scheme: dark;
+    --ink: #0A0A0A; --surface: #121212; --line: #262626; --line-strong: #3A3A3A;
+    --text: #F3F1EC; --text-2: #A8A59E; --text-3: #6E6B66;
+    --accent: #E04A4C; --accent-solid: #C62A2D;
+  }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--ink); color:var(--text); font-family:"Helvetica Neue",Helvetica,Arial,"Barun","Malgun Gothic",sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased; }
-  .shell { max-width:68rem; margin:0 auto; padding:0 1.15rem 6rem; }
-  @media (min-width:48rem) { .shell { padding:0 2.5rem 6rem; } }
-  .topbar { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1.3rem 0 1.1rem; border-bottom:1px solid var(--line); }
-  .topbar-brand { display:flex; align-items:center; gap:.6rem; text-decoration:none; color:var(--text); }
-  .topbar-brand .sq { display:grid; place-items:center; width:2.3rem; height:2.3rem; background:#C62A2D; color:#fff; font-size:.6rem; font-weight:700; letter-spacing:.04em; }
-  .topbar-brand .bn { font-size:.95rem; font-weight:700; letter-spacing:.01em; white-space:nowrap; }
-  @media (max-width:47.99rem) { .topbar-brand .bn { font-size:.8rem; } }
-  .topbar-nav { display:flex; gap:1.4rem; list-style:none; margin:0; padding:0; }
-  .topbar-nav a { font-size:.82rem; font-weight:700; letter-spacing:.02em; color:var(--text-2); text-decoration:none; }
-  .topbar-nav a:hover { color:var(--text); }
-  .topbar-nav a.on { color:var(--accent); }
-  h1 { font-size:clamp(1.7rem,6vw,2.5rem); letter-spacing:-.035em; margin:2.6rem 0 .6rem; }
-  .soon { font-size:.8rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); }
-  p { color:var(--text-2); }
-  .dock { position:fixed; left:0; right:0; bottom:0; z-index:40; pointer-events:none; display:flex; justify-content:center; align-items:center; padding:.7rem 0; background:rgba(10,10,10,.96); border-top:1px solid var(--line); }
-  .dock-word { font-size:1.05rem; font-weight:700; letter-spacing:.14em; color:var(--text); }
-  @media (max-width:47.99rem) { .dock { padding:.55rem 0; } .dock-word { font-size:.78rem; } }
+  body { margin: 0; background: var(--ink); color: var(--text); font-size: 15px; line-height: 1.75; letter-spacing: -0.01em; overflow-x: hidden; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  a:hover { color: var(--text); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  .shell { max-width: 68rem; margin: 0 auto; padding: 0 1.15rem 6.5rem; }
+  @media (min-width: 48rem) { .shell { padding: 0 2.5rem 6.5rem; } }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.3rem 0 1.1rem; border-bottom: 2px solid var(--text); }
+  .topbar-brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; color: var(--text); }
+  .topbar-brand .sq { display: grid; place-items: center; width: 2.3rem; height: 2.3rem; background: var(--accent-solid); color: #fff; font-size: .6rem; font-weight: 700; letter-spacing: .04em; }
+  .topbar-brand .bn { font-size: .95rem; font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
+  .topbar-nav { display: flex; gap: 1.4rem; list-style: none; margin: 0; padding: 0; }
+  .topbar-nav a { font-size: .82rem; font-weight: 700; letter-spacing: .02em; color: var(--text-2); text-decoration: none; }
+  .topbar-nav a:hover { color: var(--text); }
+  .topbar-nav a.on { color: var(--accent); }
+  @media (max-width: 47.99rem) { .topbar-brand .bn { font-size: .78rem; } .topbar-brand { gap: .45rem; } .topbar-nav { gap: 1rem; } }
+
+  .kicker { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); }
+
+  .hero { padding: 3.2rem 0 3rem; border-bottom: 1px solid var(--line); }
+  .hero-title { margin: 0; font-weight: 700; line-height: 1.22; letter-spacing: -.03em; font-size: clamp(1.9rem, 6.4vw, 3.6rem); text-wrap: balance; }
+
+  .sec { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: 2.5rem; padding: 3.2rem 0; border-bottom: 1px solid var(--line); }
+  .sec:last-of-type { border-bottom: 2px solid var(--text-2); }
+  .sec-head h2 { margin: 0; font-size: 1.6rem; line-height: 1.25; letter-spacing: -.02em; }
+  .sec-body { max-width: 40rem; min-width: 0; }
+  .sec-body p { margin: 0 0 1.1rem; color: var(--text-2); }
+  .sec-body strong { color: var(--text); font-weight: 700; }
+  .sec-body h3 { margin: 2.2rem 0 1rem; font-size: 1.08rem; letter-spacing: -.01em; color: var(--text); }
+  .points { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .points li { padding: .7rem 0 .7rem 1.4rem; border-bottom: 1px solid var(--line); color: var(--text); position: relative; }
+  .points li::before { content: ""; position: absolute; left: 0; top: 1.28rem; width: .5rem; height: 2px; background: var(--accent); }
+  .lead { margin: 2.2rem 0 0 !important; padding-left: 1rem; border-left: 3px solid var(--accent-solid); color: var(--text) !important; font-size: 1.05rem; font-weight: 600; line-height: 1.7; }
+  .apply { display: inline-block; margin-top: 1.8rem; background: var(--accent-solid); color: #fff; text-decoration: none; font-weight: 700; font-size: .88rem; padding: .65rem 1.2rem; border-radius: 2px; }
+  .apply:hover { background: var(--accent); color: #fff; }
+  @media (max-width: 47.99rem) {
+    .hero { padding: 2.2rem 0 2.2rem; }
+    .sec { grid-template-columns: 1fr; gap: 1.2rem; padding: 2.4rem 0; }
+    .sec-head h2 { font-size: 1.35rem; }
+  }
+
+  .foot { margin-top: 3rem; display: flex; justify-content: space-between; font-size: .75rem; color: var(--text-3); }
+  .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; pointer-events: none; display: flex; justify-content: center; align-items: center; padding: .7rem 0; background: rgba(10,10,10,.96); border-top: 1px solid var(--line); }
+  .dock-word { font-size: .9rem; font-weight: 700; letter-spacing: .14em; color: var(--text); white-space: nowrap; }
+  @media (min-width: 48rem) { .dock-word { font-size: 1.05rem; } }
+  @media (max-width: 47.99rem) { .dock { padding: .55rem 0; } .dock-word { font-size: .78rem; } }
 </style>
 <link rel="stylesheet" href="assets/site.css" />
 </head>
@@ -41,9 +78,47 @@
       <li><a href="about.html" class="on" aria-current="page">About</a></li>
     </ul>
   </nav>
-  <h1>About</h1>
-  <p class="soon">Coming soon</p>
-  <p>소개 글은 다음 단계에서 채웁니다.</p>
+
+  <header class="hero">
+    <p class="kicker">About</p>
+    <h1 class="hero-title">YOUTH는 나이가 아니라<br>일상을 대하는 태도입니다.</h1>
+  </header>
+
+  <section class="sec" aria-labelledby="believe">
+    <div class="sec-head"><p class="kicker">What We Believe</p><h2 id="believe">YOUTH</h2></div>
+    <div class="sec-body">
+      <p>YOUTH란, 나이가 아니라 일상을 대하는 태도입니다.</p>
+      <p>유스클럽은 청춘처럼 ‘내일’을 진지하게 고민하는 분들이 함께 유의미한 시간을 보내며 발전하는 공간입니다.</p>
+      <p>사무엘 울만(Samuel Ullman)의 시 &lt;YOUTH&gt;에서는 청춘을 나이가 아닌 의지와 상상력, 그리고 열정의 상태로 표현하였습니다. 그는 “두려움보다 용기를 선택하고, 이상을 잃지 않는 순간이 바로 청춘”이라 표현했습니다. 반대로, “비관과 냉소에 마음이 굳어 이상을 버리는 순간, 비록 스무 살이라도 이미 늙은 것”이라 했습니다.</p>
+      <p>이 시는 맥아더 장군이 늘 책상 위에 두고 읽었다고 전해지며, 70세가 넘어도 현역에서 활약하며 연설에서도 자주 인용했다고 합니다. YOUTH라는 단어가 그에게 얼마나 큰 힘이었는지 짐작할 수 있습니다.</p>
+      <p>유스클럽은 이러한 정신을 본받아, 신뢰를 기반으로 연결과 성장을 만들어가는 네트워크입니다.</p>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="why">
+    <div class="sec-head"><p class="kicker">Why YOUTH</p><h2 id="why">YOUTH의 가치</h2></div>
+    <div class="sec-body">
+      <p>사회에는 파티, 동호회, 술자리, 커피 모임, 자기계발 등 다양한 형태로 사람을 인스턴트하게 만날 기회가 많습니다. 그러나 어떤 자리는 참여에 불명확한 비용이 들기도 하고, 어떤 자리는 누가 나올지, 어떤 의도로 다가오는지 파악이 어려운 경우도 있습니다.</p>
+      <p>유스클럽은 <strong>검증되고 안전한 환경</strong>에서 다양성과 전문성을 갖춘 프로페셔널들이 깊이 있게, 장기적으로 교류할 수 있게 해준다는 데에서 타 커뮤니티와의 차별화를 추구합니다.</p>
+      <p>이를 위해 유스클럽은 비공개의 형태로 운영되며, 모든 가입 신청자는 검토 과정을 거쳐 승인된 회원으로서 네트워크에 참여하게 됩니다.</p>
+      <p>유스클럽은 구성원 간 의미있는 인연이 오래 이어질 수 있는 프라이빗 네트워크이자, 회원이 주체적으로 활용하며 함께 성장할 수 있는 커뮤니티를 지향합니다.</p>
+      <h3>YOUTH가 만드는 다른 방식의 네트워킹</h3>
+      <ul class="points">
+        <li>다양한 주제의 네트워킹 및 아이스브레이킹 기회</li>
+        <li>호스트가 되어 주도적으로 만들어나가는 큐레이션 경험</li>
+        <li>분야별 전문가와의 깊이있는 교류 기회</li>
+        <li>멘토링 세션을 통한 전문지식 습득 기회</li>
+        <li>인문 · 예술 · 철학 기반 세션을 통한 깊이있는 경험</li>
+        <li>신뢰에 기반한 동반성장과 시너지 효과</li>
+        <li>일과 삶, 교양과 취향의 균형있는 조화</li>
+        <li>지속적인 익명 건의사항 및 불편사항 접수를 통한 퀄리티 제고</li>
+      </ul>
+      <p class="lead">YOUTH는 나이가 아니라 일상을 대하는 태도입니다.<br>유스클럽은 가치와 깊이에 기반한 네트워크이자, 커뮤니티입니다.</p>
+      <a class="apply" href="https://docs.google.com/forms/d/e/1FAIpQLScQRZqVIFoFe7v7lJf1mkBA9GVmwUUlD245I3bt8csFH4weWg/viewform" target="_blank" rel="noopener noreferrer">가입 신청 →</a>
+    </div>
+  </section>
+
+  <footer class="foot"><span>SEOUL YOUTH CLUB</span><span></span></footer>
 </div>
 <div class="dock" aria-hidden="true"><span class="dock-word">SEOUL YOUTH CLUB</span></div>
 </body>

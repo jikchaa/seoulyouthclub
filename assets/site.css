@@ -30,5 +30,5 @@ body {
   .rd-n { font-size: 40px; }
   .rail-day { font-size: 41.6px; }
   .cover-title { font-size: 32px; }
-  body > .shell > h1 { font-size: clamp(27.2px, 6vw, 40px); }   /* About */
+  .hero-title { font-size: clamp(30.4px, 6.4vw, 57.6px); }   /* About */
 }
