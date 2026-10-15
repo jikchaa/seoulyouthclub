@@ -352,6 +352,9 @@ var IDX_HOSTS_HEADERS = ['이름', '휴대폰', '체크 시각'];
 var IDX_ORGMAP_SHEET = 'org_map';
 var IDX_ORGMAP_HEADERS = ['소속 원문', '표시 소속 (비우면 숨김)', '산업', '추가된 시각'];
 var IDX_TOKEN_DAYS = 7;
+/* 명부를 서버 캐시에 미리 만들어 두는 시간. 5분마다 도는 트리거(installIndexRefresh)가
+   다시 채우므로, 로그인은 시트를 읽지 않고 캐시에서 바로 답한다. */
+var IDX_CACHE_SEC = 600;
 var IDX_EMPTY = { '': 1, '-': 1, 'na': 1, 'n/a': 1, '없음': 1, '네': 1, 'x': 1, '비공개': 1, 'none': 1 };
 
 function prop_(k) { return PropertiesService.getScriptProperties().getProperty(k) || ''; }
@@ -464,7 +467,7 @@ function indexPeople_() {
   var hit = cache.get('indexPeople');
   if (hit) return JSON.parse(hit);
   var people = indexPeopleFromSheet_();
-  try { cache.put('indexPeople', JSON.stringify(people), 60); } catch (err) { /* 너무 크면 캐시 없이 */ }
+  try { cache.put('indexPeople', JSON.stringify(people), IDX_CACHE_SEC); } catch (err) { /* 너무 크면 캐시 없이 */ }
   return people;
 }
 
@@ -554,7 +557,7 @@ function hostPhones_() {
   return set;
 }
 
-/* 화면에 내려줄 명부. 2분 캐시(호스트를 바꾸면 바로 지운다). */
+/* 화면에 내려줄 명부. 캐시해 두고, 호스트를 바꾸거나 트리거가 돌 때 새로 만든다. */
 function indexPayload_() {
   var cache = CacheService.getScriptCache();
   var hit = cache.get('indexPayload');
@@ -569,7 +572,7 @@ function indexPayload_() {
     var o = {}; Object.keys(p).forEach(function (k) { if (k.charAt(0) !== '_') o[k] = p[k]; }); return o;
   });
   var payload = { members: members, guests: joinPeople_(phones), hosts: hostIds };
-  try { cache.put('indexPayload', JSON.stringify(payload), 120); } catch (err) { /* 100KB 넘으면 캐시 없이 */ }
+  try { cache.put('indexPayload', JSON.stringify(payload), IDX_CACHE_SEC); } catch (err) { /* 100KB 넘으면 캐시 없이 */ }
   return payload;
 }
 
@@ -688,8 +691,32 @@ function indexPost_(body) {
       lock.releaseLock();
     }
     CacheService.getScriptCache().remove('indexPayload');
+    indexPayload_();   // 바로 다시 채워 둔다
     return json_({ ok: true });
   }
 
   return json_({ ok: false, error: 'unknown op' });
+}
+
+/* ------------------------------------------------------------------ *
+ * 속도: 명부를 미리 만들어 두는 트리거
+ *
+ * Apps Script 편집기 위쪽 함수 선택 칸에서 installIndexRefresh 를 고르고
+ * [실행] 을 한 번 누른다(권한 승인). 그 뒤로는 5분마다 refreshIndexCache 가
+ * 돌아 시트를 읽고 캐시를 채운다. 새 신청은 5분 안에 명부에 나타난다.
+ * ------------------------------------------------------------------ */
+
+function refreshIndexCache() {
+  var cache = CacheService.getScriptCache();
+  cache.removeAll(['indexPeople', 'indexPayload']);
+  indexPeople_();
+  indexPayload_();
+}
+
+function installIndexRefresh() {
+  ScriptApp.getProjectTriggers().forEach(function (tr) {
+    if (tr.getHandlerFunction() === 'refreshIndexCache') ScriptApp.deleteTrigger(tr);
+  });
+  ScriptApp.newTrigger('refreshIndexCache').timeBased().everyMinutes(5).create();
+  refreshIndexCache();
 }

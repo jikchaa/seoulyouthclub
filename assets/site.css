@@ -1,0 +1,34 @@
+/* ------------------------------------------------------------------ *
+ * 모든 페이지 공통: 글꼴과 PC 글자 크기.
+ * 각 페이지의 <style> 뒤에 불러와서 그 위에 덮어쓴다.
+ *
+ * 글꼴  → Pretendard (SIL OFL 1.1). 한글·라틴을 한 글꼴로 그려
+ *         윈도우·맥·휴대폰에서 같은 모양으로 보인다.
+ * 크기  → PC(48rem 이상)에서 본문과 작은 글자를 한 단계(약 6%) 키운다.
+ *         페이지 제목·날짜 숫자 같은 큰 글자는 원래 크기 그대로 둔다.
+ * ------------------------------------------------------------------ */
+
+:root {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  word-break: keep-all;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+@media (min-width: 48rem) {
+  html { font-size: 106.25%; }   /* 16px → 17px: rem 으로 잡은 작은 글자 전부 */
+  body { font-size: 16px; }      /* 15px → 16px: 본문 */
+
+  /* 큰 글자는 키우지 않는다 — 원래 rem 값을 px 로 고정 */
+  .masthead h1, .past-title { font-size: clamp(54.4px, 7.6vw, 96px); }
+  .rd-n { font-size: 40px; }
+  .rail-day { font-size: 41.6px; }
+  .cover-title { font-size: 32px; }
+  body > .shell > h1 { font-size: clamp(27.2px, 6vw, 40px); }   /* About */
+}
