@@ -340,7 +340,7 @@ function doPost(e) {
  *   INDEX_ADMIN_KEY   명부 관리자 비밀번호 (호스트 체크용)
  *   INDEX_SECRET      비워 두면 처음 실행 때 자동으로 만든다. 바꾸면 모두 다시 로그인해야 한다.
  *
- * 이 스프레드시트(신청 접수용)에 탭 두 개가 자동으로 생긴다:
+ * 가입 신청서 응답 스프레드시트에 탭 두 개가 자동으로 생긴다(응답 탭은 건드리지 않는다):
  *   index_hosts  호스트 경험자. 명부 화면의 관리자 모드에서 체크하면 여기 쌓인다.
  *   org_map      가입 신청서 '소속' 원문 → 화면에 보일 소속 / 산업.
  *                처음 보는 소속은 '표시 소속'이 빈 채로 자동 추가되고, 채울 때까지 숨긴다.
@@ -432,20 +432,25 @@ function colOf_(head, words) {
   return -1;
 }
 
+/* 응답 탭: 이 스크립트가 만든 탭(org_map, index_hosts)을 뺀 첫 탭. */
 function readSheet_(id) {
   if (!id) return null;
-  var sh = SpreadsheetApp.openById(id).getSheets()[0];
+  var sh = SpreadsheetApp.openById(id).getSheets().filter(function (s) {
+    var n = s.getName(); return n !== IDX_ORGMAP_SHEET && n !== IDX_HOSTS_SHEET;
+  })[0];
+  if (!sh) return { head: [], rows: [] };
   var last = sh.getLastRow(), width = sh.getLastColumn();
   if (last < 1 || width < 1) return { head: [], rows: [] };
   var all = sh.getRange(1, 1, last, width).getValues();
   return { head: all[0], rows: all.slice(1) };
 }
 
+/* 운영 탭은 가입 신청서 응답 스프레드시트에 둔다. 맨 뒤에 붙인다. */
 function tab_(name, headers) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SpreadsheetApp.openById(prop_('MEMBERS_SHEET_ID'));
   var sh = ss.getSheetByName(name);
   if (!sh) {
-    sh = ss.insertSheet(name);
+    sh = ss.insertSheet(name, ss.getSheets().length);
     sh.appendRow(headers);
     sh.setFrozenRows(1);
   }
