@@ -156,8 +156,9 @@
   dialog.pw .err { color: var(--rust); font-size: .76rem; min-height: 1.1em; margin-top: .4rem; }
 
   /* 입장 화면 */
-  .gate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24rem); gap: 2.5rem; padding: 1rem 0 2rem; align-items: start; }
-  .gate-copy p { margin: 0 0 .8rem; color: var(--text-2); font-size: .92rem; max-width: 32rem; }
+  .gate { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 24rem); gap: 2.5rem; padding: 1rem 0 0; align-items: start; }
+  .gate-copy p { margin: 0 0 .9rem; color: var(--text-2); font-size: .92rem; line-height: 1.7; max-width: 32rem; }
+  .gate-copy p:last-child { margin-bottom: 0; }
   .gate-copy ol { margin: 1.2rem 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .55rem; font-size: .84rem; color: var(--text-2); }
   .gate-copy li { display: grid; grid-template-columns: 1.6rem minmax(0, 1fr); }
   .gate-copy li b { color: var(--accent); font-variant-numeric: tabular-nums; }
@@ -165,14 +166,17 @@
   .gate-form h2 { margin: 0; font-size: 1.15rem; letter-spacing: -.02em; }
   .gate-form label { display: block; font-size: .74rem; font-weight: 700; letter-spacing: .04em; color: var(--text-2); margin-bottom: .3rem; }
   .gate-form .row2 { display: grid; grid-template-columns: minmax(0, 1fr) 7rem; gap: .6rem; }
-  .gate-form .hint { font-size: .72rem; color: var(--text-3); margin-top: .25rem; }
-  .gate-form .btn { width: 100%; padding: .7rem 1rem; font-size: .9rem; }
-  .gate-form .msg { font-size: .78rem; color: var(--text-3); min-height: 1.2em; }
+  .gate-form .hint { font-size: .72rem; color: var(--text-3); margin-top: .4rem; }
+  .gate-form .btn { width: 100%; padding: .75rem 1rem; font-size: .9rem; margin-top: .3rem; }
+  .gate-form .msg { font-size: .8rem; color: var(--text-2); margin-top: -.3rem; }
+  .gate-form .msg:empty { display: none; }
+  .gate-form .apply-note { margin-top: .3rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .78rem; color: var(--text-3); }
   .gate-form .msg.err { color: var(--rust); }
   @media (max-width: 47.99rem) { .gate { grid-template-columns: 1fr; gap: 1.6rem; } }
 
-  .notice { margin-top: 3rem; font-size: .76rem; color: var(--text-3); display: flex; flex-direction: column; gap: .3rem; }
-  .foot { margin-top: 3rem; padding-top: 1.4rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.75rem; color: var(--text-3); }
+  .notice { margin-top: 4rem; font-size: .76rem; line-height: 1.65; color: var(--text-3); display: flex; flex-direction: column; gap: .35rem; }
+  @media (max-width: 47.99rem) { .notice { margin-top: 3rem; } }
+  .foot { margin-top: 1.6rem; padding-top: 1.2rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 0.75rem; color: var(--text-3); }
   .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; pointer-events: none; display: flex; justify-content: center;
     padding: .7rem 0 calc(.7rem + env(safe-area-inset-bottom, 0px)); background: rgba(10,10,10,.96); border-top: 1px solid var(--line); }
   .dock span { font-size: .9rem; font-weight: 700; letter-spacing: .14em; white-space: nowrap; }
@@ -211,9 +215,9 @@
             <div><label for="g-tail">휴대폰 뒷자리</label><input class="search" id="g-tail" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="1234"></div>
           </div>
           <div><label for="g-email">이메일</label><input class="search" id="g-email" type="email" autocomplete="off" placeholder="name@example.com"><div class="hint">Index 신청서에 적은 개인 이메일과 같아야 합니다.</div></div>
-          <button class="btn" type="submit" id="gateBtn">명부 열기</button>
+          <button class="btn" type="submit" id="gateBtn">Index 열기</button>
           <div class="msg" id="gateMsg" role="status"></div>
-          <div class="hint">아직 신청하지 않았다면 <a href="https://forms.gle/X382yeoP3pL44kKF9" target="_blank" rel="noopener noreferrer">Index 2026 참여 신청</a></div>
+          <div class="apply-note">아직 신청하지 않았다면 <a href="https://forms.gle/X382yeoP3pL44kKF9" target="_blank" rel="noopener noreferrer">Index 2026 참여 신청</a></div>
         </form>
       </div>
     </section>
