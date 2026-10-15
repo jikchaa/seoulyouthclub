@@ -476,7 +476,8 @@
       "place": "안다즈 서울 강남",
       "attendees": [],
       "note": "등록 페이지와 함께 추가 정보가 공유됩니다.",
-      "status": "auto"
+      "status": "auto",
+      "kind": "event"
     }
   ],
   "notices": [
