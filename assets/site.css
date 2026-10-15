@@ -32,3 +32,7 @@ body {
   .cover-title { font-size: 32px; }
   .hero-title { font-size: clamp(30.4px, 6.4vw, 57.6px); }   /* About */
 }
+
+/* 상단 로고 옆 YOUTH 마크: 이미지(assets/youth-mark.jpg) */
+.shell img.sq { display: block; flex: none; width: 2.3rem; height: 2.3rem; object-fit: cover; background: none; }
+@media (max-width: 47.99rem) { .shell img.sq { width: 2.4rem; height: 2.4rem; } }
