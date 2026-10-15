@@ -466,7 +466,8 @@
       "place": "성수 일대 (추후 공지)",
       "attendees": [],
       "note": "'2027년 경제 전망과 시나리오 대응방법'을 주제로 경제 전문가의 특별 세션을 준비 중에 있습니다.\n등록 페이지와 함께 추가 정보가 공유됩니다.",
-      "status": "auto"
+      "status": "auto",
+      "kind": "event"
     },
     {
       "id": "yclb-networking-year-end-1206",
