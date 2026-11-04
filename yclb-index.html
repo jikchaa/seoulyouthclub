@@ -67,7 +67,31 @@
   }
 
   /* 분포 */
-  .dist { padding: 1.4rem 0 .4rem; border-top: 2px solid var(--text); }
+  /* 근무지 지도: 서울 25개 구 경계 위에 Index 인증 회원의 근무지를 점으로 */
+  .geo { padding: 1.4rem 0 1.2rem; border-top: 2px solid var(--text); }
+  .geo h2 { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: 0; color: var(--text-2); }
+  .geo-map { position: relative; max-width: 46rem; margin: 0 auto; }
+  .geo-map svg { display: block; width: 100%; height: auto; }
+  .geo .gu { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.4; }
+  .geo .gu-name { fill: var(--text-3); font-size: 15px; text-anchor: middle; pointer-events: none; }
+  .geo .area-name { fill: var(--text); font-size: 17px; font-weight: 700; text-anchor: middle; pointer-events: none; paint-order: stroke; stroke: var(--ink); stroke-width: 4px; }
+  .geo .dot { fill: var(--accent); stroke: var(--ink); stroke-width: 2; cursor: pointer; transition: opacity .15s, r .15s; }
+  .geo .dot:hover, .geo .dot.on { fill: #ff7476; stroke: var(--text); }
+  .geo .dot:focus { outline: none; }
+  .geo .dot.dim { opacity: .18; }
+  .geo .dot:focus-visible { outline: none; stroke: var(--text); stroke-width: 3; }
+  .geo-tip { position: absolute; z-index: 5; min-width: 11rem; max-width: 16rem; padding: .7rem .8rem; background: var(--surface-2); border: 1px solid var(--line-strong);
+    border-radius: 2px; box-shadow: 0 8px 24px rgba(0,0,0,.5); font-size: .8rem; line-height: 1.5; pointer-events: auto; transform: translate(-50%, calc(-100% - 14px)); }
+  .geo-tip[hidden] { display: none; }
+  .geo-tip .t-nm { font-weight: 700; font-size: .95rem; }
+  .geo-tip .t-org { color: var(--text); }
+  .geo-tip .t-sub { color: var(--text-2); }
+  .geo-tip .t-go { appearance: none; background: none; border: 0; padding: 0; margin-top: .4rem; font: inherit; font-size: .74rem; color: var(--accent); cursor: pointer; }
+  .geo-off { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .9rem; margin-top: .9rem; font-size: .76rem; color: var(--text-3); }
+  .geo-off .o { display: inline-flex; align-items: center; gap: .3rem; }
+  .geo-off .o i { cursor: pointer; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); }
+  .card.flash { outline: 2px solid var(--accent); outline-offset: -2px; transition: outline-color .6s; }
+  .dist { padding: 1.4rem 0 .4rem; border-top: 1px solid var(--line); }
   .dist h2 { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: 0; color: var(--text-2); }
   .bars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem 3rem; }
   .bar { appearance: none; background: none; border: 0; font: inherit; color: var(--text-2); cursor: pointer; text-align: left;
@@ -223,6 +247,11 @@
     </section>
     <p class="state" id="view-state" hidden></p>
     <section id="view-board" hidden>
+      <div class="geo" id="geo">
+        <h2>근무지</h2>
+        <div class="geo-map" id="geoMap"><div class="geo-tip" id="geoTip" role="dialog" hidden></div></div>
+        <div class="geo-off" id="geoOff"></div>
+      </div>
       <div class="dist">
         <h2>데이터가 확인된 산업</h2><div class="bars" id="barsInd"></div>
       </div>
@@ -282,7 +311,7 @@ function card(m, i) {
     m.li ? `<a class="sns" href="${esc(m.li)}" target="_blank" rel="noopener noreferrer">${LI_ICON}LinkedIn</a>` : "",
   ].filter(Boolean).join("") || `<span class="off">SNS 비공개</span>`;
   const long = m.give.length > 90;
-  return `<article class="card">
+  return `<article class="card" data-mid="${m.id}">
     <div class="card-top">
       <div class="who"><h3 class="nm">${esc(m.name)}${SEAL}${hostTag(m.id)}${m.nick ? `<span class="nk">${esc(m.nick)}</span>` : ""}</h3>
         <div class="org">${esc(m.org)}</div>${pos ? `<div class="pos">${esc(pos)}</div>` : ""}${hostCk(m.id)}</div></div>
@@ -331,6 +360,7 @@ function draw() {
     const p = document.getElementById(b.dataset.t); p.classList.toggle("clamp"); b.textContent = p.classList.contains("clamp") ? "더 보기" : "접기";
   }));
   wireHostChecks();
+  if (geoReady) dimGeo();
   document.querySelectorAll(".bar").forEach(b => b.setAttribute("aria-pressed", String(state[b.dataset.key] === b.dataset.val)));
   document.querySelectorAll("#indFilters button").forEach(b => b.setAttribute("aria-pressed", String(state.ind === b.dataset.val)));
   const parts = [state.ind && `산업 <b>${esc(state.ind)}</b>`, state.work && `근무지 <b>${esc(state.work)}</b>`, state.job && `직무 <b>${esc(state.job)}</b>`, state.q && `검색 <b>${esc(state.q)}</b>`].filter(Boolean);
@@ -369,11 +399,137 @@ function view(which, text) {
 }
 
 let filtersReady = false;
+/* ---------- 근무지 지도 ----------
+ * 서울 25개 구 경계: npm korea-sigungu-geocoding 1.3.1 의 시군구 경계(MIT License,
+ * https://github.com/sh5080/korea-sigungu-geocoding)를 단순화해 SVG 경로로 옮긴 것. */
+const SEOUL = {"w":1000,"h":823,"proj":{"lat0":37.55,"k":0.7928217937073553,"minx":100.50178690681521,"maxy":37.7014552971994,"scale":3014.523646365939},"gu":[{"code":"11110","name":"종로구","d":"M605,368L602,361L598,359L593,362L591,361L588,365L583,365L579,359L580,357L578,348L576,345L573,344L571,340L568,338L566,330L564,329L537,332L531,328L528,323L524,323L513,317L508,311L511,303L531,294L529,284L531,279L529,277L528,272L530,264L526,258L522,248L523,242L519,233L514,226L515,222L514,219L503,219L504,210L498,208L476,216L464,217L455,221L444,226L440,236L445,259L443,271L444,281L453,291L449,298L451,306L450,309L456,308L462,311L465,321L461,325L462,363L460,367L451,370L484,410L489,402L493,400L495,401L498,398L539,402L567,398L603,396L616,390L618,391L618,372L615,370L605,372L605,368Z"},{"code":"11140","name":"중구","d":"M583,474L582,471L586,463L590,461L603,446L606,436L617,433L618,424L626,416L626,411L619,411L618,391L616,390L600,397L567,398L539,402L498,398L495,401L493,400L489,402L483,409L489,420L483,423L475,429L471,429L474,432L475,436L471,442L473,452L480,444L489,439L489,442L497,442L501,446L506,447L506,441L512,444L512,447L519,445L524,447L528,445L533,452L540,453L544,456L549,464L554,464L558,457L573,457L574,460L577,462L574,468L580,475L583,474Z"},{"code":"11170","name":"용산구","d":"M583,474L580,475L574,468L577,462L574,460L573,457L558,457L554,464L549,464L544,456L540,453L533,452L528,445L524,447L519,445L512,447L512,444L506,441L506,447L501,446L497,442L489,442L489,439L480,444L473,452L476,457L476,460L472,461L467,468L462,471L461,477L462,480L457,488L453,490L451,494L446,498L437,501L434,500L430,505L443,526L443,554L470,567L483,577L510,588L528,588L540,568L578,537L605,504L605,493L593,489L586,489L583,481L583,474Z"},{"code":"11200","name":"성동구","d":"M680,398L663,387L654,387L654,389L649,390L638,397L629,395L625,392L621,393L618,391L619,411L626,411L626,416L618,424L617,433L606,436L603,446L590,461L586,463L585,468L582,471L585,487L586,489L593,489L605,493L605,504L613,499L657,499L672,504L697,522L739,428L732,425L703,419L680,398Z"},{"code":"11215","name":"광진구","d":"M838,436L835,436L835,431L831,429L826,432L824,431L817,437L813,437L806,428L804,422L812,392L809,389L806,389L804,385L791,394L779,397L774,396L773,394L768,394L749,391L746,403L740,413L735,427L739,428L697,522L727,535L746,539L767,533L778,526L821,482L829,466L829,455L838,436Z"},{"code":"11230","name":"동대문구","d":"M732,285L729,284L721,289L718,288L711,290L704,303L697,302L687,305L685,302L676,317L671,316L667,317L665,315L660,319L655,332L649,332L647,339L633,358L618,372L618,391L621,393L625,392L635,397L638,397L649,390L654,389L654,387L663,387L677,395L703,419L735,427L740,413L746,403L749,391L747,387L745,368L735,351L736,347L730,336L731,330L728,321L729,314L737,302L732,285Z"},{"code":"11260","name":"중랑구","d":"M804,385L804,378L810,365L823,356L827,339L833,326L841,324L842,319L835,307L845,292L846,283L841,279L843,270L841,258L842,252L837,247L827,242L803,247L799,244L792,249L788,249L785,252L776,247L768,245L757,248L755,250L733,256L730,259L734,265L732,285L737,302L729,314L728,321L731,330L730,336L736,347L735,351L745,368L747,387L749,391L773,394L774,396L779,397L791,394L804,385Z"},{"code":"11290","name":"성북구","d":"M563,228L547,211L538,207L537,203L523,196L519,201L508,205L504,210L502,216L503,219L514,219L515,222L514,226L519,233L523,242L522,248L526,258L530,264L528,272L529,277L531,279L529,284L531,294L511,303L508,311L513,317L524,323L528,323L531,328L537,332L564,329L566,330L568,338L571,340L573,344L576,345L578,348L580,357L579,359L583,365L588,365L591,361L593,362L598,359L602,361L605,368L605,372L615,370L618,372L633,358L647,339L649,332L655,332L660,319L665,315L667,317L671,316L676,317L685,302L687,305L697,302L704,303L711,290L718,288L721,289L729,284L732,285L734,265L729,258L714,263L710,262L692,246L681,233L674,238L667,250L658,258L652,267L635,279L635,269L626,268L616,272L615,269L612,268L604,262L597,262L589,257L580,243L581,233L572,233L571,231L563,228Z"},{"code":"11305","name":"강북구","d":"M583,52L573,49L568,54L567,52L556,54L548,64L544,66L548,80L549,96L547,101L548,104L544,109L534,112L530,127L521,136L514,137L521,153L524,156L526,167L528,167L522,174L525,180L527,180L529,184L525,196L537,203L538,207L547,211L561,227L571,231L572,233L581,233L580,243L589,257L597,262L604,262L612,268L615,269L616,272L626,268L635,269L635,279L652,267L658,258L667,250L674,238L681,233L676,224L657,209L654,203L653,197L645,192L640,180L624,168L621,163L614,158L604,159L594,154L592,149L597,121L600,121L603,119L599,113L600,104L606,98L607,94L601,83L596,79L594,71L591,67L585,66L583,52Z"},{"code":"11320","name":"도봉구","d":"M616,5L610,1L599,0L596,8L591,12L586,14L586,25L581,30L585,66L591,67L594,71L596,79L601,83L607,94L606,98L600,104L599,113L603,119L600,121L597,121L592,149L594,154L597,154L599,157L604,159L614,158L621,163L624,168L640,180L645,192L653,197L654,203L657,209L664,214L662,211L668,205L674,186L674,182L680,179L685,171L689,180L693,185L694,181L696,167L691,153L690,132L685,123L684,111L679,102L678,93L679,79L686,57L686,47L682,41L682,32L679,22L672,27L665,23L665,19L661,19L655,25L640,29L639,26L637,25L633,7L629,2L623,6L616,5Z"},{"code":"11350","name":"노원구","d":"M828,178L824,177L818,170L808,170L796,173L788,171L783,156L787,148L780,130L780,127L787,115L790,113L789,106L793,96L787,75L782,69L785,60L793,48L792,37L788,37L785,35L779,36L766,33L763,29L763,22L756,16L741,19L736,23L714,20L705,34L694,37L686,43L686,57L679,79L678,93L685,116L685,123L690,132L692,142L691,153L696,167L694,181L693,185L689,180L685,171L680,179L674,182L674,186L668,205L662,211L668,219L676,224L692,246L710,262L730,259L733,256L755,250L757,248L768,245L776,247L785,252L788,249L792,249L799,244L803,247L815,244L813,241L811,241L816,223L829,211L831,207L829,204L831,203L831,196L827,188L830,186L828,178Z"},{"code":"11380","name":"은평구","d":"M447,140L438,134L438,129L435,129L424,132L418,137L410,151L394,155L381,167L356,171L349,164L335,158L342,166L352,172L352,174L348,190L350,198L340,205L340,210L344,217L345,223L344,227L339,232L340,240L337,243L336,248L331,249L324,272L328,295L324,296L328,320L322,327L323,336L319,339L293,340L290,337L289,334L293,324L288,325L281,334L297,352L328,377L354,345L361,348L363,357L373,357L381,345L386,344L390,341L390,331L396,322L402,317L421,310L422,304L419,300L419,297L422,296L424,291L428,291L428,287L439,280L444,274L443,271L445,259L441,232L444,226L466,216L475,206L465,177L465,165L462,161L461,149L452,139L447,140Z"},{"code":"11410","name":"서대문구","d":"M484,410L451,370L460,367L462,363L461,325L465,321L462,311L456,308L450,309L451,306L449,298L453,291L444,281L444,274L439,280L428,287L428,291L424,291L422,296L419,297L419,300L422,304L421,310L402,317L396,322L390,331L390,341L386,344L381,345L373,357L363,357L361,348L354,345L328,377L345,392L368,405L386,411L391,416L387,424L387,430L412,441L422,437L465,435L471,429L489,420L484,410Z"},{"code":"11440","name":"마포구","d":"M309,361L293,348L281,334L276,338L274,346L270,347L268,362L270,364L269,372L261,371L240,374L226,381L213,385L213,391L218,398L241,415L261,428L295,450L321,463L335,482L377,482L378,485L390,489L396,483L416,493L430,505L434,500L437,501L446,498L451,494L453,490L457,488L462,480L461,477L462,471L471,464L472,461L476,460L471,442L475,436L474,432L471,429L465,435L422,437L412,441L387,430L387,424L391,416L386,411L368,405L345,392L309,361Z"},{"code":"11470","name":"양천구","d":"M263,466L254,464L238,453L233,474L237,485L237,518L181,527L168,501L168,494L164,481L156,482L156,474L157,470L156,463L150,464L149,466L146,474L147,477L145,482L138,485L136,487L138,497L137,502L145,517L152,520L152,529L148,532L145,538L146,547L140,558L143,568L142,580L143,582L152,581L159,583L158,588L161,593L169,599L179,594L182,589L186,591L197,579L201,580L204,577L211,575L217,580L224,577L229,587L234,585L236,592L239,593L242,590L249,593L252,590L256,595L260,597L264,584L261,581L262,579L265,578L261,573L269,566L274,553L271,551L274,546L273,531L278,529L278,523L282,525L285,524L286,521L293,516L299,516L301,512L297,511L297,508L299,507L299,501L291,487L288,477L277,462L271,465L263,466Z"},{"code":"11500","name":"강서구","d":"M129,323L91,291L84,298L85,301L79,306L78,313L79,322L81,325L82,332L87,338L86,343L82,342L76,351L78,353L75,357L74,351L72,351L72,356L69,353L70,359L67,365L68,376L64,362L62,364L62,373L59,373L57,376L59,380L56,378L42,386L40,392L43,395L38,395L40,399L37,404L35,401L29,408L26,402L24,403L26,410L29,414L29,419L31,420L32,427L27,421L24,422L23,427L21,426L17,431L20,434L19,436L13,435L6,437L4,435L5,437L0,440L4,442L4,445L7,444L8,452L12,453L16,462L25,460L31,467L54,468L60,474L65,475L65,481L72,483L68,488L70,488L71,499L83,493L82,486L87,483L84,482L89,479L95,477L102,476L109,482L117,485L138,485L145,482L147,477L146,474L150,464L156,463L157,470L156,474L156,482L164,481L168,494L168,501L181,527L237,518L237,485L233,474L238,453L258,465L271,465L276,463L271,447L274,447L274,442L277,438L241,415L218,398L213,391L213,385L206,383L196,374L163,355L145,336L129,323Z"},{"code":"11530","name":"구로구","d":"M331,653L319,647L314,639L307,606L306,597L309,592L304,576L294,567L286,566L282,562L282,559L274,553L269,566L261,573L265,578L262,579L261,581L264,584L260,597L256,595L252,590L249,593L242,590L239,593L236,592L234,585L229,587L224,577L217,580L211,575L204,577L201,580L197,579L186,591L182,589L179,594L169,599L161,593L158,588L159,583L152,581L138,584L136,601L131,605L131,609L123,614L118,613L118,615L115,618L119,628L139,637L141,644L131,651L132,663L130,670L121,679L119,683L125,688L129,685L129,682L131,679L151,680L160,675L166,677L168,680L168,684L176,681L183,684L187,683L193,686L195,664L200,661L205,663L211,662L217,651L223,649L234,635L241,633L246,627L244,625L248,622L251,625L250,632L253,639L257,636L259,643L266,640L268,642L263,651L272,647L279,651L299,669L321,673L324,664L331,653Z"},{"code":"11545","name":"금천구","d":"M321,671L321,673L315,673L299,669L279,651L272,647L263,651L259,649L256,652L271,686L279,699L280,702L286,708L286,712L282,715L286,720L290,720L294,725L290,725L288,728L291,731L291,739L298,744L300,750L306,752L309,750L314,763L312,763L311,768L313,771L317,772L323,790L321,792L330,801L331,806L341,808L346,807L353,793L362,788L370,789L372,787L379,771L391,760L391,757L386,750L383,749L379,745L376,738L359,736L357,734L358,723L354,715L356,712L353,710L343,690L350,686L352,674L346,674L344,670L347,665L321,671Z"},{"code":"11560","name":"영등포구","d":"M430,505L416,493L396,483L390,489L378,485L377,482L335,482L321,463L295,450L277,438L274,442L274,447L271,446L271,452L288,477L291,487L299,501L299,507L297,508L297,511L301,512L299,516L293,516L282,525L278,523L278,529L273,531L274,546L271,551L282,559L282,562L286,566L294,567L304,576L309,592L306,597L307,606L314,639L319,647L331,653L351,621L354,618L370,615L372,612L384,570L387,569L388,560L417,559L443,554L443,526L430,505Z"},{"code":"11590","name":"동작구","d":"M516,588L503,586L483,577L470,567L442,554L417,559L388,560L387,569L384,570L372,612L370,615L354,618L351,621L331,653L338,653L352,648L363,639L370,637L381,638L389,622L398,628L404,628L411,631L419,629L425,631L436,625L440,626L440,628L447,631L452,636L461,631L464,627L468,626L470,629L469,635L472,642L472,652L469,657L477,668L488,678L491,678L492,682L511,678L519,678L522,616L528,608L516,599L514,595L516,588Z"},{"code":"11620","name":"관악구","d":"M519,676L519,678L511,678L492,682L491,678L488,678L477,668L469,657L472,652L472,642L469,635L470,629L468,626L464,627L461,631L452,636L447,631L440,628L440,626L436,625L425,631L419,629L411,631L404,628L398,628L389,622L381,638L370,637L363,639L352,648L338,653L331,653L324,664L321,671L347,665L344,670L346,674L352,674L350,686L343,690L353,710L356,712L354,715L358,723L357,734L359,736L376,738L379,745L383,749L386,750L396,763L397,772L411,783L414,788L412,791L414,796L420,801L423,796L431,797L439,792L441,793L449,790L455,792L464,791L467,787L474,787L478,782L477,769L492,760L502,745L511,741L520,740L522,737L530,736L535,733L533,728L535,716L532,705L522,693L519,676Z"},{"code":"11650","name":"서초구","d":"M804,732L799,739L790,739L789,733L791,725L786,724L783,721L782,713L779,706L773,702L768,694L766,694L764,689L764,680L749,683L746,682L736,692L726,695L718,700L695,701L684,705L684,700L679,698L684,692L670,675L662,652L644,654L611,569L605,542L599,532L602,529L593,518L595,514L578,537L540,568L528,588L516,588L514,595L516,599L528,608L522,616L519,676L522,693L532,705L535,716L533,728L535,733L543,726L545,727L547,723L555,722L556,715L553,708L555,706L569,706L571,705L574,710L573,716L576,720L588,742L594,742L597,743L604,740L609,741L617,736L623,735L626,732L626,729L630,728L629,724L633,718L633,712L637,711L645,715L643,724L646,727L646,734L651,742L646,750L650,754L653,760L651,769L654,773L652,778L647,785L648,791L651,793L658,793L670,806L673,807L676,816L682,817L687,823L701,818L714,819L719,821L726,816L733,816L731,811L733,806L733,801L739,796L735,792L734,784L744,782L754,785L759,784L763,776L769,775L773,772L774,762L780,750L784,747L786,740L791,738L799,739L804,732Z"},{"code":"11680","name":"강남구","d":"M859,708L818,637L810,629L789,617L746,601L729,599L724,533L694,521L672,504L657,499L613,499L605,504L593,518L602,529L599,532L605,542L611,569L644,654L662,652L670,675L684,692L679,698L684,700L684,705L695,701L714,701L736,692L746,682L749,683L764,680L764,689L766,694L768,694L773,702L779,706L782,713L783,721L786,724L791,725L789,733L790,739L799,739L808,729L811,728L813,724L812,721L817,721L830,723L832,724L834,728L842,732L843,721L859,708Z"},{"code":"11710","name":"송파구","d":"M909,556L847,523L857,491L847,483L833,478L824,477L821,482L778,526L754,538L746,539L727,535L697,522L724,533L729,599L746,601L789,617L810,629L818,637L859,708L862,704L862,699L866,702L873,705L880,703L878,698L880,693L880,684L905,686L907,676L914,676L915,663L918,655L941,638L941,631L945,624L944,617L948,609L946,604L943,603L939,598L937,602L926,598L922,593L915,598L910,597L909,595L900,591L901,587L897,582L898,576L900,570L906,569L905,565L901,562L902,560L908,560L909,556Z"},{"code":"11740","name":"강동구","d":"M982,471L991,467L999,468L1000,461L1000,451L996,448L997,423L992,410L991,400L983,384L981,374L982,371L985,368L986,363L978,367L962,370L919,402L887,403L871,409L857,416L844,429L838,436L829,455L829,466L824,477L833,478L841,481L857,491L847,523L906,556L909,556L908,548L911,541L916,541L922,528L927,521L930,511L930,506L935,495L952,472L961,474L962,471L968,472L974,470L982,471Z"}]};
+/* 신청서의 '주 활동 지역: 근무지' 보기 → 지도 위 위치(위도, 경도). 낱말이 들어 있으면 그 자리에 찍는다. */
+const AREAS = [
+  ["강남/역삼", ["강남", "역삼"], 37.4999, 127.0374, "b"],
+  ["삼성/선릉", ["삼성", "선릉"], 37.5068, 127.0560, "r"],
+  ["서초/교대", ["서초", "교대"], 37.4934, 127.0145],
+  ["잠실/송파", ["잠실", "송파"], 37.5133, 127.1001],
+  ["성수/건대", ["성수", "건대"], 37.5446, 127.0600],
+  ["광화문/종로", ["광화문", "종로"], 37.5714, 126.9810, "t"],
+  ["을지로/명동", ["을지로", "명동", "시청"], 37.5640, 126.9880, "r"],
+  ["서울역/용산", ["서울역", "용산"], 37.5430, 126.9680, "b"],
+  ["여의도", ["여의도"], 37.5216, 126.9243],
+  ["마포/홍대", ["마포", "홍대", "합정", "공덕"], 37.5530, 126.9300],
+  ["상암", ["상암", "DMC"], 37.5794, 126.8895],
+  ["마곡", ["마곡"], 37.5602, 126.8254],
+  ["구로/가산", ["구로", "가산", "가디"], 37.4816, 126.8826],
+  ["목동", ["목동"], 37.5266, 126.8749],
+];
+function areaOf(work) {
+  const w = String(work || "");
+  return AREAS.find(a => a[1].some(k => w.includes(k))) || null;
+}
+function project(lat, lon) {
+  const P = SEOUL.proj;
+  return [(lon * P.k - P.minx) * P.scale, (P.maxy - lat) * P.scale];
+}
+let geoReady = false;
+function setupGeo() {
+  const host = document.getElementById("geoMap"), tip = document.getElementById("geoTip");
+  geoW = host.clientWidth;
+  const placed = {}, off = {};
+  M.forEach(m => {
+    const a = areaOf(m.work);
+    if (a) (placed[a[0]] = placed[a[0]] || { a, list: [] }).list.push(m);
+    else if (m.work) (off[m.work] = off[m.work] || []).push(m);
+  });
+  /* 지도는 화면 폭에 맞춰 줄어든다. 휴대폰에서도 점이 손가락으로 누를 만한 크기(반지름 약 5.5px)가 되게 키우되,
+     이웃 지역 점들이 서로 붙지 않을 만큼만 키운다. */
+  const f = Math.max(1, Math.min(2.2, 5.5 / (8 * (host.clientWidth || 1000) / SEOUL.w)));
+  const R = 8 * f, GAP = 15 * f, FS = 17 * f;
+  let svg = `<svg viewBox="0 0 ${SEOUL.w} ${SEOUL.h}" role="img" aria-label="서울 근무지 분포">`;
+  svg += SEOUL.gu.map(g => `<path class="gu" d="${g.d}"><title>${esc(g.name)}</title></path>`).join("");
+  Object.values(placed).forEach(({ a, list }) => {
+    const [cx, cy] = project(a[2], a[3]);
+    /* 같은 지역 사람들은 해바라기 씨 모양으로 겹치지 않게 흩뿌린다. */
+    list.sort((x, y) => byName(x.name, y.name, false)).forEach((m, i) => {
+      const r = i ? GAP * Math.sqrt(i) : 0, th = i * 2.39996;
+      svg += `<circle class="dot" tabindex="0" r="${R.toFixed(1)}" cx="${(cx + r * Math.cos(th)).toFixed(1)}" cy="${(cy + r * Math.sin(th)).toFixed(1)}" data-mid="${m.id}" aria-label="${esc(m.name)}"></circle>`;
+    });
+    const spread = GAP * Math.sqrt(Math.max(0, list.length - 1)) + R + 6 * f;
+    const pos = a[4] || "t";
+    const lx = pos === "r" ? cx + spread : pos === "l" ? cx - spread : cx;
+    const ly = pos === "b" ? cy + spread + FS * .8 : pos === "t" ? cy - spread : cy + FS * .35;
+    const anchor = pos === "r" ? "start" : pos === "l" ? "end" : "middle";
+    svg += `<text class="area-name" x="${lx.toFixed(0)}" y="${ly.toFixed(0)}" style="font-size:${FS.toFixed(0)}px;stroke-width:${(4 * f).toFixed(1)}px;text-anchor:${anchor}">${esc(a[0])}</text>`;
+  });
+  svg += `</svg>`;
+  host.insertAdjacentHTML("afterbegin", svg);
+  const offKeys = Object.keys(off);
+  document.getElementById("geoOff").innerHTML = offKeys.length
+    ? `<span>지도 밖</span>` + offKeys.map(k => `<span class="o">${off[k].map(m => `<i class="dot-off" tabindex="0" data-mid="${m.id}" aria-label="${esc(m.name)}"></i>`).join("")}${esc(k)}</span>`).join("")
+    : "";
+
+  const byId = {}; M.forEach(m => byId[m.id] = m);
+  let pinned = null;
+  function showTip(el, pin) {
+    const m = byId[el.dataset.mid]; if (!m) return;
+    clearTimeout(hideTimer);
+    const pos = [m.dept, m.title].filter(Boolean).join(" · ");
+    tip.innerHTML = `<div class="t-nm">${esc(m.name)}${SEAL}${hostTag(m.id)}</div><div class="t-org">${esc(m.org)}</div>${pos ? `<div class="t-sub">${esc(pos)}</div>` : ""}<div class="t-sub">${esc(m.ind)} · ${esc(m.work)}</div><button type="button" class="t-go">카드 보기 →</button>`;
+    const hb = host.getBoundingClientRect(), eb = el.getBoundingClientRect();
+    let x = eb.left + eb.width / 2 - hb.left, y = eb.top - hb.top;
+    tip.hidden = false;
+    const w = tip.offsetWidth;
+    x = Math.max(w / 2 + 4, Math.min(hb.width - w / 2 - 4, x));
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+    if (y < tip.offsetHeight + 20) tip.style.transform = "translate(-50%, 14px)", tip.style.top = (eb.bottom - hb.top) + "px";
+    else tip.style.transform = "";
+    host.querySelectorAll(".dot.on").forEach(d => d.classList.remove("on"));
+    if (el.classList.contains("dot")) el.classList.add("on");
+    pinned = pin ? el : null;
+    tip.querySelector(".t-go").onclick = () => goCard(m.id);
+  }
+  /* 점에서 정보 창으로 마우스를 옮기는 동안 닫히지 않게 잠깐 기다린다. */
+  let hideTimer = 0;
+  function hideNow() { if (pinned) return; tip.hidden = true; host.querySelectorAll(".dot.on").forEach(d => d.classList.remove("on")); }
+  function hideTip() { clearTimeout(hideTimer); hideTimer = setTimeout(hideNow, 250); }
+  tip.addEventListener("mouseenter", () => clearTimeout(hideTimer));
+  tip.addEventListener("mouseleave", hideTip);
+  const targets = () => document.querySelectorAll("#geo [data-mid]");
+  targets().forEach(el => {
+    el.addEventListener("mouseenter", () => { if (!pinned) showTip(el, false); });
+    el.addEventListener("mouseleave", hideTip);
+    el.addEventListener("focus", () => showTip(el, false));
+    el.addEventListener("blur", hideTip);
+    el.addEventListener("click", e => { e.stopPropagation(); showTip(el, true); });
+    el.addEventListener("keydown", e => { if (e.key === "Enter") goCard(el.dataset.mid); });
+  });
+  tip.addEventListener("click", e => e.stopPropagation());
+  document.addEventListener("click", () => { pinned = null; hideNow(); });   // 바깥을 누르면 닫힘
+}
+function resetGeo() {
+  const s = document.querySelector("#geoMap svg"); if (s) s.remove();
+  document.getElementById("geoOff").innerHTML = ""; document.getElementById("geoTip").hidden = true; geoReady = false;
+}
+let geoW = 0;
+addEventListener("resize", () => {
+  const w = document.getElementById("geoMap").clientWidth;
+  if (geoReady && Math.abs(w - geoW) > 80) { resetGeo(); setupGeo(); geoReady = true; dimGeo(); }
+});
+function goCard(id) {
+  if (state.q || state.ind) { state.q = state.ind = ""; document.getElementById("q").value = ""; draw(); }
+  const c = document.querySelector(`#cards [data-mid="${id}"]`); if (!c) return;
+  c.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 1600);
+}
+/* 검색·산업 필터에 맞지 않는 점은 흐리게 */
+function dimGeo() {
+  const ok = new Set(M.filter(hit).map(m => m.id));
+  document.querySelectorAll("#geo [data-mid]").forEach(el => el.classList.toggle("dim", !ok.has(el.dataset.mid)));
+}
 function show(data) {
   M = data.members || []; G = data.guests || [];
   HOSTS.clear(); (data.hosts || []).forEach(id => HOSTS.add(id));
   if (!filtersReady) { setupFilters(); filtersReady = true; }
-  view("board"); draw();
+  view("board");
+  if (!geoReady) { setupGeo(); geoReady = true; }
+  draw();
 }
 
 function load() {
@@ -410,7 +566,7 @@ document.getElementById("gateForm").addEventListener("submit", e => {
 });
 document.getElementById("logout").addEventListener("click", () => {
   store.del(localStorage, TOKEN_KEY); store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
-  M = []; G = []; document.getElementById("cards").innerHTML = ""; view("gate"); gateMsg("로그아웃했습니다.", false);
+  M = []; G = []; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); gateMsg("로그아웃했습니다.", false);
 });
 
 /* ---------- 관리자 ---------- */
@@ -450,7 +606,7 @@ document.getElementById("pwForm").addEventListener("submit", e => {
 });
 document.getElementById("adminExit").addEventListener("click", () => {
   store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
-  if (!store.get(localStorage, TOKEN_KEY)) { M = []; G = []; document.getElementById("cards").innerHTML = ""; view("gate"); }
+  if (!store.get(localStorage, TOKEN_KEY)) { M = []; G = []; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); }
 });
 
 /* 서버 주소는 Events 페이지와 같은 data/config.json 에서 온다. */
