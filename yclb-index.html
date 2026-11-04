@@ -86,6 +86,27 @@
   .geo-tip .t-org { color: var(--text); }
   .geo-tip .t-sub { color: var(--text-2); }
   .geo-tip .t-go { appearance: none; background: none; border: 0; padding: 0; margin-top: .4rem; font: inherit; font-size: .74rem; color: var(--accent); cursor: pointer; }
+  .geo .dot.home { fill: var(--ink); stroke: var(--accent); }
+  .geo .dot.home:hover, .geo .dot.home.on { fill: rgba(224, 74, 76, .35); stroke: #ff7476; }
+  .geo-legend { display: flex; justify-content: center; gap: 1.2rem; margin-top: .6rem; font-size: .76rem; color: var(--text-2); }
+  .geo-legend[hidden] { display: none; }
+  .geo-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+  .geo-legend i { width: .62rem; height: .62rem; border-radius: 50%; display: inline-block; }
+  .geo-legend .lg-work { background: var(--accent); }
+  .geo-legend .lg-home { border: 2px solid var(--accent); }
+  .my-loc { max-width: 32rem; margin: 1rem auto 0; padding: .8rem 1rem .7rem; border: 1px solid var(--line); border-radius: 2px; display: flex; flex-wrap: wrap; gap: .35rem 1.2rem; font-size: .82rem; color: var(--text); }
+  .my-loc[hidden] { display: none; }
+  .my-loc legend { padding: 0 .35rem; font-size: .74rem; font-weight: 700; color: var(--text-2); }
+  .my-loc label { display: inline-flex; align-items: center; gap: .35rem; cursor: pointer; }
+  .my-loc label.off { color: var(--text-3); cursor: default; }
+  .my-loc input { accent-color: var(--accent-solid); margin: 0; }
+  .my-loc .def { color: var(--text-3); }
+  .my-loc-msg { flex-basis: 100%; font-size: .74rem; color: var(--text-3); min-height: 0; }
+  .my-loc-msg:empty { display: none; }
+  .facet { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 2px; overflow: hidden; align-self: flex-start; }
+  .facet button { appearance: none; background: none; border: 0; padding: .38rem .9rem; font: inherit; font-size: .8rem; font-weight: 700; color: var(--text-2); cursor: pointer; }
+  .facet button + button { border-left: 1px solid var(--line-strong); }
+  .facet button[aria-pressed="true"] { background: var(--text); color: var(--ink); }
   .card.flash { outline: 2px solid var(--accent); outline-offset: -2px; transition: outline-color .6s; }
   .dist { padding: 1rem 0 .4rem; border-top: 1px solid var(--line); }
   .dist-toggle { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-size: .78rem; font-weight: 700; color: var(--text-2); cursor: pointer; }
@@ -251,6 +272,14 @@
     <section id="view-board" hidden>
       <div class="geo" id="geo" aria-label="서울 근무지 지도">
         <div class="geo-map" id="geoMap"><div class="geo-tip" id="geoTip" role="dialog" hidden></div></div>
+        <div class="geo-legend" id="geoLegend" hidden><span><i class="lg-work"></i>근무지</span><span><i class="lg-home"></i>거주지</span></div>
+        <fieldset class="my-loc" id="myLoc" hidden>
+          <legend>나의 위치 표시</legend>
+          <label><input type="radio" name="myLoc" value="work"> 근무지 기준 표기 <span class="def">(기본값)</span></label>
+          <label><input type="radio" name="myLoc" value="home"> 거주지 기준으로 노출</label>
+          <label><input type="radio" name="myLoc" value="both"> 근무지와 거주지 둘 다 노출</label>
+          <div class="my-loc-msg" id="myLocMsg" role="status"></div>
+        </fieldset>
       </div>
       <div class="dist">
         <button type="button" class="dist-toggle" id="distToggle" aria-expanded="false" aria-controls="barsInd">데이터가 확인된 산업</button>
@@ -258,7 +287,10 @@
       </div>
       <div class="tools">
         <input class="search" id="q" type="search" placeholder="키워드 검색하기" aria-label="키워드 검색">
-        <div class="filters" id="indFilters" role="group" aria-label="산업"></div>
+        <div class="facet" role="group" aria-label="보기 기준">
+          <button type="button" data-facet="ind" aria-pressed="true">업종별</button><button type="button" data-facet="work" aria-pressed="false">지역별</button>
+        </div>
+        <div class="filters" id="indFilters" role="group" aria-label="필터"></div>
         <div class="active" id="active" role="status"></div>
       </div>
       <div class="cards" id="cards"></div>
@@ -335,9 +367,17 @@ function gcard(g) {
     ${g.ind ? `<div class="pills"><span class="pill ind">${esc(g.ind)}</span></div>` : ""}
   </article>`;
 }
+/* 지도·지역 필터에 쓰는 위치. 본인이 고른 '나의 위치 표시'를 따른다(서버가 허락한 경우에만 home 이 온다). */
+function locs(m) {
+  const out = [];
+  if (m.loc !== "home" && m.work) out.push({ kind: "work", area: m.work });
+  if ((m.loc === "home" || m.loc === "both") && m.home) out.push({ kind: "home", area: m.home });
+  if (!out.length && m.work) out.push({ kind: "work", area: m.work });
+  return out;
+}
 function hit(m) {
   if (state.ind && m.ind !== state.ind) return false;
-  if (state.work && m.work !== state.work) return false;
+  if (state.work && !locs(m).some(l => l.area === state.work)) return false;
   if (state.job && m.job !== state.job) return false;
   if (!state.q) return true;
   return [m.name, m.nick, m.org, m.dept, m.title, m.ind, m.job, m.work, m.ig, m.give, m.want.join(" "), isHost(m.id) ? "호스트 경험" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
@@ -363,8 +403,8 @@ function draw() {
   wireHostChecks();
   if (geoReady) dimGeo();
   document.querySelectorAll(".bar").forEach(b => b.setAttribute("aria-pressed", String(state[b.dataset.key] === b.dataset.val)));
-  document.querySelectorAll("#indFilters button").forEach(b => b.setAttribute("aria-pressed", String(state.ind === b.dataset.val)));
-  const parts = [state.ind && `산업 <b>${esc(state.ind)}</b>`, state.work && `근무지 <b>${esc(state.work)}</b>`, state.job && `직무 <b>${esc(state.job)}</b>`, state.q && `검색 <b>${esc(state.q)}</b>`].filter(Boolean);
+  document.querySelectorAll("#indFilters button").forEach(b => b.setAttribute("aria-pressed", String((state[b.dataset.key] || "") === b.dataset.val)));
+  const parts = [state.ind && `산업 <b>${esc(state.ind)}</b>`, state.work && `지역 <b>${esc(state.work)}</b>`, state.job && `직무 <b>${esc(state.job)}</b>`, state.q && `검색 <b>${esc(state.q)}</b>`].filter(Boolean);
   document.getElementById("active").innerHTML = (parts.length ? parts.map(p => `<span>${p}</span>`).join("") + `<button type="button" class="clear" id="clear">조건 지우기</button>` : "");
   const c = document.getElementById("clear");
   if (c) c.addEventListener("click", () => { state.q = state.ind = state.work = state.job = ""; document.getElementById("q").value = ""; draw(); });
@@ -372,15 +412,29 @@ function draw() {
 function setupFilters() {
   inds = count(M.map(m => m.ind).concat(G.map(g => g.ind)));
   bars("barsInd", inds, "ind");
-  document.getElementById("indFilters").innerHTML =
-    `<button type="button" data-val="" aria-pressed="true">전체</button>` +
-    inds.map(([k]) => `<button type="button" data-val="${esc(k)}" aria-pressed="false">${esc(k)}</button>`).join("");
+
   document.querySelectorAll(".bar").forEach(b => b.addEventListener("click", () => {
+    if (facet !== "ind") { facet = "ind"; state.work = ""; renderFacet(); }
     state[b.dataset.key] = state[b.dataset.key] === b.dataset.val ? "" : b.dataset.val; draw();
     document.getElementById("q").scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }));
-  document.querySelectorAll("#indFilters button").forEach(b => b.addEventListener("click", () => { state.ind = b.dataset.val; draw(); }));
 }
+/* 필터 줄: 업종별이면 산업, 지역별이면 근무지·거주지 지역. 기준을 바꾸면 기존 조건은 지운다. */
+let facet = "ind";
+function renderFacet() {
+  const key = facet === "work" ? "work" : "ind";
+  const list = key === "ind" ? inds : count(M.flatMap(m => locs(m).map(l => l.area)));
+  const box = document.getElementById("indFilters");
+  box.setAttribute("aria-label", key === "ind" ? "업종" : "지역");
+  box.innerHTML = `<button type="button" data-key="${key}" data-val="" aria-pressed="true">전체</button>` +
+    list.map(([k]) => `<button type="button" data-key="${key}" data-val="${esc(k)}" aria-pressed="false">${esc(k)}</button>`).join("");
+  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { state[key] = b.dataset.val; draw(); }));
+  document.querySelectorAll(".facet button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.facet === facet)));
+}
+document.querySelectorAll(".facet button").forEach(b => b.addEventListener("click", () => {
+  if (facet === b.dataset.facet) return;
+  facet = b.dataset.facet; state.ind = state.work = ""; renderFacet(); draw();
+}));
 document.getElementById("distToggle").addEventListener("click", e => {
   const open = e.currentTarget.getAttribute("aria-expanded") !== "true";
   e.currentTarget.setAttribute("aria-expanded", String(open));
@@ -439,22 +493,29 @@ function setupGeo() {
   const host = document.getElementById("geoMap"), tip = document.getElementById("geoTip");
   geoW = host.clientWidth;
   const placed = {};   // 서울 지도 안에 들어오는 근무지만 찍는다(수도권 기타·해외 등은 표시하지 않음)
-  M.forEach(m => {
-    const a = areaOf(m.work);
-    if (a) (placed[a[0]] = placed[a[0]] || { a, list: [] }).list.push(m);
-  });
+  let anyBoth = false;
+  M.forEach(m => locs(m).forEach(l => {
+    const a = areaOf(l.area);
+    if (!a) return;
+    const both = m.loc === "both" && !!m.home;
+    if (both) anyBoth = true;
+    (placed[a[0]] = placed[a[0]] || { a, list: [] }).list.push({ m, kind: l.kind, area: l.area, both });
+  }));
+  document.getElementById("geoLegend").hidden = !anyBoth;
   /* 지도는 화면 폭에 맞춰 줄어든다. 휴대폰에서도 점이 손가락으로 누를 만한 크기(반지름 약 5.5px)가 되게 키우되,
      이웃 지역 점들이 서로 붙지 않을 만큼만 키운다. */
   const f = Math.max(1, Math.min(2.2, 5.5 / (8 * (host.clientWidth || 1000) / SEOUL.w)));
   const R = 8 * f, GAP = 15 * f, FS = Math.max(17 * f, 12.5 * SEOUL.w / (host.clientWidth || 1000));   // 지역 이름은 화면에서 최소 12.5px
-  let svg = `<svg viewBox="0 0 ${SEOUL.w} ${SEOUL.h}" role="img" aria-label="서울 근무지 분포">`;
+  let svg = `<svg viewBox="0 0 ${SEOUL.w} ${SEOUL.h}" role="img" aria-label="서울 근무지·거주지 분포">`;
   svg += SEOUL.gu.map(g => `<path class="gu" d="${g.d}"><title>${esc(g.name)}</title></path>`).join("");
   Object.values(placed).forEach(({ a, list }) => {
     const [cx, cy] = project(a[2], a[3]);
     /* 같은 지역 사람들은 해바라기 씨 모양으로 겹치지 않게 흩뿌린다. */
-    list.sort((x, y) => byName(x.name, y.name, false)).forEach((m, i) => {
+    list.sort((x, y) => byName(x.m.name, y.m.name, false) || (x.kind < y.kind ? 1 : -1)).forEach((e, i) => {
       const r = i ? GAP * Math.sqrt(i) : 0, th = i * 2.39996;
-      svg += `<circle class="dot" tabindex="0" r="${R.toFixed(1)}" cx="${(cx + r * Math.cos(th)).toFixed(1)}" cy="${(cy + r * Math.sin(th)).toFixed(1)}" data-mid="${m.id}" aria-label="${esc(m.name)}"></circle>`;
+      /* 근무지·거주지를 둘 다 고른 사람만 거주지 점을 속이 빈 원으로 구분한다. */
+      const cls = "dot" + (e.both && e.kind === "home" ? " home" : "");
+      svg += `<circle class="${cls}" tabindex="0" r="${R.toFixed(1)}" cx="${(cx + r * Math.cos(th)).toFixed(1)}" cy="${(cy + r * Math.sin(th)).toFixed(1)}" data-mid="${e.m.id}" data-kind="${e.kind}" data-area="${esc(e.area)}" aria-label="${esc(e.m.name)} ${e.kind === "home" ? "거주지" : "근무지"}"></circle>`;
     });
     const spread = GAP * Math.sqrt(Math.max(0, list.length - 1)) + R + 6 * f;
     const pos = a[4] || "t";
@@ -472,7 +533,7 @@ function setupGeo() {
     const m = byId[el.dataset.mid]; if (!m) return;
     clearTimeout(hideTimer);
     const pos = [m.dept, m.title].filter(Boolean).join(" · ");
-    tip.innerHTML = `<div class="t-nm">${esc(m.name)}${SEAL}${hostTag(m.id)}</div><div class="t-org">${esc(m.org)}</div>${pos ? `<div class="t-sub">${esc(pos)}</div>` : ""}<div class="t-sub">${esc(m.ind)} · ${esc(m.work)}</div><button type="button" class="t-go">카드 보기 →</button>`;
+    tip.innerHTML = `<div class="t-nm">${esc(m.name)}${SEAL}${hostTag(m.id)}</div><div class="t-org">${esc(m.org)}</div>${pos ? `<div class="t-sub">${esc(pos)}</div>` : ""}<div class="t-sub">${esc(m.ind)} · ${el.dataset.kind === "home" ? "거주지" : "근무지"} ${esc(el.dataset.area || m.work)}</div><button type="button" class="t-go">카드 보기 →</button>`;
     const hb = host.getBoundingClientRect(), eb = el.getBoundingClientRect();
     let x = eb.left + eb.width / 2 - hb.left, y = eb.top - hb.top;
     tip.hidden = false;
@@ -524,14 +585,43 @@ function dimGeo() {
   const ok = new Set(M.filter(hit).map(m => m.id));
   document.querySelectorAll("#geo [data-mid]").forEach(el => el.classList.toggle("dim", !ok.has(el.dataset.mid)));
 }
-function show(data) {
+let ME = null, MINE = null;   // 로그인한 회원 본인(관리자 모드에선 없음)
+function show(data, res) {
   M = data.members || []; G = data.guests || [];
   HOSTS.clear(); (data.hosts || []).forEach(id => HOSTS.add(id));
+  if (res && res.me) { ME = res.me; MINE = res.mine || { loc: "work", hasHome: false }; }
   if (!filtersReady) { setupFilters(); filtersReady = true; }
+  renderFacet();
   view("board");
-  if (!geoReady) { setupGeo(); geoReady = true; }
+  if (geoReady) resetGeo();
+  setupGeo(); geoReady = true;
+  renderMyLoc();
   draw();
 }
+function renderMyLoc() {
+  const box = document.getElementById("myLoc");
+  box.hidden = !ME;
+  if (!ME) return;
+  box.querySelectorAll("input").forEach(r => {
+    r.checked = r.value === (MINE.loc || "work");
+    const needHome = r.value !== "work" && !MINE.hasHome;
+    r.disabled = needHome;
+    r.closest("label").classList.toggle("off", needHome);
+  });
+  if (!MINE.hasHome) document.getElementById("myLocMsg").textContent = "Index 신청서에 거주지를 적지 않아 근무지 기준으로만 표시됩니다.";
+}
+document.querySelectorAll('#myLoc input').forEach(r => r.addEventListener("change", () => {
+  const msg = document.getElementById("myLocMsg"), token = store.get(localStorage, TOKEN_KEY);
+  if (!token) return;
+  const before = MINE.loc;
+  document.querySelectorAll('#myLoc input').forEach(x => x.disabled = true);
+  msg.textContent = "저장 중입니다…";
+  call({ op: "pref", token, loc: r.value }).then(res => {
+    if (!res.ok) throw new Error(res.error);
+    MINE = res.mine; show(res.data, res);
+    msg.textContent = "저장했습니다. 다른 회원에게도 이 기준으로 표시됩니다.";
+  }).catch(err => { MINE.loc = before; renderMyLoc(); msg.textContent = (err && err.message) || "저장하지 못했습니다. 잠시 뒤 다시 시도해 주세요."; });
+}));
 
 function load() {
   const adminKey = store.get(sessionStorage, ADMIN_KEY), token = store.get(localStorage, TOKEN_KEY);
@@ -542,7 +632,7 @@ function load() {
   }
   view("state", "명부를 불러오는 중입니다…");
   call(adminKey ? { op: "data", adminKey } : { op: "data", token }).then(res => {
-    if (res.ok) { if (adminKey) setAdmin(true); show(res.data); return; }
+    if (res.ok) { if (adminKey) setAdmin(true); show(res.data, res); return; }
     store.del(localStorage, TOKEN_KEY); store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
     view("gate"); gateMsg(res.error || "다시 본인 확인을 해 주세요.", false);
   }).catch(() => view("state", "명부를 불러오지 못했습니다. 잠시 뒤 새로 고쳐 주세요."));
@@ -561,13 +651,13 @@ document.getElementById("gateForm").addEventListener("submit", e => {
     if (!res.ok) { gateMsg(res.error || "확인하지 못했습니다.", true); return; }
     store.set(localStorage, TOKEN_KEY, res.token);
     document.getElementById("g-tail").value = "";
-    show(res.data);
+    show(res.data, res);
   }).catch(() => gateMsg("서버에 연결하지 못했습니다. 잠시 뒤 다시 시도해 주세요.", true))
     .finally(() => { btn.disabled = false; });
 });
 document.getElementById("logout").addEventListener("click", () => {
   store.del(localStorage, TOKEN_KEY); store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
-  M = []; G = []; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); gateMsg("로그아웃했습니다.", false);
+  M = []; G = []; ME = MINE = null; document.getElementById("myLoc").hidden = true; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); gateMsg("로그아웃했습니다.", false);
 });
 
 /* ---------- 관리자 ---------- */
@@ -607,7 +697,7 @@ document.getElementById("pwForm").addEventListener("submit", e => {
 });
 document.getElementById("adminExit").addEventListener("click", () => {
   store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
-  if (!store.get(localStorage, TOKEN_KEY)) { M = []; G = []; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); }
+  if (!store.get(localStorage, TOKEN_KEY)) { M = []; G = []; ME = MINE = null; document.getElementById("myLoc").hidden = true; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); }
 });
 
 /* 서버 주소는 Events 페이지와 같은 data/config.json 에서 온다. */

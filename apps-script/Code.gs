@@ -354,6 +354,10 @@ function doPost(e) {
 
 var IDX_HOSTS_SHEET = 'index_hosts';
 var IDX_HOSTS_HEADERS = ['이름', '휴대폰', '체크 시각'];
+/* 회원이 고른 '나의 위치 표시'. 없으면 근무지 기준. 거주지는 회원이 노출을 고른 경우에만 화면으로 나간다. */
+var IDX_PREFS_SHEET = 'index_prefs';
+var IDX_PREFS_HEADERS = ['이름', '휴대폰', '위치 표시 (work/home/both)', '변경 시각'];
+var IDX_LOC = { work: 1, home: 1, both: 1 };
 var IDX_ORGMAP_SHEET = 'org_map';
 var IDX_ORGMAP_HEADERS = ['소속 원문', '표시 소속 (비우면 숨김)', '산업', '추가된 시각'];
 var IDX_TOKEN_DAYS = 7;
@@ -445,7 +449,7 @@ function colOf_(head, words) {
 function readSheet_(id, withColors) {
   if (!id) return null;
   var sh = SpreadsheetApp.openById(id).getSheets().filter(function (s) {
-    var n = s.getName(); return n !== IDX_ORGMAP_SHEET && n !== IDX_HOSTS_SHEET;
+    var n = s.getName(); return n !== IDX_ORGMAP_SHEET && n !== IDX_HOSTS_SHEET && n !== IDX_PREFS_SHEET;
   })[0];
   if (!sh) return { head: [], rows: [] };
   var last = sh.getLastRow(), width = sh.getLastColumn();
@@ -488,7 +492,7 @@ function indexPeopleFromSheet_() {
     ts: colOf_(h, ['timestamp', '타임스탬프']), name: colOf_(h, ['이름(실명)', '이름']),
     nick: colOf_(h, ['카카오톡닉네임']), email: colOf_(h, ['이메일']), phone: colOf_(h, ['휴대폰']),
     org: colOf_(h, ['소속기업', '소속']), dept: colOf_(h, ['부서또는', '부서']), title: colOf_(h, ['직책']),
-    ind: colOf_(h, ['산업/업종', '산업']), job: colOf_(h, ['직무분야', '직무']), work: colOf_(h, ['근무지']),
+    ind: colOf_(h, ['산업/업종', '산업']), job: colOf_(h, ['직무분야', '직무']), work: colOf_(h, ['근무지']), home: colOf_(h, ['거주지']),
     li: colOf_(h, ['linkedin']), ig: colOf_(h, ['인스타그램']), want: colOf_(h, ['네트워킹하고']),
     give: colOf_(h, ['도움이나가치', '도움']), c1: colOf_(h, ['정보공개동의']), c2: colOf_(h, ['개인정보수집'])
   };
@@ -508,6 +512,7 @@ function indexPeopleFromSheet_() {
       name: name, nick: nick_(g(r, 'nick'), name), org: clean_(g(r, 'org')),
       dept: priv_(g(r, 'dept')), title: priv_(g(r, 'title')),
       ind: clean_(g(r, 'ind')) || '기타', job: clean_(g(r, 'job')) || '기타', work: clean_(g(r, 'work')),
+      _home: clean_(g(r, 'home')),   // 밑줄로 시작하는 값은 그대로는 화면에 나가지 않는다
       li: linkedin_(g(r, 'li')), ig: igId_(g(r, 'ig')), want: multi_(g(r, 'want')), give: clean_(g(r, 'give'))
     };
   });
@@ -574,6 +579,16 @@ function joinPeople_(indexPhones) {
   return out;
 }
 
+function prefPhones_() {
+  var sh = tab_(IDX_PREFS_SHEET, IDX_PREFS_HEADERS);
+  var last = sh.getLastRow(), map = {};
+  if (last >= 2) sh.getRange(2, 1, last - 1, 3).getValues().forEach(function (r) {
+    var d = phoneDigits_(r[1]), v = String(r[2] || '').trim();
+    if (d && IDX_LOC[v]) map[d] = v;
+  });
+  return map;
+}
+
 function hostPhones_() {
   var sh = tab_(IDX_HOSTS_SHEET, IDX_HOSTS_HEADERS);
   var last = sh.getLastRow(), set = {};
@@ -594,12 +609,26 @@ function indexPayload_() {
   var hosts = hostPhones_(), hostIds = [];
   people.forEach(function (p) { if (p._phone && hosts[p._phone]) hostIds.push(p.id); });
   Object.keys(hosts).forEach(function (d) { if (!phones[d]) hostIds.push(personId_(d)); });
+  var prefs = prefPhones_();
   var members = people.map(function (p) {
-    var o = {}; Object.keys(p).forEach(function (k) { if (k.charAt(0) !== '_') o[k] = p[k]; }); return o;
+    var o = {}; Object.keys(p).forEach(function (k) { if (k.charAt(0) !== '_') o[k] = p[k]; });
+    /* 거주지는 본인이 '거주지' 또는 '둘 다'를 고르고, 거주지를 적은 경우에만 싣는다. */
+    var loc = (p._phone && prefs[p._phone]) || 'work';
+    if (loc !== 'work' && p._home) { o.loc = loc; o.home = p._home; } else o.loc = 'work';
+    return o;
   });
   var payload = { members: members, guests: joinPeople_(phones), hosts: hostIds };
   try { cache.put('indexPayload', JSON.stringify(payload), IDX_CACHE_SEC); } catch (err) { /* 100KB 넘으면 캐시 없이 */ }
   return payload;
+}
+
+/* 로그인한 본인의 위치 표시 설정과, 거주지를 적었는지 여부(값은 보내지 않는다). */
+function myLoc_(id) {
+  var me = null;
+  indexPeople_().forEach(function (p) { if (p.id === id) me = p; });
+  if (!me) return { loc: 'work', hasHome: false };
+  var prefs = prefPhones_();
+  return { loc: (me._phone && prefs[me._phone]) || 'work', hasHome: !!me._home };
 }
 
 /* ---------------- 로그인 토큰 ---------------- */
@@ -665,14 +694,42 @@ function indexPost_(body) {
       bump_('idxFail:' + name, 900); bump_('idxFailAll', 600);
       return json_({ ok: false, error: 'Index 신청서의 정보와 일치하지 않습니다. 신청서에 적은 이름, 뒷자리, 이메일을 확인해 주세요.' });
     }
-    return json_({ ok: true, token: makeToken_(me.id), me: me.id, data: indexPayload_() });
+    return json_({ ok: true, token: makeToken_(me.id), me: me.id, mine: myLoc_(me.id), data: indexPayload_() });
   }
 
   if (op === 'data') {
-    if (body.adminKey ? adminOk_(body.adminKey) : checkToken_(body.token)) {
-      return json_({ ok: true, data: indexPayload_() });
+    if (body.adminKey) {
+      if (adminOk_(body.adminKey)) return json_({ ok: true, data: indexPayload_() });
+    } else {
+      var who = checkToken_(body.token);
+      if (who) return json_({ ok: true, me: who, mine: myLoc_(who), data: indexPayload_() });
     }
     return json_({ ok: false, expired: true, error: '다시 본인 확인을 해 주세요.' });
+  }
+
+  /* 로그인한 회원이 자기 '나의 위치 표시'를 바꾼다. */
+  if (op === 'pref') {
+    var id = checkToken_(body.token);
+    if (!id) return json_({ ok: false, expired: true, error: '다시 본인 확인을 해 주세요.' });
+    var loc = String(body.loc || '');
+    if (!IDX_LOC[loc]) return json_({ ok: false, error: '선택지를 확인해 주세요.' });
+    var me = null;
+    indexPeople_().forEach(function (p) { if (p.id === id) me = p; });
+    if (!me || !me._phone) return json_({ ok: false, error: '본인 정보를 찾지 못했습니다.' });
+    if (loc !== 'work' && !me._home) return json_({ ok: false, error: 'Index 신청서에 거주지를 적지 않아 거주지를 표시할 수 없습니다.' });
+    var lock = LockService.getScriptLock();
+    lock.waitLock(15000);
+    try {
+      var sh = tab_(IDX_PREFS_SHEET, IDX_PREFS_HEADERS);
+      var last = sh.getLastRow();
+      var rows = last >= 2 ? sh.getRange(2, 2, last - 1, 1).getValues() : [];
+      for (var i = rows.length - 1; i >= 0; i--) if (phoneDigits_(rows[i][0]) === me._phone) sh.deleteRow(i + 2);
+      if (loc !== 'work') sh.appendRow([me.name, "'" + me._phone, loc, new Date()]);
+    } finally {
+      lock.releaseLock();
+    }
+    CacheService.getScriptCache().remove('indexPayload');
+    return json_({ ok: true, mine: myLoc_(id), data: indexPayload_() });
   }
 
   /* 화면이 열리자마자 부른다. 사람이 입력하는 동안 서버를 깨우고 캐시를 채워 둔다. 데이터는 안 나간다. */
