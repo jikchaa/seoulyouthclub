@@ -69,8 +69,7 @@
   /* 분포 */
   /* 근무지 지도: 서울 25개 구 경계 위에 Index 인증 회원의 근무지를 점으로 */
   .geo { padding: 1.4rem 0 1.2rem; border-top: 2px solid var(--text); }
-  .geo h2 { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: 0; color: var(--text-2); }
-  .geo-map { position: relative; max-width: 46rem; margin: 0 auto; }
+  .geo-map { position: relative; max-width: 32rem; margin: 0 auto; }
   .geo-map svg { display: block; width: 100%; height: auto; }
   .geo .gu { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.4; }
   .geo .gu-name { fill: var(--text-3); font-size: 15px; text-anchor: middle; pointer-events: none; }
@@ -87,11 +86,14 @@
   .geo-tip .t-org { color: var(--text); }
   .geo-tip .t-sub { color: var(--text-2); }
   .geo-tip .t-go { appearance: none; background: none; border: 0; padding: 0; margin-top: .4rem; font: inherit; font-size: .74rem; color: var(--accent); cursor: pointer; }
-  .geo-off { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .9rem; margin-top: .9rem; font-size: .76rem; color: var(--text-3); }
-  .geo-off .o { display: inline-flex; align-items: center; gap: .3rem; }
-  .geo-off .o i { cursor: pointer; display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--accent); }
   .card.flash { outline: 2px solid var(--accent); outline-offset: -2px; transition: outline-color .6s; }
-  .dist { padding: 1.4rem 0 .4rem; border-top: 1px solid var(--line); }
+  .dist { padding: 1rem 0 .4rem; border-top: 1px solid var(--line); }
+  .dist-toggle { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-size: .78rem; font-weight: 700; color: var(--text-2); cursor: pointer; }
+  .dist-toggle::after { content: " \25BE"; }
+  .dist-toggle[aria-expanded="true"]::after { content: " \25B4"; }
+  .dist-toggle:hover { color: var(--text); }
+  .dist .bars { margin-top: .8rem; }
+  .dist .bars[hidden] { display: none; }
   .dist h2 { margin: 0 0 .7rem; font-size: .78rem; font-weight: 700; letter-spacing: 0; color: var(--text-2); }
   .bars { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem 3rem; }
   .bar { appearance: none; background: none; border: 0; font: inherit; color: var(--text-2); cursor: pointer; text-align: left;
@@ -247,13 +249,12 @@
     </section>
     <p class="state" id="view-state" hidden></p>
     <section id="view-board" hidden>
-      <div class="geo" id="geo">
-        <h2>근무지</h2>
+      <div class="geo" id="geo" aria-label="서울 근무지 지도">
         <div class="geo-map" id="geoMap"><div class="geo-tip" id="geoTip" role="dialog" hidden></div></div>
-        <div class="geo-off" id="geoOff"></div>
       </div>
       <div class="dist">
-        <h2>데이터가 확인된 산업</h2><div class="bars" id="barsInd"></div>
+        <button type="button" class="dist-toggle" id="distToggle" aria-expanded="false" aria-controls="barsInd">데이터가 확인된 산업</button>
+        <div class="bars" id="barsInd" hidden></div>
       </div>
       <div class="tools">
         <input class="search" id="q" type="search" placeholder="키워드 검색하기" aria-label="키워드 검색">
@@ -380,6 +381,11 @@ function setupFilters() {
   }));
   document.querySelectorAll("#indFilters button").forEach(b => b.addEventListener("click", () => { state.ind = b.dataset.val; draw(); }));
 }
+document.getElementById("distToggle").addEventListener("click", e => {
+  const open = e.currentTarget.getAttribute("aria-expanded") !== "true";
+  e.currentTarget.setAttribute("aria-expanded", String(open));
+  document.getElementById("barsInd").hidden = !open;
+});
 document.getElementById("q").addEventListener("input", e => { state.q = e.target.value.trim(); draw(); });
 
 /* ---------- 서버 ---------- */
@@ -432,16 +438,15 @@ let geoReady = false;
 function setupGeo() {
   const host = document.getElementById("geoMap"), tip = document.getElementById("geoTip");
   geoW = host.clientWidth;
-  const placed = {}, off = {};
+  const placed = {};   // 서울 지도 안에 들어오는 근무지만 찍는다(수도권 기타·해외 등은 표시하지 않음)
   M.forEach(m => {
     const a = areaOf(m.work);
     if (a) (placed[a[0]] = placed[a[0]] || { a, list: [] }).list.push(m);
-    else if (m.work) (off[m.work] = off[m.work] || []).push(m);
   });
   /* 지도는 화면 폭에 맞춰 줄어든다. 휴대폰에서도 점이 손가락으로 누를 만한 크기(반지름 약 5.5px)가 되게 키우되,
      이웃 지역 점들이 서로 붙지 않을 만큼만 키운다. */
   const f = Math.max(1, Math.min(2.2, 5.5 / (8 * (host.clientWidth || 1000) / SEOUL.w)));
-  const R = 8 * f, GAP = 15 * f, FS = 17 * f;
+  const R = 8 * f, GAP = 15 * f, FS = Math.max(17 * f, 12.5 * SEOUL.w / (host.clientWidth || 1000));   // 지역 이름은 화면에서 최소 12.5px
   let svg = `<svg viewBox="0 0 ${SEOUL.w} ${SEOUL.h}" role="img" aria-label="서울 근무지 분포">`;
   svg += SEOUL.gu.map(g => `<path class="gu" d="${g.d}"><title>${esc(g.name)}</title></path>`).join("");
   Object.values(placed).forEach(({ a, list }) => {
@@ -460,10 +465,6 @@ function setupGeo() {
   });
   svg += `</svg>`;
   host.insertAdjacentHTML("afterbegin", svg);
-  const offKeys = Object.keys(off);
-  document.getElementById("geoOff").innerHTML = offKeys.length
-    ? `<span>지도 밖</span>` + offKeys.map(k => `<span class="o">${off[k].map(m => `<i class="dot-off" tabindex="0" data-mid="${m.id}" aria-label="${esc(m.name)}"></i>`).join("")}${esc(k)}</span>`).join("")
-    : "";
 
   const byId = {}; M.forEach(m => byId[m.id] = m);
   let pinned = null;
@@ -505,7 +506,7 @@ function setupGeo() {
 }
 function resetGeo() {
   const s = document.querySelector("#geoMap svg"); if (s) s.remove();
-  document.getElementById("geoOff").innerHTML = ""; document.getElementById("geoTip").hidden = true; geoReady = false;
+  document.getElementById("geoTip").hidden = true; geoReady = false;
 }
 let geoW = 0;
 addEventListener("resize", () => {
