@@ -728,8 +728,20 @@ function indexPost_(body) {
     } finally {
       lock.releaseLock();
     }
-    CacheService.getScriptCache().remove('indexPayload');
-    return json_({ ok: true, mine: myLoc_(id), data: indexPayload_() });
+    /* 명부 전체를 다시 만들지 않고, 캐시된 명부에서 본인 줄만 고친다(저장이 빨라진다). */
+    var member = { loc: loc === 'work' ? 'work' : loc };
+    if (loc !== 'work') member.home = me._home;
+    var cache = CacheService.getScriptCache(), hit = cache.get('indexPayload');
+    if (hit) {
+      var payload = JSON.parse(hit);
+      payload.members.forEach(function (m) {
+        if (m.id !== id) return;
+        m.loc = member.loc;
+        if (member.home) m.home = member.home; else delete m.home;
+      });
+      try { cache.put('indexPayload', JSON.stringify(payload), IDX_CACHE_SEC); } catch (err) { cache.remove('indexPayload'); }
+    }
+    return json_({ ok: true, mine: { loc: loc, hasHome: !!me._home }, member: member });
   }
 
   /* 화면이 열리자마자 부른다. 사람이 입력하는 동안 서버를 깨우고 캐시를 채워 둔다. 데이터는 안 나간다. */

@@ -101,6 +101,8 @@
   .my-loc label.off { color: var(--text-3); cursor: default; }
   .my-loc input { accent-color: var(--accent-solid); margin: 0; }
   .my-loc .def { color: var(--text-3); }
+  .my-loc-ok { appearance: none; margin-left: auto; background: var(--accent-solid); border: 0; border-radius: 2px; color: #fff; font: inherit; font-size: .78rem; font-weight: 700; padding: .35rem .95rem; cursor: pointer; }
+  .my-loc-ok:disabled { background: var(--surface-2); color: var(--text-3); cursor: default; }
   .my-loc-msg { flex-basis: 100%; font-size: .74rem; color: var(--text-3); min-height: 0; }
   .my-loc-msg:empty { display: none; }
   .facet { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 2px; overflow: hidden; align-self: flex-start; }
@@ -278,6 +280,7 @@
           <label><input type="radio" name="myLoc" value="work"> 근무지 기준 표기 <span class="def">(기본값)</span></label>
           <label><input type="radio" name="myLoc" value="home"> 거주지 기준으로 노출</label>
           <label><input type="radio" name="myLoc" value="both"> 근무지와 거주지 둘 다 노출</label>
+          <button type="button" class="my-loc-ok" id="myLocOk" disabled>확인</button>
           <div class="my-loc-msg" id="myLocMsg" role="status"></div>
         </fieldset>
       </div>
@@ -288,7 +291,7 @@
       <div class="tools">
         <input class="search" id="q" type="search" placeholder="키워드 검색하기" aria-label="키워드 검색">
         <div class="facet" role="group" aria-label="보기 기준">
-          <button type="button" data-facet="ind" aria-pressed="true">업종별</button><button type="button" data-facet="work" aria-pressed="false">지역별</button>
+          <button type="button" data-facet="work" aria-pressed="true">지역별</button><button type="button" data-facet="ind" aria-pressed="false">업종별</button>
         </div>
         <div class="filters" id="indFilters" role="group" aria-label="필터"></div>
         <div class="active" id="active" role="status"></div>
@@ -420,7 +423,7 @@ function setupFilters() {
   }));
 }
 /* 필터 줄: 업종별이면 산업, 지역별이면 근무지·거주지 지역. 기준을 바꾸면 기존 조건은 지운다. */
-let facet = "ind";
+let facet = "work";   // 기본은 지역별
 function renderFacet() {
   const key = facet === "work" ? "work" : "ind";
   const list = key === "ind" ? inds : count(M.flatMap(m => locs(m).map(l => l.area)));
@@ -608,20 +611,33 @@ function renderMyLoc() {
     r.disabled = needHome;
     r.closest("label").classList.toggle("off", needHome);
   });
+  document.getElementById("myLocOk").disabled = true;
   if (!MINE.hasHome) document.getElementById("myLocMsg").textContent = "Index 신청서에 거주지를 적지 않아 근무지 기준으로만 표시됩니다.";
 }
+/* 선택지는 고르기만 하고, [확인]을 눌러야 저장한다. 저장된 값과 같으면 [확인]은 꺼져 있다. */
 document.querySelectorAll('#myLoc input').forEach(r => r.addEventListener("change", () => {
-  const msg = document.getElementById("myLocMsg"), token = store.get(localStorage, TOKEN_KEY);
-  if (!token) return;
-  const before = MINE.loc;
-  document.querySelectorAll('#myLoc input').forEach(x => x.disabled = true);
-  msg.textContent = "저장 중입니다…";
-  call({ op: "pref", token, loc: r.value }).then(res => {
-    if (!res.ok) throw new Error(res.error);
-    MINE = res.mine; show(res.data, res);
-    msg.textContent = "저장했습니다. 다른 회원에게도 이 기준으로 표시됩니다.";
-  }).catch(err => { MINE.loc = before; renderMyLoc(); msg.textContent = (err && err.message) || "저장하지 못했습니다. 잠시 뒤 다시 시도해 주세요."; });
+  document.getElementById("myLocOk").disabled = !MINE || r.value === MINE.loc;
+  document.getElementById("myLocMsg").textContent = "";
 }));
+document.getElementById("myLocOk").addEventListener("click", () => {
+  const msg = document.getElementById("myLocMsg"), token = store.get(localStorage, TOKEN_KEY);
+  const sel = document.querySelector('#myLoc input:checked');
+  if (!token || !sel || sel.value === MINE.loc) return;
+  const ok = document.getElementById("myLocOk");
+  document.querySelectorAll('#myLoc input').forEach(x => x.disabled = true); ok.disabled = true;
+  msg.textContent = "저장 중입니다…";
+  call({ op: "pref", token, loc: sel.value }).then(res => {
+    if (!res.ok) throw new Error(res.error);
+    MINE = res.mine;
+    if (res.member) {
+      /* 새 서버: 본인 줄만 받아 화면에서 바로 바꾼다(명부 전체를 다시 받지 않음). */
+      const m = M.find(x => x.id === ME);
+      if (m) { m.loc = res.member.loc; if (res.member.home) m.home = res.member.home; else delete m.home; }
+      renderFacet(); resetGeo(); setupGeo(); geoReady = true; renderMyLoc(); draw();
+    } else show(res.data, res);
+    msg.textContent = "저장했습니다. 다른 회원에게도 이 기준으로 표시됩니다.";
+  }).catch(err => { renderMyLoc(); msg.textContent = (err && err.message) || "저장하지 못했습니다. 잠시 뒤 다시 시도해 주세요."; });
+});
 
 function load() {
   const adminKey = store.get(sessionStorage, ADMIN_KEY), token = store.get(localStorage, TOKEN_KEY);
