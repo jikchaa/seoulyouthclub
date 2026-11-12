@@ -174,7 +174,7 @@
   .vb svg { display: block; width: 100%; height: 100%; }
   .vb .seal { fill: var(--verified); }
   .vb .tick { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
-  .host { display: inline-block; margin-left: .35rem; vertical-align: .12em; background: #fff; color: #0A0A0A; font-size: .64rem; font-weight: 700; letter-spacing: .02em; line-height: 1; padding: .22rem .4rem; border-radius: 2px; white-space: nowrap; }
+  .host { display: inline-block; margin-left: .35rem; vertical-align: .12em; background: #fff; color: #0A0A0A; font-size: .64rem; font-weight: 700; letter-spacing: .08em; line-height: 1; padding: .22rem .4rem; border-radius: 2px; white-space: nowrap; }
   @media (max-width: 60rem) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 34rem) { .cards { grid-template-columns: 1fr; } }
   .empty { background: var(--ink); padding: 2.5rem 1rem; color: var(--text-3); grid-column: 1 / -1; }
@@ -338,7 +338,7 @@ function bars(id, list, key) {
 }
 const IG_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.3" fill="currentColor"/></svg>';
 const LI_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3" fill="currentColor"/><g fill="#0A0A0A"><rect x="5.6" y="9.6" width="2.9" height="8.6"/><circle cx="7.05" cy="6.6" r="1.7"/><path d="M10.6 9.6h2.8v1.2c.5-.8 1.5-1.4 2.9-1.4 2.3 0 3.2 1.4 3.2 3.9v4.9h-2.9v-4.4c0-1.2-.3-2-1.4-2-1.2 0-1.7.9-1.7 2.1v4.3h-2.9z"/></g></svg>';
-const hostTag = id => isHost(id) ? `<span class="host">호스트 경험</span>` : "";
+const hostTag = id => isHost(id) ? `<span class="host">HOST</span>` : "";
 const hostCk = id => `<label class="hostck"><input type="checkbox" data-host="${id}"${isHost(id) ? " checked" : ""}>호스트</label>`;
 function card(m, i) {
   const pos = [m.dept, m.title].filter(Boolean).join(" · ");
@@ -361,7 +361,7 @@ function hitGuest(g) {
   if (state.work || state.job) return false;
   if (state.ind && g.ind !== state.ind) return false;
   if (!state.q) return true;
-  return [g.mask, g.org, g.ind, isHost(g.id) ? "호스트 경험" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
+  return [g.mask, g.org, g.ind, isHost(g.id) ? "HOST 호스트" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
 }
 function gcard(g) {
   return `<article class="card gcard">
@@ -383,7 +383,7 @@ function hit(m) {
   if (state.work && !locs(m).some(l => l.area === state.work)) return false;
   if (state.job && m.job !== state.job) return false;
   if (!state.q) return true;
-  return [m.name, m.nick, m.org, m.dept, m.title, m.ind, m.job, m.work, m.ig, m.give, m.want.join(" "), isHost(m.id) ? "호스트 경험" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
+  return [m.name, m.nick, m.org, m.dept, m.title, m.ind, m.job, m.work, m.ig, m.give, m.want.join(" "), isHost(m.id) ? "HOST 호스트" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
 }
 const isLatin = s => /^[A-Za-z]/.test(s);
 // latinFirst=false: 가나다 → A-Z, true: A-Z → 가나다
