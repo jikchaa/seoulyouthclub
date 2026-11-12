@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-22",
+  "updated": "2026-11-12",
   "events": [
     {
       "id": "wine-liam-noahs",
@@ -442,7 +442,7 @@
       "date": "2026-11-14",
       "time": "1pm",
       "attendees": [],
-      "note": "도서: 군주론(마키아밸리)\n차후 세션도 독서모임 종합 단톡방을 통해 모집됩니다.",
+      "note": "도서: 군주론(마키아밸리)\n*독서모임은 전용 단톡방을 통해 모집됩니다.",
       "links": [
         {
           "label": "독서모임 종합 단톡방",
@@ -461,12 +461,13 @@
       "status": "auto",
       "kind": "event",
       "image": "posters/yclb-insight-economy-1115-mv97ynsx.jpg",
-      "desc": "오는 11월 15일 일요일, 하나증권에서 Prop Trader로 근무하시는 원종윤님을 모시고 '2027년 전망과 시나리오 대응법'을 주제로 인사이트를 얻고, 이어지는 자리에서 회원 여러분의 자연스러운 네트워킹을 지원하고자 합니다.",
-      "formUrl": "https://forms.gle/3ij8xvRtcocjNeYE6"
+      "desc": "하나증권에서 근무하시는 원종윤님을 모시고 '2027년 전망과 시나리오 대응법'을 주제로 인사이트를 얻고 참석자간 교류하는 자리입니다.",
+      "formUrl": "https://forms.gle/3ij8xvRtcocjNeYE6",
+      "note": "강연자: 원종윤"
     },
     {
       "id": "yclb-networking-year-end-1206",
-      "title": "YOUTH Networking: YEAR END",
+      "title": "YOUTH Networking: 송년회",
       "date": "2026-12-06",
       "time": "5pm",
       "place": "안다즈 서울 강남",
@@ -500,7 +501,36 @@
       "attendees": [
         "직차"
       ],
-      "status": "auto"
+      "status": "closed"
+    },
+    {
+      "id": "yoosmisikhoe-dorang-1114",
+      "title": "유스미식회: 도량(철가방요리사)",
+      "host": "윤태웅",
+      "date": "2026-11-14",
+      "time": "12:30pm",
+      "place": "도량 (종로구 지하문로6길 6 백송 빌딩 2, 3층)",
+      "attendees": [],
+      "status": "closed"
+    },
+    {
+      "id": "adieu-pika-cheongdam-1114",
+      "title": "Adieu PIKA청담 모임🍾",
+      "host": "손대승",
+      "date": "2026-11-14",
+      "time": "5pm",
+      "attendees": [],
+      "note": "Drink방 통해 모집 마감",
+      "status": "closed"
+    },
+    {
+      "id": "byob-wine-pizza-1122",
+      "title": "BYOB 와인과 피자 모임",
+      "date": "2026-11-22",
+      "time": "5pm",
+      "attendees": [],
+      "note": "Drink 방에서 모집하여 마감되었습니다.",
+      "status": "closed"
     }
   ],
   "notices": [
