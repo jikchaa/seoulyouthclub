@@ -344,9 +344,14 @@ function doPost(e) {
  *   MEMBERS_SHEET_ID  가입 신청서 응답 스프레드시트 ID
  *   INDEX_ADMIN_KEY   명부 관리자 비밀번호 (호스트 체크용)
  *   INDEX_SECRET      비워 두면 처음 실행 때 자동으로 만든다. 바꾸면 모두 다시 로그인해야 한다.
+ *   NOTION_TOKEN      (선택) Notion 통합 토큰. 넣으면 Notion 'Host Tracker'를 5분마다 읽어
+ *                     HOST 배지와 HOST 기록을 자동으로 만든다. 없으면 index_hosts 체크를 쓴다.
+ *   NOTION_DB_ID      (선택) Host Tracker 데이터베이스 ID. 비우면 기본값.
  *
  * 가입 신청서 응답 스프레드시트에 탭 두 개가 자동으로 생긴다(응답 탭은 건드리지 않는다):
- *   index_hosts  호스트 경험자. 명부 화면의 관리자 모드에서 체크하면 여기 쌓인다.
+ *   index_hosts  호스트 경험자(수동). NOTION_TOKEN 이 없을 때만 쓴다.
+ *   index_insight INSIGHT 배지(인사이트 세션 진행자). 관리자 모드에서 체크하면 여기 쌓인다.
+ *   host_log     Notion Host Tracker 사본. 동기화 때마다 다시 쓴다(Notion이 원본, 여기선 고치지 않는다).
  *   org_map      가입 신청서 '소속' 원문 → 화면에 보일 소속 / 산업.
  *                처음 보는 소속은 '표시 소속'이 빈 채로 자동 추가되고, 채울 때까지 숨긴다.
  *                (소속 칸에 실명을 같이 적는 사람이 있어서다.)
@@ -354,6 +359,11 @@ function doPost(e) {
 
 var IDX_HOSTS_SHEET = 'index_hosts';
 var IDX_HOSTS_HEADERS = ['이름', '휴대폰', '체크 시각'];
+var IDX_INSIGHT_SHEET = 'index_insight';
+var IDX_HOSTLOG_SHEET = 'host_log';
+var IDX_HOSTLOG_HEADERS = ['날짜', '모임 이름', '호스트 (Notion 표기)', '형태', '가져온 시각'];
+var NOTION_DB_DEFAULT = '2ea8f1dcccae804ba576d5f51eb202c5';
+var NOTION_DS_DEFAULT = '2ea8f1dc-ccae-808e-8f1a-000bf55d8a3e';
 /* 회원이 고른 '나의 위치 표시'. 없으면 근무지 기준. 거주지는 회원이 노출을 고른 경우에만 화면으로 나간다. */
 var IDX_PREFS_SHEET = 'index_prefs';
 var IDX_PREFS_HEADERS = ['이름', '휴대폰', '위치 표시 (work/home/both)', '변경 시각'];
@@ -449,7 +459,8 @@ function colOf_(head, words) {
 function readSheet_(id, withColors) {
   if (!id) return null;
   var sh = SpreadsheetApp.openById(id).getSheets().filter(function (s) {
-    var n = s.getName(); return n !== IDX_ORGMAP_SHEET && n !== IDX_HOSTS_SHEET && n !== IDX_PREFS_SHEET;
+    var n = s.getName();
+    return [IDX_ORGMAP_SHEET, IDX_HOSTS_SHEET, IDX_PREFS_SHEET, IDX_INSIGHT_SHEET, IDX_HOSTLOG_SHEET].indexOf(n) < 0;
   })[0];
   if (!sh) return { head: [], rows: [] };
   var last = sh.getLastRow(), width = sh.getLastColumn();
@@ -569,7 +580,8 @@ function joinPeople_(indexPhones) {
     var r = latest[k], raw = cOrg >= 0 ? String(r[cOrg] || '').trim() : '';
     var m = raw ? om.map[raw] : null;
     if (raw && !m) { unknown.push(raw); om.map[raw] = m = { org: '', ind: '' }; }
-    return { id: personId_(phoneDigits_(r[cPhone]), k), mask: mask_(r[cName]), org: m ? m.org : '', ind: m && m.org ? m.ind : '' };
+    /* _name 은 HOST 이름 연결에만 쓰고 화면으로는 내보내지 않는다. */
+    return { id: personId_(phoneDigits_(r[cPhone]), k), mask: mask_(r[cName]), org: m ? m.org : '', ind: m && m.org ? m.ind : '', _name: String(r[cName] || '').trim() };
   });
   if (unknown.length) {
     var now = new Date();
@@ -589,13 +601,164 @@ function prefPhones_() {
   return map;
 }
 
-function hostPhones_() {
-  var sh = tab_(IDX_HOSTS_SHEET, IDX_HOSTS_HEADERS);
+function hostPhones_(sheetName) {
+  var sh = tab_(sheetName || IDX_HOSTS_SHEET, IDX_HOSTS_HEADERS);
   var last = sh.getLastRow(), set = {};
   if (last >= 2) sh.getRange(2, 1, last - 1, 2).getValues().forEach(function (r) {
     var d = phoneDigits_(r[1]); if (d) set[d] = 1;
   });
   return set;
+}
+
+/* ------------------------------------------------------------------ *
+ * HOST 기록 — Notion 'Host Tracker'가 원본
+ *
+ *   syncHostLog: Notion을 읽어 host_log 탭에 사본을 쓴다(5분 트리거가 부른다).
+ *   이름 연결:   Notion '호스트' 값과 명부의 실명(또는 카톡 닉네임)이 하나로만 맞으면 자동 연결.
+ *               동명이인은 Notion에 '김지훈 (오라클)'처럼 괄호에 소속(또는 닉네임)을 적으면 갈린다.
+ *               '정다운 (Amy)'처럼 같은 이름이 한 명뿐이면 괄호는 무시한다.
+ *   공개 범위:   HOST 배지는 모두에게, 모임 기록은 본인과 관리자에게만.
+ * ------------------------------------------------------------------ */
+
+function notionText_(p) {
+  var arr = (p && (p.title || p.rich_text)) || [];
+  return arr.map(function (t) { return t.plain_text || ''; }).join('').trim();
+}
+function notionSelect_(p) { return p && p.select && p.select.name ? String(p.select.name).trim() : ''; }
+
+/* Notion API로 모든 행을 읽는다. 새 API(data source) → 안 되면 옛 API(database) 순서로 시도. */
+function notionRows_() {
+  var token = prop_('NOTION_TOKEN');
+  if (!token) return null;
+  var tries = [
+    { url: 'https://api.notion.com/v1/data_sources/' + (prop_('NOTION_DS_ID') || NOTION_DS_DEFAULT) + '/query', ver: '2025-09-03' },
+    { url: 'https://api.notion.com/v1/databases/' + (prop_('NOTION_DB_ID') || NOTION_DB_DEFAULT) + '/query', ver: '2022-06-28' }
+  ];
+  var lastErr = '';
+  for (var t = 0; t < tries.length; t++) {
+    var rows = [], cursor = null, ok = true;
+    for (var page = 0; page < 50; page++) {
+      var payload = { page_size: 100 };
+      if (cursor) payload.start_cursor = cursor;
+      var res = UrlFetchApp.fetch(tries[t].url, {
+        method: 'post', contentType: 'application/json', muteHttpExceptions: true, payload: JSON.stringify(payload),
+        headers: { Authorization: 'Bearer ' + token, 'Notion-Version': tries[t].ver }
+      });
+      if (res.getResponseCode() !== 200) { ok = false; lastErr = res.getResponseCode() + ' ' + res.getContentText().slice(0, 200); break; }
+      var j = JSON.parse(res.getContentText());
+      (j.results || []).forEach(function (r) {
+        var p = r.properties || {};
+        var d = p['날짜'] && p['날짜'].date && p['날짜'].date.start ? String(p['날짜'].date.start).slice(0, 10) : '';
+        var row = { d: d, t: notionText_(p['모임 이름']), h: notionSelect_(p['호스트']), k: notionSelect_(p['형태']) };
+        if (row.d && row.t && row.h) rows.push(row);
+      });
+      if (!j.has_more) break;
+      cursor = j.next_cursor;
+    }
+    if (ok) return rows;
+  }
+  throw new Error('Notion 읽기 실패: ' + lastErr);
+}
+
+/* 5분 트리거가 부른다. 편집기에서 직접 [실행]해도 된다. */
+function syncHostLog() {
+  var props = PropertiesService.getScriptProperties();
+  try {
+    var rows = notionRows_();
+    if (!rows) return 0;
+    var key = function (r) { return [r.d, r.t, r.h, r.k].join('\u0001'); };
+    rows.sort(function (a, b) { var x = key(a), y = key(b); return x < y ? -1 : x > y ? 1 : 0; });   // 순서가 늘 같아야 바뀐 것만 다시 쓴다
+    var sh = tab_(IDX_HOSTLOG_SHEET, IDX_HOSTLOG_HEADERS);
+    var last = sh.getLastRow();
+    var old = last >= 2 ? sh.getRange(2, 1, last - 1, 4).getDisplayValues().map(function (r) { return r.join('\t'); }).join('\n') : '';
+    var now = rows.map(function (r) { return [r.d, r.t, r.h, r.k].join('\t'); }).join('\n');
+    if (old !== now) {
+      if (last >= 2) sh.getRange(2, 1, last - 1, 5).clearContent();
+      if (rows.length) {
+        sh.getRange(2, 1, rows.length, 1).setNumberFormat('@');
+        var at = new Date();
+        sh.getRange(2, 1, rows.length, 5).setValues(rows.map(function (r) { return [r.d, r.t, r.h, r.k, at]; }));
+      }
+      CacheService.getScriptCache().remove('indexPayload');
+    }
+    CacheService.getScriptCache().put('hostLog', JSON.stringify(rows), IDX_CACHE_SEC);
+    props.setProperty('NOTION_SYNCED_AT', new Date().toISOString());
+    props.deleteProperty('NOTION_LAST_ERROR');
+    return rows.length;
+  } catch (err) {
+    props.setProperty('NOTION_LAST_ERROR', String(err && err.message || err).slice(0, 300));
+    return -1;   // 실패해도 host_log 의 지난 사본으로 계속 보여 준다
+  }
+}
+
+/* host_log 사본. NOTION_TOKEN 이 없으면 null(수동 체크 방식). */
+function hostLog_() {
+  if (!prop_('NOTION_TOKEN')) return null;
+  var hit = CacheService.getScriptCache().get('hostLog');
+  if (hit) return JSON.parse(hit);
+  var sh = tab_(IDX_HOSTLOG_SHEET, IDX_HOSTLOG_HEADERS);
+  var last = sh.getLastRow();
+  if (last < 2) return [];
+  return sh.getRange(2, 1, last - 1, 4).getDisplayValues().map(function (r) {
+    return { d: String(r[0]).slice(0, 10), t: r[1], h: r[2], k: r[3] };
+  }).filter(function (r) { return r.d && r.t && r.h; });
+}
+
+function nkey_(s) { return String(s == null ? '' : s).replace(/\s+/g, '').toLowerCase(); }
+
+/* Notion '호스트' 표기 → 사람 id. 결과: { recs: {id: [기록]}, report: [표기별 연결 상태] } */
+function hostMatch_(people, guests, log) {
+  var cands = people.map(function (p) { return { id: p.id, name: p.name, nick: p.nick, org: p.org, idx: true }; })
+    .concat(guests.map(function (g) { return { id: g.id, name: g._name, nick: '', org: g.org, idx: false }; }));
+  var labels = {};
+  log.forEach(function (r) { labels[r.h] = (labels[r.h] || 0) + 1; });
+  var who = {}, report = [];
+  Object.keys(labels).forEach(function (L) {
+    var m = L.match(/^(.*?)\s*[\(（]([^\)）]*)[\)）]\s*$/);
+    var base = nkey_(m ? m[1] : L), q = m ? nkey_(m[2]) : '';
+    var hit = cands.filter(function (c) { return nkey_(c.name) === base; });
+    if (!hit.length) hit = cands.filter(function (c) { return c.nick && nkey_(c.nick) === base; });
+    if (hit.length > 1 && q) {
+      var f = hit.filter(function (c) {
+        return [c.org, c.nick].some(function (v) { v = nkey_(v); return v && (v.indexOf(q) >= 0 || q.indexOf(v) >= 0); });
+      });
+      if (f.length) hit = f;
+    }
+    var st = hit.length === 1 ? 'ok' : hit.length ? 'dup' : 'none';
+    if (st === 'ok') who[L] = hit[0].id;
+    report.push({ label: L, n: labels[L], st: st, id: st === 'ok' ? hit[0].id : '',
+      who: hit.map(function (c) { return { name: c.idx ? c.name : mask_(c.name), org: c.org || '', idx: c.idx }; }) });
+  });
+  var recs = {};
+  log.forEach(function (r) {
+    var id = who[r.h]; if (!id) return;
+    (recs[id] = recs[id] || []).push({ d: r.d, t: r.t, k: r.k });
+  });
+  Object.keys(recs).forEach(function (id) { recs[id].sort(function (a, b) { return a.d < b.d ? 1 : a.d > b.d ? -1 : 0; }); });
+  report.sort(function (a, b) { return (a.st === 'ok') - (b.st === 'ok') || b.n - a.n || a.label.localeCompare(b.label); });
+  return { recs: recs, report: report };
+}
+
+/* HOST 기록(본인·관리자용). 명부를 만들 때 함께 만들어 캐시한다. 화면용 명부에는 들어가지 않는다. */
+function hostState_() {
+  var cache = CacheService.getScriptCache();
+  var hit = cache.get('hostState');
+  if (hit) return JSON.parse(hit);
+  cache.remove('indexPayload');
+  indexPayload_();
+  hit = cache.get('hostState');
+  return hit ? JSON.parse(hit) : { recs: {}, report: [] };
+}
+
+function myHost_(id) {
+  var list = hostState_().recs[id];
+  return list && list.length ? { list: list } : null;
+}
+
+function hostAdmin_() {
+  var st = hostState_();
+  return { src: prop_('NOTION_TOKEN') ? 'notion' : 'manual', report: st.report, recs: st.recs,
+    syncedAt: prop_('NOTION_SYNCED_AT'), err: prop_('NOTION_LAST_ERROR') };
 }
 
 /* 화면에 내려줄 명부. 캐시해 두고, 호스트를 바꾸거나 트리거가 돌 때 새로 만든다. */
@@ -606,9 +769,20 @@ function indexPayload_() {
 
   var people = indexPeople_(), phones = {};
   people.forEach(function (p) { if (p._phone) phones[p._phone] = 1; });
-  var hosts = hostPhones_(), hostIds = [];
-  people.forEach(function (p) { if (p._phone && hosts[p._phone]) hostIds.push(p.id); });
-  Object.keys(hosts).forEach(function (d) { if (!phones[d]) hostIds.push(personId_(d)); });
+  var guests = joinPeople_(phones);
+  /* HOST 배지: Notion 기록이 있으면 그것만으로(기록 = 배지), 없으면 수동 체크(index_hosts). */
+  var log = hostLog_(), hostIds = [], hs = { recs: {}, report: [] };
+  if (log) {
+    hs = hostMatch_(people, guests, log);
+    hostIds = Object.keys(hs.recs);
+  } else {
+    var hosts = hostPhones_();
+    people.forEach(function (p) { if (p._phone && hosts[p._phone]) hostIds.push(p.id); });
+    Object.keys(hosts).forEach(function (d) { if (!phones[d]) hostIds.push(personId_(d)); });
+  }
+  var ins = hostPhones_(IDX_INSIGHT_SHEET), insIds = [];
+  people.forEach(function (p) { if (p._phone && ins[p._phone]) insIds.push(p.id); });
+  Object.keys(ins).forEach(function (d) { if (!phones[d]) insIds.push(personId_(d)); });
   var prefs = prefPhones_();
   var members = people.map(function (p) {
     var o = {}; Object.keys(p).forEach(function (k) { if (k.charAt(0) !== '_') o[k] = p[k]; });
@@ -617,8 +791,10 @@ function indexPayload_() {
     if (loc !== 'work' && p._home) { o.loc = loc; o.home = p._home; } else o.loc = 'work';
     return o;
   });
-  var payload = { members: members, guests: joinPeople_(phones), hosts: hostIds };
+  guests = guests.map(function (g) { return { id: g.id, mask: g.mask, org: g.org, ind: g.ind }; });
+  var payload = { members: members, guests: guests, hosts: hostIds, insight: insIds, hostSrc: log ? 'notion' : 'manual' };
   try { cache.put('indexPayload', JSON.stringify(payload), IDX_CACHE_SEC); } catch (err) { /* 100KB 넘으면 캐시 없이 */ }
+  try { cache.put('hostState', JSON.stringify(hs), IDX_CACHE_SEC + 60); } catch (err) { /* 너무 크면 캐시 없이 */ }
   return payload;
 }
 
@@ -671,7 +847,8 @@ function adminOk_(key) {
  *   op 'login'  : name, tail, email      → token + 명부
  *   op 'data'   : token  또는 adminKey   → 명부
  *   op 'admin'  : adminKey               → 관리자 확인
- *   op 'host'   : adminKey, id, on       → 호스트 체크/해제
+ *   op 'host'   : adminKey, id, on       → 호스트 체크/해제 (NOTION_TOKEN 이 없을 때)
+ *   op 'insight': adminKey, id, on       → INSIGHT 체크/해제
  * ------------------------------------------------------------------ */
 
 function indexPost_(body) {
@@ -694,15 +871,16 @@ function indexPost_(body) {
       bump_('idxFail:' + name, 900); bump_('idxFailAll', 600);
       return json_({ ok: false, error: 'Index 신청서의 정보와 일치하지 않습니다. 신청서에 적은 이름, 뒷자리, 이메일을 확인해 주세요.' });
     }
-    return json_({ ok: true, token: makeToken_(me.id), me: me.id, mine: myLoc_(me.id), data: indexPayload_() });
+    var data0 = indexPayload_();
+    return json_({ ok: true, token: makeToken_(me.id), me: me.id, mine: myLoc_(me.id), host: myHost_(me.id), data: data0 });
   }
 
   if (op === 'data') {
     if (body.adminKey) {
-      if (adminOk_(body.adminKey)) return json_({ ok: true, data: indexPayload_() });
+      if (adminOk_(body.adminKey)) { var dataA = indexPayload_(); return json_({ ok: true, data: dataA, hostAdmin: hostAdmin_() }); }
     } else {
       var who = checkToken_(body.token);
-      if (who) return json_({ ok: true, me: who, mine: myLoc_(who), data: indexPayload_() });
+      if (who) { var dataM = indexPayload_(); return json_({ ok: true, me: who, mine: myLoc_(who), host: myHost_(who), data: dataM }); }
     }
     return json_({ ok: false, expired: true, error: '다시 본인 확인을 해 주세요.' });
   }
@@ -754,7 +932,8 @@ function indexPost_(body) {
     return json_(adminOk_(body.adminKey) ? { ok: true } : { ok: false, error: '비밀번호가 맞지 않거나 시도가 너무 많습니다.' });
   }
 
-  if (op === 'host') {
+  if (op === 'host' || op === 'insight') {
+    var markSheet = op === 'insight' ? IDX_INSIGHT_SHEET : IDX_HOSTS_SHEET;
     if (!adminOk_(body.adminKey)) return json_({ ok: false, error: '관리자 확인에 실패했습니다.' });
     var id = String(body.id || ''), on = !!body.on;
     /* id → 휴대폰 번호. 명부 전체에서 같은 id를 찾는다. */
@@ -775,7 +954,7 @@ function indexPost_(body) {
     var lock = LockService.getScriptLock();
     lock.waitLock(15000);
     try {
-      var sh = tab_(IDX_HOSTS_SHEET, IDX_HOSTS_HEADERS);
+      var sh = tab_(markSheet, IDX_HOSTS_HEADERS);
       var last = sh.getLastRow();
       var rows = last >= 2 ? sh.getRange(2, 2, last - 1, 1).getValues() : [];
       for (var i = rows.length - 1; i >= 0; i--) {
@@ -803,7 +982,8 @@ function indexPost_(body) {
 
 function refreshIndexCache() {
   var cache = CacheService.getScriptCache();
-  cache.removeAll(['indexPeople', 'indexPayload']);
+  cache.removeAll(['indexPeople', 'indexPayload', 'hostState']);
+  if (prop_('NOTION_TOKEN')) syncHostLog();
   indexPeople_();
   indexPayload_();
 }

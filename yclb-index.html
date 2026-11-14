@@ -178,6 +178,50 @@
      지원하지 않는 브라우저는 아래쪽 여백(글꼴의 내림 공간)을 덜어 같은 모양으로 맞춘다. 픽셀로 재서 맞춘 값. */
   .host { display: inline-block; margin-left: .35rem; vertical-align: .14em; background: #fff; color: #0A0A0A; font-size: 11px; font-weight: 700; letter-spacing: .08em; line-height: 1; padding: 3px 6px 1.8px; border-radius: 2px; white-space: nowrap; }
   @supports (text-box: trim-both cap alphabetic) { .host { text-box: trim-both cap alphabetic; padding: 4.25px 6px 3.75px; } }
+  /* INSIGHT 배지: HOST와 같은 크기, 테두리만 */
+  .host.ins { background: transparent; color: #fff; box-shadow: inset 0 0 0 1px #fff; }
+
+  /* 나의 HOST 기록 (본인·관리자만) */
+  .hp { margin: 1.6rem 0 2.2rem; }
+  .hp[hidden] { display: none; }
+  .hp-top { border-bottom: 2px solid var(--text); padding-bottom: 1rem; }
+  .hp-top .k { font-size: .72rem; letter-spacing: .2em; color: var(--accent); font-weight: 800; }
+  .hp-top h2 { margin: .3rem 0 0; font-size: 1.6rem; line-height: 1.25; letter-spacing: -.03em; }
+  .hp-top .s4 { font-size: .82rem; color: var(--text-2); margin-top: .35rem; }
+  .kpi { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+  .kpi div { padding: .9rem 1rem .9rem 0; min-width: 0; }
+  .kpi div + div { border-left: 1px solid var(--line); padding-left: 1rem; }
+  .kpi b { display: block; font-size: 1.8rem; font-weight: 800; letter-spacing: -.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size: .72rem; color: var(--text-2); letter-spacing: .02em; }
+  .hr { display: grid; grid-template-columns: 6rem minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: .75rem 0; border-bottom: 1px solid var(--line); }
+  .hr .d { font-weight: 800; font-size: 1.02rem; letter-spacing: -.02em; font-variant-numeric: tabular-nums; line-height: 1.25; }
+  .hr .d small { display: block; font-size: .64rem; color: var(--text-3); letter-spacing: .08em; font-weight: 700; margin-top: .1rem; }
+  .hr .t { font-weight: 700; font-size: .9rem; min-width: 0; }
+  .hr .c { font-size: .74rem; color: var(--text-2); text-align: right; white-space: nowrap; }
+  .hr.up { background: rgba(198,42,45,.08); padding-inline: .6rem; margin-inline: -.6rem; }
+  .hr.up .d { color: var(--accent); }
+  @media (max-width: 34rem) { .hr { grid-template-columns: 5.2rem minmax(0, 1fr); gap: .15rem .8rem; } .hr .d { grid-row: span 2; } .hr .c { grid-column: 2; text-align: left; } }
+  .hp-more { margin-top: .7rem; }
+  .hp-note { margin-top: .7rem; font-size: .72rem; color: var(--text-3); }
+
+  /* 관리자: HOST 이름 연결 */
+  .ha { margin: 1.6rem 0 2.2rem; border: 1px solid var(--line-strong); padding: 1.1rem 1.15rem 1rem; background: var(--surface); }
+  .ha[hidden] { display: none; }
+  .ha h2 { margin: 0; font-size: 1.05rem; letter-spacing: -.02em; }
+  .ha .sum { font-size: .78rem; color: var(--text-2); margin-top: .25rem; }
+  .ha .err { color: var(--rust); font-size: .78rem; margin-top: .4rem; }
+  .ha .rule { font-size: .74rem; color: var(--text-3); margin-top: .5rem; line-height: 1.6; }
+  .q2 { padding: .65rem 0; border-bottom: 1px solid var(--line); font-size: .84rem; }
+  .q2:last-child { border-bottom: 0; }
+  .q2 .lb { font-weight: 700; }
+  .q2 .lb .n { font-weight: 400; color: var(--text-3); margin-left: .35rem; font-size: .76rem; }
+  .q2 .al { font-size: .76rem; color: var(--text-2); margin-top: .15rem; }
+  .q2 .st { font-size: .68rem; font-weight: 800; letter-spacing: .06em; margin-right: .4rem; }
+  .q2 .st.dup { color: #E0B44A; } .q2 .st.none { color: var(--rust); } .q2 .st.ok { color: var(--sage); }
+  .q2 button.lb { appearance: none; background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: var(--text); cursor: pointer; text-align: left; }
+  .q2 button.lb:hover { color: var(--accent); }
+  .q2 .rec { margin-top: .4rem; }
+  .ha-list { margin-top: .7rem; border-top: 1px solid var(--line); }
   @media (max-width: 60rem) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 34rem) { .cards { grid-template-columns: 1fr; } }
   .empty { background: var(--ink); padding: 2.5rem 1rem; color: var(--text-3); grid-column: 1 / -1; }
@@ -244,7 +288,7 @@
 <link rel="stylesheet" href="assets/site.css" />
 </head>
 <body>
-<div class="admin-bar" id="adminBar" hidden><b>관리자 모드</b><span id="adminMsg">카드의 '호스트'를 체크하면 바로 저장됩니다.</span><span class="sp"></span><button type="button" id="adminExit">나가기</button></div>
+<div class="admin-bar" id="adminBar" hidden><b>관리자 모드</b><span id="adminMsg">카드의 체크 칸을 누르면 바로 저장됩니다.</span><span class="sp"></span><button type="button" id="adminExit">나가기</button></div>
 <div class="shell">
   <nav class="topbar" aria-label="메인 메뉴">
     <a class="brand" href="./"><img class="sq" src="assets/youth-mark.jpg" width="192" height="192" alt=""><span class="bn">SEOUL YOUTH CLUB</span></a>
@@ -275,6 +319,8 @@
     </section>
     <p class="state" id="view-state" hidden></p>
     <section id="view-board" hidden>
+      <section class="ha" id="hostAdmin" hidden aria-label="HOST 이름 연결"></section>
+      <section class="hp" id="myHost" hidden aria-label="나의 HOST 기록"></section>
       <div class="geo" id="geo" aria-label="서울 근무지 지도">
         <div class="geo-map" id="geoMap"><div class="geo-tip" id="geoTip" role="dialog" hidden></div></div>
         <div class="geo-legend" id="geoLegend" hidden><span><i class="lg-work"></i>근무지</span><span><i class="lg-home"></i>거주지</span></div>
@@ -321,8 +367,9 @@
  * ------------------------------------------------------------------ */
 let ENDPOINT = "";
 let M = [], G = [];
-const HOSTS = new Set();
-const isHost = id => HOSTS.has(id);
+const HOSTS = new Set(), INSIGHT = new Set();
+const isHost = id => HOSTS.has(id), isIns = id => INSIGHT.has(id);
+let HOST_SRC = "manual", MYHOST = null, HADMIN = null;
 const TOKEN_KEY = "yclb-index-token", ADMIN_KEY = "yclb-index-admin";
 const store = {
   get(s, k) { try { return s.getItem(k); } catch (_) { return null; } },
@@ -341,8 +388,11 @@ function bars(id, list, key) {
 }
 const IG_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.4" cy="6.6" r="1.3" fill="currentColor"/></svg>';
 const LI_ICON = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3" fill="currentColor"/><g fill="#0A0A0A"><rect x="5.6" y="9.6" width="2.9" height="8.6"/><circle cx="7.05" cy="6.6" r="1.7"/><path d="M10.6 9.6h2.8v1.2c.5-.8 1.5-1.4 2.9-1.4 2.3 0 3.2 1.4 3.2 3.9v4.9h-2.9v-4.4c0-1.2-.3-2-1.4-2-1.2 0-1.7.9-1.7 2.1v4.3h-2.9z"/></g></svg>';
-const hostTag = id => isHost(id) ? `<span class="host">HOST</span>` : "";
-const hostCk = id => `<label class="hostck"><input type="checkbox" data-host="${id}"${isHost(id) ? " checked" : ""}>호스트</label>`;
+const hostTag = id => (isHost(id) ? `<span class="host">HOST</span>` : "") + (isIns(id) ? `<span class="host ins">INSIGHT</span>` : "");
+const badgeText = id => (isHost(id) ? "HOST 호스트 " : "") + (isIns(id) ? "INSIGHT 인사이트" : "");
+/* 관리자 체크: INSIGHT 는 늘, HOST 는 Notion 연결 전(수동 방식)에만. Notion이 붙으면 HOST는 기록으로 자동. */
+const hostCk = id => (HOST_SRC === "manual" ? `<label class="hostck"><input type="checkbox" data-mark="host" data-id="${id}"${isHost(id) ? " checked" : ""}>HOST</label> ` : "")
+  + `<label class="hostck"><input type="checkbox" data-mark="insight" data-id="${id}"${isIns(id) ? " checked" : ""}>INSIGHT</label>`;
 function card(m, i) {
   const pos = [m.dept, m.title].filter(Boolean).join(" · ");
   const links = [
@@ -364,7 +414,7 @@ function hitGuest(g) {
   if (state.work || state.job) return false;
   if (state.ind && g.ind !== state.ind) return false;
   if (!state.q) return true;
-  return [g.mask, g.org, g.ind, isHost(g.id) ? "HOST 호스트" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
+  return [g.mask, g.org, g.ind, badgeText(g.id)].join(" ").toLowerCase().includes(state.q.toLowerCase());
 }
 function gcard(g) {
   return `<article class="card gcard">
@@ -386,7 +436,7 @@ function hit(m) {
   if (state.work && !locs(m).some(l => l.area === state.work)) return false;
   if (state.job && m.job !== state.job) return false;
   if (!state.q) return true;
-  return [m.name, m.nick, m.org, m.dept, m.title, m.ind, m.job, m.work, m.ig, m.give, m.want.join(" "), isHost(m.id) ? "HOST 호스트" : ""].join(" ").toLowerCase().includes(state.q.toLowerCase());
+  return [m.name, m.nick, m.org, m.dept, m.title, m.ind, m.job, m.work, m.ig, m.give, m.want.join(" "), badgeText(m.id)].join(" ").toLowerCase().includes(state.q.toLowerCase());
 }
 const isLatin = s => /^[A-Za-z]/.test(s);
 // latinFirst=false: 가나다 → A-Z, true: A-Z → 가나다
@@ -595,14 +645,91 @@ let ME = null, MINE = null;   // 로그인한 회원 본인(관리자 모드에�
 function show(data, res) {
   M = data.members || []; G = data.guests || [];
   HOSTS.clear(); (data.hosts || []).forEach(id => HOSTS.add(id));
-  if (res && res.me) { ME = res.me; MINE = res.mine || { loc: "work", hasHome: false }; }
+  INSIGHT.clear(); (data.insight || []).forEach(id => INSIGHT.add(id));
+  HOST_SRC = data.hostSrc || "manual";
+  if (res && res.me) { ME = res.me; MINE = res.mine || { loc: "work", hasHome: false }; MYHOST = res.host || null; }
+  HADMIN = (res && res.hostAdmin) || null;
   if (!filtersReady) { setupFilters(); filtersReady = true; }
   renderFacet();
   view("board");
   if (geoReady) resetGeo();
   setupGeo(); geoReady = true;
   renderMyLoc();
+  renderMyHost();
+  renderHostAdmin();
   draw();
+}
+
+/* ---------- HOST 기록 (Notion Host Tracker → 서버가 이름 연결) ---------- */
+const WD = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+function hostRows(list) {
+  const t = today();
+  return list.map(r => {
+    const up = r.d > t, wd = WD[new Date(r.d + "T00:00:00").getDay()] || "";
+    return `<div class="hr${up ? " up" : ""}"><div class="d">${r.d.slice(5).replace("-", ".")}<small>${r.d.slice(0, 4)} · ${wd}${up ? " · 예정" : ""}</small></div><div class="t">${esc(r.t)}</div><div class="c">${esc(r.k || "")}</div></div>`;
+  }).join("");
+}
+function hostKpi(list) {
+  const t = today(), past = list.filter(r => r.d <= t).length, up = list.length - past;
+  const first = list[list.length - 1].d;
+  const now = new Date(), f = new Date(first + "T00:00:00");
+  const months = Math.max(1, (now.getFullYear() - f.getFullYear()) * 12 + now.getMonth() - f.getMonth() + 1);
+  return { past, up, first, months };
+}
+const HP_SHOW = 6;
+function renderMyHost() {
+  const box = document.getElementById("myHost");
+  const list = (ME && MYHOST && MYHOST.list) || [];
+  box.hidden = !list.length;
+  if (!list.length) { box.innerHTML = ""; return; }
+  const me = M.find(x => x.id === ME) || { name: "" }, k = hostKpi(list);
+  const more = list.length > HP_SHOW;
+  box.innerHTML = `<div class="hp-top"><div class="k">MY HOST RECORD</div><h2>${esc(me.name)}${SEAL}${hostTag(ME)}</h2><div class="s4">${k.first.slice(0, 7).replace("-", ".")} 첫 HOST</div></div>
+    <div class="kpi"><div><b>${k.past}</b><span>HOST한 모임</span></div><div><b>${k.up}</b><span>예정된 모임</span></div><div><b>${k.months}개월</b><span>HOST 활동 기간</span></div></div>
+    <div id="hpRows">${hostRows(more ? list.slice(0, HP_SHOW) : list)}</div>
+    ${more ? `<button type="button" class="linkish hp-more" id="hpMore">전체 ${list.length}개 보기</button>` : ""}
+    <div class="hp-note">본인과 운영진만 볼 수 있는 기록입니다. 다른 회원에게는 HOST 배지만 보입니다.</div>`;
+  const b = document.getElementById("hpMore");
+  if (b) b.addEventListener("click", () => {
+    const open = b.dataset.open === "1";
+    document.getElementById("hpRows").innerHTML = hostRows(open ? list.slice(0, HP_SHOW) : list);
+    b.dataset.open = open ? "" : "1"; b.textContent = open ? `전체 ${list.length}개 보기` : "접기";
+  });
+}
+function renderHostAdmin() {
+  const box = document.getElementById("hostAdmin");
+  const on = document.body.classList.contains("is-admin") && HADMIN;
+  box.hidden = !on;
+  if (!on) { box.innerHTML = ""; return; }
+  const A = HADMIN;
+  if (A.src !== "notion") {
+    box.innerHTML = `<h2>HOST 이름 연결</h2><div class="sum">Notion이 아직 연결되지 않아 HOST는 카드의 체크로 표시합니다.</div><div class="rule">스크립트 속성에 NOTION_TOKEN을 넣으면 Notion Host Tracker 기록으로 자동 전환됩니다.</div>`;
+    return;
+  }
+  const rep = A.report || [], bad = rep.filter(r => r.st !== "ok"), ok = rep.filter(r => r.st === "ok");
+  const at = A.syncedAt ? new Date(A.syncedAt) : null;
+  const atTxt = at && !isNaN(at) ? `${at.getMonth() + 1}.${at.getDate()} ${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}` : "아직 없음";
+  const who = r => r.who.map(w => `${esc(w.name)}${w.org ? ` (${esc(w.org)})` : ""}${w.idx ? "" : " · 가입 명단"}`).join(" / ");
+  const badRow = r => `<div class="q2"><div><span class="st ${r.st}">${r.st === "dup" ? "동명이인" : "명부에 없음"}</span><span class="lb">${esc(r.label)}<span class="n">${r.n}회</span></span></div>
+    <div class="al">${r.st === "dup" ? `후보 ${r.who.length}명 — ${who(r)}<br>Notion 호스트 값을 '${esc(r.label.replace(/\s*[(（].*$/, ""))} (소속)'처럼 바꾸면 자동 연결됩니다.` : "Index·가입 명단에 같은 실명·카톡 닉네임이 없습니다. Notion 호스트 값을 실명으로 바꾸면 연결됩니다."}</div></div>`;
+  const okRow = r => `<div class="q2"><div><span class="st ok">연결</span><button type="button" class="lb" data-rec="${esc(r.id)}">${esc(r.label)}<span class="n">${r.n}회 · ${who(r)}</span></button></div><div class="rec" id="rec-${esc(r.id)}" hidden></div></div>`;
+  box.innerHTML = `<h2>HOST 이름 연결</h2>
+    <div class="sum">자동 연결 ${ok.length}명 · 확인 필요 ${bad.length}건 · 마지막 동기화 ${atTxt}</div>
+    ${A.err ? `<div class="err">최근 동기화 실패: ${esc(A.err)}</div>` : ""}
+    <div class="rule">Notion Host Tracker의 '호스트' 값을 명부 실명과 맞춰 자동으로 연결합니다(5분마다). 동명이인은 '김지훈 (오라클)'처럼 괄호에 소속을 적으면 갈립니다. 고칠 곳은 Notion뿐입니다.</div>
+    ${bad.length ? `<div class="ha-list">${bad.map(badRow).join("")}</div>` : ""}
+    <button type="button" class="linkish hp-more" id="haOk">연결된 HOST ${ok.length}명 보기</button>
+    <div class="ha-list" id="haOkList" hidden>${ok.map(okRow).join("")}</div>`;
+  document.getElementById("haOk").addEventListener("click", e => {
+    const l = document.getElementById("haOkList"); l.hidden = !l.hidden;
+    e.target.textContent = l.hidden ? `연결된 HOST ${ok.length}명 보기` : "접기";
+  });
+  box.querySelectorAll("[data-rec]").forEach(b => b.addEventListener("click", () => {
+    const el = document.getElementById("rec-" + b.dataset.rec);
+    if (!el.innerHTML) el.innerHTML = hostRows((A.recs || {})[b.dataset.rec] || []);
+    el.hidden = !el.hidden;
+  }));
 }
 function renderMyLoc() {
   const box = document.getElementById("myLoc");
@@ -676,7 +803,7 @@ document.getElementById("gateForm").addEventListener("submit", e => {
 });
 document.getElementById("logout").addEventListener("click", () => {
   store.del(localStorage, TOKEN_KEY); store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
-  M = []; G = []; ME = MINE = null; document.getElementById("myLoc").hidden = true; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); gateMsg("로그아웃했습니다.", false);
+  M = []; G = []; ME = MINE = MYHOST = HADMIN = null; renderMyHost(); renderHostAdmin(); document.getElementById("myLoc").hidden = true; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); gateMsg("로그아웃했습니다.", false);
 });
 
 /* ---------- 관리자 ---------- */
@@ -686,13 +813,14 @@ function setAdmin(on) {
 }
 function adminMsg(s) { document.getElementById("adminMsg").textContent = s; }
 function wireHostChecks() {
-  document.querySelectorAll("input[data-host]").forEach(cb => cb.addEventListener("change", () => {
-    const id = cb.dataset.host, on = cb.checked, adminKey = store.get(sessionStorage, ADMIN_KEY);
+  document.querySelectorAll("input[data-mark]").forEach(cb => cb.addEventListener("change", () => {
+    const id = cb.dataset.id, mark = cb.dataset.mark, on = cb.checked, adminKey = store.get(sessionStorage, ADMIN_KEY);
+    const set = mark === "insight" ? INSIGHT : HOSTS, label = mark === "insight" ? "INSIGHT" : "HOST";
     cb.disabled = true;
-    call({ op: "host", adminKey, id, on }).then(res => {
+    call({ op: mark, adminKey, id, on }).then(res => {
       if (!res.ok) throw new Error(res.error);
-      if (on) HOSTS.add(id); else HOSTS.delete(id);
-      adminMsg(on ? "호스트로 표시했습니다." : "호스트 표시를 해제했습니다.");
+      if (on) set.add(id); else set.delete(id);
+      adminMsg(on ? `${label}로 표시했습니다.` : `${label} 표시를 해제했습니다.`);
       draw();
     }).catch(err => { cb.checked = !on; adminMsg((err && err.message) || "저장하지 못했습니다."); })
       .finally(() => { cb.disabled = false; });
@@ -715,8 +843,9 @@ document.getElementById("pwForm").addEventListener("submit", e => {
   }).catch(() => { document.getElementById("pwErr").textContent = "서버에 연결하지 못했습니다."; });
 });
 document.getElementById("adminExit").addEventListener("click", () => {
-  store.del(sessionStorage, ADMIN_KEY); setAdmin(false);
-  if (!store.get(localStorage, TOKEN_KEY)) { M = []; G = []; ME = MINE = null; document.getElementById("myLoc").hidden = true; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); }
+  store.del(sessionStorage, ADMIN_KEY); setAdmin(false); HADMIN = null; renderHostAdmin();
+  if (store.get(localStorage, TOKEN_KEY)) { load(); return; }
+  { M = []; G = []; ME = MINE = MYHOST = null; renderMyHost(); document.getElementById("myLoc").hidden = true; document.getElementById("cards").innerHTML = ""; resetGeo(); view("gate"); }
 });
 
 /* 서버 주소는 Events 페이지와 같은 data/config.json 에서 온다. */
