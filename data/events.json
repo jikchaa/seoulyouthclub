@@ -22,7 +22,7 @@
     },
     {
       "id": "yclb-insight-day-1",
-      "title": "YCLB INSIGHT DAY #1",
+      "title": "유스클럽 인사이트 데이",
       "capacity": 6,
       "capacityText": "최대 6명",
       "date": "2026-08-01",
@@ -31,7 +31,8 @@
       "note": "간단한 다과와 함께 음료가 준비됩니다.",
       "attendees": [],
       "formUrl": "https://forms.gle/8hShm5yQEYNDXkRB7",
-      "status": "auto"
+      "status": "auto",
+      "kind": "event"
     },
     {
       "id": "hyatt-champagne",
@@ -40,7 +41,8 @@
       "time": "6pm-8pm",
       "place": "그랜드하얏트 로비라운지",
       "attendees": [],
-      "status": "closed"
+      "status": "closed",
+      "host": "직차"
     },
     {
       "id": "apgujeong-gadam",
@@ -71,7 +73,8 @@
       "time": "7pm",
       "attendees": [],
       "formUrl": "https://forms.gle/gF9FBPpG8ggUmfRm8",
-      "status": "auto"
+      "status": "auto",
+      "host": "직차"
     },
     {
       "id": "family-josun-palace",
@@ -154,7 +157,8 @@
           "url": "https://invite.kakao.com/tc/8SQSk5hnDD"
         }
       ],
-      "status": "waitlist"
+      "status": "waitlist",
+      "host": "직차"
     },
     {
       "id": "misikhoe-pavlo",
@@ -190,7 +194,8 @@
           "url": "https://invite.kakao.com/tc/R5S0sk7pZR"
         }
       ],
-      "status": "auto"
+      "status": "auto",
+      "host": "직차"
     },
     {
       "id": "us-wine-cheongdam",
@@ -218,7 +223,8 @@
       "note": "유스클럽의 구성원들과 건강하고 깊이있는 커피 네트워킹을 즐길 수 있는 기회입니다.",
       "attendees": [],
       "formUrl": "https://forms.gle/US4D5WT1WuukrtqR7",
-      "status": "auto"
+      "status": "auto",
+      "host": "직차"
     },
     {
       "id": "bookclub-july",
@@ -257,13 +263,14 @@
     },
     {
       "id": "ev-msepvyb-new",
-      "title": "YC Insight Day",
+      "title": "유스클럽 인사이트 데이",
       "date": "2026-08-21",
       "time": "7pm",
       "place": "강남역 일대(TBD)",
       "note": "곧 상세 정보가 업데이트됩니다.",
       "attendees": [],
-      "status": "auto"
+      "status": "auto",
+      "kind": "event"
     },
     {
       "id": "networking-andaz",
@@ -321,7 +328,8 @@
         "직차",
         "성보"
       ],
-      "status": "auto"
+      "status": "auto",
+      "host": "직차"
     },
     {
       "id": "autumn-hiking-surak-songsan",
@@ -345,7 +353,8 @@
       "date": "2026-10-09",
       "place": "베뉴지",
       "attendees": [],
-      "status": "closed"
+      "status": "closed",
+      "host": "한시형"
     },
     {
       "id": "garak-market-crab-byob",
@@ -416,7 +425,8 @@
       "date": "2026-10-31",
       "note": "주류(Drink)방에서 모집 완료",
       "attendees": [],
-      "status": "closed"
+      "status": "closed",
+      "host": "직차"
     },
     {
       "id": "host-coffee-chat-networking-1101",
@@ -463,7 +473,8 @@
       "image": "posters/yclb-insight-economy-1115-mv97ynsx.jpg",
       "desc": "하나증권에서 근무하시는 원종윤님을 모시고 '2027년 전망과 시나리오 대응법'을 주제로 인사이트를 얻고 참석자간 교류하는 자리입니다.",
       "formUrl": "https://forms.gle/3ij8xvRtcocjNeYE6",
-      "note": "강연자: 원종윤"
+      "note": "강연자: 원종윤",
+      "host": "원종윤"
     },
     {
       "id": "yclb-networking-year-end-1206",
@@ -485,7 +496,8 @@
       "time": "6pm",
       "attendees": [],
       "note": "골프방에서 모집 완료",
-      "status": "closed"
+      "status": "closed",
+      "host": "직차"
     },
     {
       "id": "hanwoo-dinner-samsung-1119",
@@ -561,7 +573,8 @@
       "place": "월송리CC",
       "note": "골프 방에서 모집 완료",
       "attendees": [],
-      "status": "closed"
+      "status": "closed",
+      "host": "직차"
     },
     {
       "id": "wine-class-spain-1212",
@@ -569,7 +582,8 @@
       "date": "2026-12-12",
       "note": "추가 정보가 업데이트됩니다.",
       "attendees": [],
-      "status": "auto"
+      "status": "auto",
+      "host": "손대승"
     }
   ],
   "notices": [

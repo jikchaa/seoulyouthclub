@@ -1136,21 +1136,29 @@
     main.appendChild(tt);
 
     /* 호스트 */
+    /* 호스트가 정해진 모임만 표기한다. 네트워킹 같은 행사는 호스트를 비워 두면 빈 칸으로 남는다. */
     var host = el("div", "row-host");
-    host.appendChild(el("span", null, "호스트"));
-    host.appendChild(el("b", null, big ? "—" : (ev.host || "—")));
+    if (ev.host) {
+      host.appendChild(el("span", null, "호스트"));
+      host.appendChild(el("b", null, ev.host));
+    }
     main.appendChild(host);
 
     /* 자리 + 신청 */
     var seat = el("div", "row-seat");
-    if (!big && !openMeet && !past && ev.capacity) {
-      var cap = ev.capacity, left = Math.max(0, cap - going);
+    /* 신청 링크로 받는 모임은 자리 수 대신 접수 중임만 알린다. 마감된 모임은 꽉 찬 것으로 보인다. */
+    var closedFull = status === "closed";
+    var viaForm = !closedFull && !!safeUrl(ev.formUrl);
+    if (!big && !openMeet && !past && viaForm) {
+      seat.appendChild(el("small", null, "참석 신청 접수 중"));
+    } else if (!big && !openMeet && !past && ev.capacity) {
+      var cap = ev.capacity, left = closedFull ? 0 : Math.max(0, cap - going);
       seat.appendChild(el("small", null, left > 0 ? going + " / " + cap + " · " + left + "자리 남음" : "만석"));
       if (cap <= 12) {
         var bar = el("div", "seat-bar");
         for (var i = 0; i < cap; i++) {
           var tick = document.createElement("i");
-          if (i < going) tick.className = "f";
+          if (closedFull || i < going) tick.className = "f";
           bar.appendChild(tick);
         }
         seat.appendChild(bar);
@@ -1164,7 +1172,7 @@
     if (openMeet && !past) {
       action = el("span", "row-btn off", "자유 참여");   // 상세는 제목 아래 '상세 보기'로 연다
     } else if (big) {
-      action = extra ? toggleButton(extra, "row-btn") : el("span", "row-btn off", "정보 준비 중");
+      action = extra ? toggleButton(extra, "row-btn") : el("span", "row-btn off", past ? "종료" : "정보 준비 중");
     } else if (past) {
       action = el("span", "row-btn off", "종료");
     } else if (status === "closed" || !signup) {
