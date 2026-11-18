@@ -50,7 +50,8 @@
       "date": "2026-08-05",
       "time": "7:30pm",
       "attendees": [],
-      "status": "closed"
+      "status": "closed",
+      "host": "이지민"
     },
     {
       "id": "sports-picnic-day",
