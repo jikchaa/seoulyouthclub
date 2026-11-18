@@ -1212,7 +1212,9 @@
   /* 최근 3건만. 날짜가 같으면 목록에 나중에 적힌 것을 앞에 둔다. */
   function renderNotices() {
     var box = document.getElementById("announce");
-    var items = (state.notices || []).map(function (n, i) { return { n: n, i: i }; })
+    /* hidden: true 인 공지(끝난 행사 등)는 보여주지 않는다. 데이터는 남겨 둔다. */
+    var items = (state.notices || []).filter(function (n) { return !n.hidden; })
+      .map(function (n, i) { return { n: n, i: i }; })
       .sort(function (a, b) {
         var da = a.n.date || "", db = b.n.date || "";
         if (da !== db) return da < db ? 1 : -1;
