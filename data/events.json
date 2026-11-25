@@ -584,7 +584,8 @@
       "note": "추가 정보가 업데이트됩니다.",
       "attendees": [],
       "status": "auto",
-      "host": "손대승"
+      "host": "손대승",
+      "kind": "open"
     },
     {
       "id": "osteria-samkim-lunch-1128",
