@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-18",
+  "updated": "2026-11-25",
   "events": [
     {
       "id": "wine-liam-noahs",
@@ -565,7 +565,7 @@
       "place": "누와 (신사스퀘어)",
       "formUrl": "https://forms.gle/gW9nno12waM8yp2YA",
       "attendees": [],
-      "status": "auto"
+      "status": "closed"
     },
     {
       "id": "nocaddie-golf-wolsongri-1129",
@@ -585,6 +585,34 @@
       "attendees": [],
       "status": "auto",
       "host": "손대승"
+    },
+    {
+      "id": "osteria-samkim-lunch-1128",
+      "title": "오스테리아 샘킴 런치",
+      "host": "윤태웅",
+      "capacity": 4,
+      "date": "2026-11-28",
+      "time": "1:30pm",
+      "place": "합정역 (서울 마포구 월드컵로1길 14 마포한강 푸르지오 1차(딜라이트스퀘어) 2층)",
+      "note": "샘킴 스타 셰프의 업장을 방문합니다\n참석: 직차, 태웅, Amy (이어주세요)",
+      "attendees": [
+        "직차",
+        "태웅",
+        "Amy"
+      ],
+      "status": "auto"
+    },
+    {
+      "id": "yoosmisikhoe-notre-1217",
+      "title": "유스미식회: 노뜨르(요리하는 돌아이)",
+      "host": "윤태웅",
+      "capacity": 4,
+      "date": "2026-12-17",
+      "time": "6:30pm",
+      "place": "노뜨르 (서울특별시 강남구 선릉로155길 13 2층)",
+      "note": "준비되는대로 모집을 시작할 예정입니다.",
+      "attendees": [],
+      "status": "auto"
     }
   ],
   "notices": [
